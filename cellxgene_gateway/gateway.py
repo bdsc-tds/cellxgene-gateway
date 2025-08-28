@@ -29,6 +29,7 @@ from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_entry import CacheEntryStatus
 from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
+from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
 from cellxgene_gateway.process_exception import ProcessException
@@ -222,29 +223,68 @@ def index():
 @app.route("/filecrawl.html")
 @app.route("/filecrawl/<path:path>")
 def filecrawl(path=None):
-    source_name = request.args.get("source")
-    sources = (
-        filter(
-            lambda x: x.name == urllib.parse.unquote_plus(source_name),
-            item_sources,
-        )
-        if source_name
-        else item_sources
-    )
-    # loop all data sources --
-    rendered_sources = [
-        render_item_source(item_source, path) for item_source in sources
-    ]  # will we need to make this async in the page???
-    rendered_html = "\n".join(rendered_sources)
+    # Check if we should use the new metadata-based interface
+    csv_path = os.environ.get("DATASET_METADATA_CSV", "datasets.csv")
+    use_metadata = os.path.exists(csv_path)
+    
+    if use_metadata:
+        # Load dataset metadata from CSV
+        data_dir = os.environ.get("CELLXGENE_DATA", "cellxgene_data")
+        datasets, modalities, principal_investigators, leads = load_dataset_metadata(csv_path, data_dir)
 
-    resp = make_response(
-        render_template(
-            "filecrawl.html",
-            extra_scripts=get_extra_scripts(),
-            rendered_html=rendered_html,
-            path=path,
+        # Filtering logic
+        selected_modality = request.args.getlist("modality")
+        selected_pi = request.args.get("pi")
+        selected_lead = request.args.get("lead")
+        filtered = []
+        for ds in datasets:
+            if selected_modality and ds.get("modality") not in selected_modality:
+                continue
+            if selected_pi and ds.get("principal_investigator") != selected_pi:
+                continue
+            if selected_lead and ds.get("lead") != selected_lead:
+                continue
+            filtered.append(ds)
+
+        resp = make_response(
+            render_template(
+                "filecrawl.html",
+                extra_scripts=get_extra_scripts(),
+                datasets=filtered,
+                modalities=modalities,
+                principal_investigators=principal_investigators,
+                leads=leads,
+                enable_annotations=env.enable_annotations,
+                use_metadata=True,
+            )
         )
-    )
+    else:
+        # Fall back to original file-based interface
+        source_name = request.args.get("source")
+        sources = (
+            filter(
+                lambda x: x.name == urllib.parse.unquote_plus(source_name),
+                item_sources,
+            )
+            if source_name
+            else item_sources
+        )
+        # loop all data sources --
+        rendered_sources = [
+            render_item_source(item_source, path) for item_source in sources
+        ]  # will we need to make this async in the page???
+        rendered_html = "\n".join(rendered_sources)
+
+        resp = make_response(
+            render_template(
+                "filecrawl.html",
+                extra_scripts=get_extra_scripts(),
+                rendered_html=rendered_html,
+                path=path,
+                use_metadata=False,
+            )
+        )
+    
     set_no_cache(resp)
     return resp
 
