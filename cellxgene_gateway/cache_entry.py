@@ -15,7 +15,6 @@ import psutil
 import re
 from enum import Enum
 from flask import make_response, render_template, request
-from flask.wrappers import Response
 from requests import get, post, put
 
 

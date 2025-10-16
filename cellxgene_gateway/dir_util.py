@@ -14,7 +14,6 @@ import os
 
 # Import other functions from package
 from cellxgene_gateway import env
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
 
 
 # General variables

@@ -16,11 +16,6 @@ import urllib.parse
 # Import other functions from package
 from cellxgene_gateway import flask_util
 from cellxgene_gateway.cache_key import CacheKey
-from cellxgene_gateway.dir_util import (
-    annotations_suffix,
-    make_annotations,
-    make_h5ad,
-)
 from cellxgene_gateway.env import enable_annotations
 
 

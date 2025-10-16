@@ -1,6 +1,6 @@
 # Import utility modules
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 
 # Import other functions from package
