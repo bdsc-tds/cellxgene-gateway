@@ -1,6 +1,9 @@
+# Import utility modules
 import unittest
 from unittest.mock import MagicMock, patch
 
+
+# Import other functions from package
 from cellxgene_gateway.cache_entry import CacheEntry
 from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.items.file.fileitem import FileItem
@@ -10,8 +13,26 @@ from cellxgene_gateway.process_exception import ProcessException
 
 
 class TestSubprocessBackend(unittest.TestCase):
+    """
+    Unit tests for `SubprocessBackend` class, which is responsible for launching
+    `cellxgene` server process using subprocesses.
+
+    Validate subprocess command construction, error handling, and annotation
+    flag management during process launch.
+    """
+
     @patch("subprocess.Popen")
     def test_launch_GIVEN_no_stdout_THEN_throw_ProcessException(self, popen):
+        """
+        Test that backend throws `ProcessException` if subprocess fails to
+        produce stdout.
+
+        Parameters:
+        -----------
+          popen: MagicMock
+            Mocked `subprocess.Popen` used to simulate system process call.
+        """
+
         subprocess = MagicMock()
         subprocess.stdout.readline().decode.return_value = ""
         subprocess.stderr.read().decode.return_value = "An unexpected error"
@@ -26,7 +47,10 @@ class TestSubprocessBackend(unittest.TestCase):
 
         backend = SubprocessBackend()
         cellxgene_loc = "/some/cellxgene"
-        scripts = ["http://example.com/script.js", "http://example.com/script2.js"]
+        scripts = [
+            "http://example.com/script.js",
+            "http://example.com/script2.js",
+        ]
 
         with self.assertRaises(ProcessException) as context:
             backend.launch(cellxgene_loc, scripts, entry)
@@ -42,6 +66,16 @@ class TestSubprocessBackend(unittest.TestCase):
 
     @patch("subprocess.Popen")
     def test_launch_GIVEN_annotations_enabled_THEN_set_flags(self, popen):
+        """
+        Test that annotation and gene set flags are correctly passed when
+        annotations are enabled.
+
+        Parameters:
+        -----------
+          popen: MagicMock
+            Mocked `subprocess.Popen` used to simulate system process call.
+        """
+
         subprocess = MagicMock()
         subprocess.stdout.readline().decode.return_value = (
             "[cellxgene] Type CTRL-C at any time to exit.\n"
@@ -53,7 +87,9 @@ class TestSubprocessBackend(unittest.TestCase):
             FileItem("/czi/", name="pbmc3k.h5ad", type=ItemType.h5ad),
             FileItemSource("/tmp", "local"),
             FileItem(
-                "/czi/pbmc3k_annotations/", name="foo.csv", type=ItemType.annotation
+                "/czi/pbmc3k_annotations/",
+                name="foo.csv",
+                type=ItemType.annotation,
             ),
         )
         entry = CacheEntry.for_key(key, 8000)

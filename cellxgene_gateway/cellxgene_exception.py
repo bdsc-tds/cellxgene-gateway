@@ -9,7 +9,27 @@
 
 
 class CellxgeneException(Exception):
+    """
+    Custom exception class to handle errors related to Cellxgene application.
+    This exception is raised when there are issues within Cellxgene environment.
+    """
+
     def __init__(self, message, http_status):
+        """
+        Initialise CellxgeneException with a message and an HTTP status.
+
+        Parameters:
+        -----------
+        message: str
+          Error message describing exception.
+
+        http_status: int
+          HTTP status code related to exception.
+
+        Returns:
+        --------
+        None
+        """
         Exception.__init__(self)
         self.message = message
         self.http_status = http_status

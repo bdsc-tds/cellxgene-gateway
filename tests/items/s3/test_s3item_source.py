@@ -1,26 +1,35 @@
+# Import utility modules
 import unittest
-import os
-import shutil
-import tempfile
-
 from unittest.mock import MagicMock, Mock, patch
 
+
+# Import other functions from package
+from cellxgene_gateway.gateway import app
 from cellxgene_gateway.items.item import ItemType
 from cellxgene_gateway.items.s3.s3item import S3Item
 from cellxgene_gateway.items.s3.s3item_source import S3ItemSource
-from cellxgene_gateway.gateway import app
 
 
 class TestScanDirectory(unittest.TestCase):
-    def setUp(self):
+    """
+    Unit tests for the `S3ItemSource.scan_directory` method.
 
-        self.app = app
-
-    def tearDown(self):
-        pass
+    Verify correct handling of S3 directory traversal.
+    """
 
     @patch("s3fs.S3FileSystem")
     def test_GIVEN_invalid_bucket_THEN_throws_error(self, s3func):
+        """
+        Test that `scan_directory` raises error for invalid or nonexistent S3
+        bucket.
+
+        Parameters:
+        -----------
+        s3func: unittest.mock.Mock
+            Mocked `s3fs.S3FileSystem` class for simulating S3 filesystem
+            behavior.
+        """
+
         class S3Mock:
             def exists(path):
                 if path in ["s3://my-bucket/"]:
@@ -36,7 +45,19 @@ class TestScanDirectory(unittest.TestCase):
         )
 
     @patch("s3fs.S3FileSystem")
-    def test__GIVEN_multilevel_bucket_THEN_properly_recurses_suburls(self, s3func):
+    def test__GIVEN_multilevel_bucket_THEN_properly_recurses_suburls(
+        self, s3func
+    ):
+        """
+        Test that `scan_directory` recursively traverses multi-level S3 bucket
+        structure.
+
+        Parameters:
+        -----------
+        s3func: unittest.mock.Mock
+            Mocked `s3fs.S3FileSystem` class for simulating recursive S3
+            traversal.
+        """
 
         class S3Mock:
             def exists(path):
@@ -62,7 +83,10 @@ class TestScanDirectory(unittest.TestCase):
                 elif path == "s3://my-bucket/pbmc3k_annotations":
                     return ["my-bucket/pbmc3k_annotations/annot.csv"]
                 elif path == "s3://my-bucket/lvl1":
-                    return ["my-bucket/lvl1/lvl2", "my-bucket/lvl1/pbmc3k_l1.h5ad"]
+                    return [
+                        "my-bucket/lvl1/lvl2",
+                        "my-bucket/lvl1/pbmc3k_l1.h5ad",
+                    ]
                 elif path == "s3://my-bucket/lvl1/lvl2":
                     return ["my-bucket/lvl1/lvl2/pbmc3k_l2.h5ad"]
 
@@ -94,7 +118,9 @@ class TestScanDirectory(unittest.TestCase):
 
         s3func.return_value = S3Mock
         source = S3ItemSource("my-bucket")
-        with self.app.test_request_context(query_string="refresh=true") as test_context:
+        with app.test_request_context(
+            query_string="refresh=true"
+        ) as test_context:
             tree = source.scan_directory()
 
         def s3item_compare(i1, i2, msg=""):
@@ -102,7 +128,9 @@ class TestScanDirectory(unittest.TestCase):
             self.assertEqual(i1.type, i2.type, "type equals")
             self.assertEqual(i1.s3key, i2.s3key, "s3key equals")
             if i1.annotations is None:
-                self.assertEqual(i1.annotations, i2.annotations, "annotations equals")
+                self.assertEqual(
+                    i1.annotations, i2.annotations, "annotations equals"
+                )
             else:
                 self.assertEqual(
                     len(i1.annotations),
@@ -171,13 +199,33 @@ class TestScanDirectory(unittest.TestCase):
 
 
 class TestListItems(unittest.TestCase):
+    """
+    Unit tests for the `S3ItemSource.list_items` method.
+
+    Ensure filter arguments are correctly passed to `scan_directory` and default
+    behavior occurs when no filter is provided.
+    """
+
     def test_GIVEN_filter_THEN_pass_filter_into_scan_directory(self):
+        """
+        Test that `list_items` forwards a provided filter argument to `scan_directory`.
+
+        Uses a mock for `scan_directory` to confirm it is invoked with the same
+        filter string passed to `list_items`.
+        """
+
         source = S3ItemSource("my-bucket")
         source.scan_directory = MagicMock()
         tree = source.list_items("some-filter")
         source.scan_directory.assert_called_once_with("some-filter")
 
     def test_GIVEN_no_filter_THEN_pass_empty_string_into_scan_directory(self):
+        """
+        Test that `list_items` calls `scan_directory` with an empty string when no filter is given.
+
+        Ensures default behavior when no subpath or filter is provided.
+        """
+
         source = S3ItemSource("my-bucket")
         source.scan_directory = MagicMock()
         tree = source.list_items()

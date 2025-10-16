@@ -7,12 +7,19 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 
+
+# Import utility modules
 import logging
 import os
 
+
+# Cellxgene variables
 cellxgene_location = os.environ.get("CELLXGENE_LOCATION")
 cellxgene_data = os.environ.get("CELLXGENE_DATA", "")
 cellxgene_args = os.environ.get("CELLXGENE_ARGS", None)
+env_vars = {"CELLXGENE_LOCATION": cellxgene_location}
+
+# Gateway variables
 gateway_port = int(os.environ.get("GATEWAY_PORT", "5005"))
 external_host = os.environ.get(
     "EXTERNAL_HOST",
@@ -24,28 +31,32 @@ external_protocol = os.environ.get(
 ip = os.environ.get("GATEWAY_IP")
 extra_scripts = os.environ.get("GATEWAY_EXTRA_SCRIPTS")
 expire_seconds = int(
-    os.environ.get("GATEWAY_EXPIRE_SECONDS", os.environ.get("GATEWAY_TTL", "3600"))
+    os.environ.get(
+        "GATEWAY_EXPIRE_SECONDS", os.environ.get("GATEWAY_TTL", "3600")
+    )
 )
-enable_annotations = os.environ.get("GATEWAY_ENABLE_ANNOTATIONS", "").lower() in [
+enable_annotations = os.environ.get(
+    "GATEWAY_ENABLE_ANNOTATIONS", ""
+).lower() in [
     "true",
     "1",
 ]
-enable_backed_mode = os.environ.get("GATEWAY_ENABLE_BACKED_MODE", "").lower() in [
+enable_backed_mode = os.environ.get(
+    "GATEWAY_ENABLE_BACKED_MODE", ""
+).lower() in [
     "true",
     "1",
 ]
 log_level = logging.getLevelName(os.environ.get("GATEWAY_LOG_LEVEL", "INFO"))
 
-env_vars = {
-    "CELLXGENE_LOCATION": cellxgene_location,
-}
-
+# Proxy variables
 proxy_fix_for = int(os.environ.get("PROXY_FIX_FOR", "0"))
 proxy_fix_proto = int(os.environ.get("PROXY_FIX_PROTO", "0"))
 proxy_fix_host = int(os.environ.get("PROXY_FIX_HOST", "0"))
 proxy_fix_port = int(os.environ.get("PROXY_FIX_PORT", "0"))
 proxy_fix_prefix = int(os.environ.get("PROXY_FIX_PREFIX", "0"))
 
+# Optional variables
 optional_env_vars = {
     "EXTERNAL_HOST": external_host,
     "EXTERNAL_PROTOCOL": external_protocol,
@@ -67,6 +78,24 @@ optional_env_vars = {
 
 
 def validate():
+    """
+    Check that all environment variables are properly set and raise an error if
+    any are missing. Otherwise, confirm presence of required and optional
+    environment variables in logs.
+
+    Parameters:
+    -----------
+    None
+
+    Returns:
+    --------
+    None
+
+    Raises:
+    -------
+    ValueError
+      If any required environment variables are not set.
+    """
     if not all(env_vars.values()):
         raise ValueError(
             f"""

@@ -7,21 +7,54 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 
-import os
 
+# Import other functions from package
 from cellxgene_gateway.items.item import Item
 
 
 class S3Item(Item):
-    """e.g. FileItem(subpath = subpath, name = filename, type = ItemType.h5ad)
+    """
+    Class to represent S3-based dataset or annotation item with path and
+    optional extension.
 
-    The Item superclass expects a 'name' and 'type'.
+    Inherits:
+    ---------
+    Item: Abstract base class defining core interface for data items.
     """
 
     def __init__(self, s3key: str, *args, **kwargs):
+        """
+        Initialise S3Item. Item superclass expects 'name' and 'type'.
+
+        Parameters:
+        -----------
+        s3key: str
+            Full key (path) of object in S3 bucket.
+
+        *args, **kwargs :
+          Additional arguments passed to Item superclass.
+
+        Returns:
+        --------
+        None
+
+        Example:
+        --------
+        FileItem(subpath = subpath, name = filename, type = ItemType.h5ad)
+        """
+
         super().__init__(*args, **kwargs)
         self.s3key = s3key
 
     @property
     def descriptor(self) -> str:
+        """
+        Return unique descriptor for item.
+
+        Returns:
+        --------
+        str
+          S3 key for object.
+        """
+
         return self.s3key

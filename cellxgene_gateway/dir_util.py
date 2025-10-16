@@ -7,23 +7,67 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 
+
+# Import utility modules
 import os
 
+
+# Import other functions from package
 from cellxgene_gateway import env
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
 
+
+# General variables
 annotations_suffix = "_annotations"
 h5ad_suffix = ".h5ad"
 
 
 def make_h5ad(el):
+    """
+    Convert annotation file name to corresponding .h5ad file name.
+
+    Parameters:
+    -----------
+    el: str
+      Annotation file name (ending with annotations suffix).
+
+    Returns:
+    --------
+    str
+      Corresponding .h5ad file name.
+    """
     return el[: -len(annotations_suffix)] + h5ad_suffix
 
 
 def make_annotations(el):
+    """
+    Convert .h5ad file name to corresponding annotations file name.
+
+    Parameters:
+    -----------
+    el: str
+      .h5ad file name.
+
+    Returns:
+    --------
+    str
+      Corresponding annotations file name with appropriate suffix.
+    """
     return el[:-5] + annotations_suffix
 
 
 def ensure_dir_exists(file_path):
+    """
+    Ensure that directory for given file path exists. If not, create it.
+
+    Parameters:
+    -----------
+    file_path: str
+      Path of directory to check or create.
+
+    Returns:
+    --------
+    None
+    """
     if not os.path.exists(file_path):
         os.makedirs(file_path)

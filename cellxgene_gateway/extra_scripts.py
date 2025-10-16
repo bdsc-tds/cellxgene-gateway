@@ -7,20 +7,46 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 
+
+# Import utility modules
 from json import loads
 from json.decoder import JSONDecodeError
 
+# Import other functions from package
 from cellxgene_gateway import env
 
 
 def get_extra_scripts():
-    # can be array of script tags to inject on every page, e.g. for google analytics could be
-    # ['https://www.googletagmanager.com/gtag/js?id=UA-123456-2',
-    #  f"{env.external_protocol}://{env.external_host}/static/js/google_ua.js"]
-    # where google_ua.js is a script you add to the static/js folder prior to deployment.
+    """
+    Retrieve additional script URLs from environment settings to inject into
+    every page.
+
+    Parameters:
+    -----------
+    None
+
+    Returns:
+    --------
+    env.extra_scripts or []: list
+      List of script URLs as strings or empty list if not set.
+
+    Raises:
+    -------
+    Exception
+      If GATEWAY_EXTRA_SCRIPTS environment variable contains invalid JSON.
+
+    Examples:
+    ---------
+    Array of script tags to inject on every page, e.g. google analytics could be
+    ['https://www.googletagmanager.com/gtag/js?id=UA-123456-2',
+    f"{env.external_protocol}://{env.external_host}/static/js/google_ua.js"]
+    where google_ua.js is a script you add to static/js folder prior to
+    deployment.
+    """
+
     try:
         return [] if env.extra_scripts is None else loads(env.extra_scripts)
     except JSONDecodeError as exc:
         raise Exception(
-            f'Error parsing GATEWAY_EXTRA_SCRIPTS, expected JSON array e.g. ["https://example.com/path/to/script.js"]'
+            'Error parsing GATEWAY_EXTRA_SCRIPTS, expected JSON array e.g. ["https://example.com/path/to/script.js"]'
         ) from exc

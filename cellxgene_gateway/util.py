@@ -7,10 +7,20 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 
+
+# Import utility modules
 from datetime import datetime
 
 
 def current_time_stamp():
+    """
+    Return current time as Unix timestamp.
+
+    Returns:
+    --------
+    timestamp: float
+        Number of seconds since Unix epoch (January 1, 1970).
+    """
     now = datetime.now()
     timestamp = datetime.timestamp(now)
     return timestamp

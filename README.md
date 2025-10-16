@@ -212,16 +212,16 @@ If you need help for any reason, please make a github ticket. One of the contrib
 
 - Update Changelog.md and version number in __init__.py
 - Cut a release on github
-	- Go to your project homepage on GitHub
-	- On right side, you will see [Releases](https://github.com/Novartis/cellxgene-gateway/releases) link. Click on it.
-	- Click on Draft a new release
-	- Fill in all the details
-		- Tag version should be the version number of your package release
-		- Release Title can be anything you want, but we use v0.3.11 (the same as the tag to be created on publish)
-		- Description should be changelog
-	- Click Publish release at the bottom of the page
-	- Now under Releases you can view all of your releases.
-	- Copy the download link (tar.gz) and save it somewhere
+    - Go to your project homepage on GitHub
+    - On right side, you will see [Releases](https://github.com/Novartis/cellxgene-gateway/releases) link. Click on it.
+    - Click on Draft a new release
+    - Fill in all the details
+        - Tag version should be the version number of your package release
+        - Release Title can be anything you want, but we use v0.3.11 (the same as the tag to be created on publish)
+        - Description should be changelog
+    - Click Publish release at the bottom of the page
+    - Now under Releases you can view all of your releases.
+    - Copy the download link (tar.gz) and save it somewhere
 
 ## How to publish to PyPI
 

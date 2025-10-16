@@ -1,5 +1,6 @@
 // neandertal javascript
-// Annotations only work with file itemsources at the moment. If they work with others in the future we may need to revisit this.
+// Annotations only work with file itemsources at the moment. If they work with
+// others in the future we may need to revisit this.
 const new_annotation_callback = (() =>{
     const suffix = `.csv`;
     return (e) => {

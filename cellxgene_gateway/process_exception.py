@@ -9,7 +9,35 @@
 
 
 class ProcessException(Exception):
+    """
+    Custom exception class to handle dataset process failures
+    """
+
     def __init__(self, message, stdout, stderr, http_status, key):
+        """
+        Initialise ProcessException with process output and metadata.
+
+        Parameters:
+        -----------
+        message: str
+          Error message describing failure.
+
+        stdout: str
+          Standard output from failed process.
+
+        stderr: str
+          Standard error from failed process.
+
+        http_status: int
+          HTTP status code associated with failure.
+
+        key: CacheKey
+          Cache key identifying dataset or process.
+
+        Returns:
+        --------
+        None
+        """
         Exception.__init__(self)
         self.message = message
         self.stdout = stdout
@@ -19,6 +47,19 @@ class ProcessException(Exception):
 
     @classmethod
     def from_cache_entry(cls, cache_entry):
+        """
+        Create ProcessException from CacheEntry.
+
+        Parameters:
+        -----------
+        cache_entry: CacheEntry
+          Cache entry containing information about failed process.
+
+        Returns:
+        --------
+        ProcessException
+          New ProcessException initialised with cache entry's data.
+        """
         return cls(
             cache_entry.message,
             cache_entry.all_output,
