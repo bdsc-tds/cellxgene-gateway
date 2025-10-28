@@ -55,7 +55,7 @@ setup(
         "cellxgene_gateway": [
             "static/css/homepagestyle.css",
             "static/js/annotation.js",
-            "static/nibr.ico",
+            "static/favicon.png",
             "templates/*.html",
         ]
     },
