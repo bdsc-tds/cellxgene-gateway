@@ -19,121 +19,19 @@
   <!-- Page title -->
   <title>Datasets - SSF BioHub</title>
 
+  <!-- Stylesheets -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/filecrawl.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/table.css') }}" />
+
+  <!-- Miscellaneous -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="{{ url_for('static', filename='js/annotation.js') }}"></script>
-
-  <style>
-    body {
-      background: #f8f9fa;
-      font-size: 0.875rem;
-    }
-
-    .container-fluid {
-      padding-left: 15px;
-      padding-right: 15px;
-    }
-
-    .navbar {
-      padding: 0.25rem 0;
-      margin-bottom: 0.5rem;
-    }
-
-    .navbar-brand {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    .nav-link {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    h2 {
-      font-size: 1.4rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .sidebar {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-      padding: 16px;
-    }
-
-    .table-responsive {
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-      background: #fff;
-      overflow-x: auto;
-      margin-top: 0.5rem;
-    }
-
-    .table {
-      margin-bottom: 0;
-    }
-
-    .table thead th {
-      border-bottom: 2px solid #dee2e6;
-      font-weight: 600;
-      color: #495057;
-      background-color: #f8f9fa;
-      font-size: 0.875rem;
-    }
-
-    .table tbody tr:hover {
-      background-color: rgba(0, 123, 255, 0.05);
-    }
-
-    .table tbody td {
-      font-size: 0.875rem;
-      vertical-align: middle;
-    }
-
-    .annotation-item {
-      margin-right: 8px;
-      white-space: nowrap;
-    }
-
-    .download-link {
-      color: #007bff;
-      text-decoration: none;
-      margin-left: 4px;
-      font-size: 0.9em;
-      padding: 2px 4px;
-      border-radius: 3px;
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      display: inline-block;
-      line-height: 1;
-    }
-
-    .download-link:hover {
-      color: #0056b3;
-      background: #e9ecef;
-      text-decoration: none;
-    }
-
-    .annotation-indicator {
-      color: #28a745;
-      font-size: 0.8em;
-      font-weight: 500;
-      margin-left: 8px;
-    }
-
-    .btn-group .btn {
-      margin-right: 5px;
-    }
-
-    .text-truncate {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .badge {
-      font-size: 0.75em;
-    }
-  </style>
 </head>
 
 <body>

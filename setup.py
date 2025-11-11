@@ -53,9 +53,9 @@ setup(
     packages=find_packages(),
     package_data={
         "cellxgene_gateway": [
-            "static/css/homepagestyle.css",
             "static/js/annotation.js",
             "static/favicon.png",
+            "static/css/*.css",
             "templates/*.html",
             "static/ssf_logo.png",
         ]

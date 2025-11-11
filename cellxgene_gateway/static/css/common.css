@@ -1,0 +1,44 @@
+/* General customisation with style classes shared across pages */
+
+/* Base layout for every element */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* body tag style class */
+body {
+  background: #f8f9fa;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  color: #333333;
+}
+
+/* Full-width responsive container style class */
+.container-fluid {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Title style class */
+h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Preformatted text style class */
+pre {
+  display: block;
+  padding: 8.5px;
+  margin: 0 0 9px;
+  font-size: 0.8rem;
+  line-height: 1.385;
+  color: #333333;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f5f5f5;
+  border: 1px solid #cccccc;
+  border-radius: 3px;
+  width: 80%;
+}

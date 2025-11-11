@@ -16,39 +16,14 @@
   <!-- Default header -->
   {% include 'header.html' %}
 
-  <style>
-    body {
-      background: #f8f9fa;
-    }
-
-    .container-fluid {
-      padding-left: 15px;
-      padding-right: 15px;
-    }
-
-    .navbar {
-      padding: 0.25rem 0;
-      margin-bottom: 0.5rem;
-    }
-
-    .navbar-brand {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    .nav-link {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    h4 {
-      font-size: 1.4rem;
-      margin-bottom: 0.75rem;
-    }
-  </style>
   <!-- Page title -->
   <title>Cellxgene Error - SSF BioHub</title>
 
+  <!-- Stylesheets -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/common.css') }}" />
 </head>
 
 <body>

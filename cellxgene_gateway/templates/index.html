@@ -19,58 +19,22 @@
   <!-- Page title -->
   <title>SSF BioHub</title>
 
+  <!-- Stylesheets -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/common.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/homepagestyle.css') }}" />
-  <style>
-    li {
-      font-size: 16px;
-    }
+</head>
 
-    body {
-      background: #f8f9fa;
-    }
+<body style="background: #ffffff">
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
-    .container-fluid {
-      padding-left: 15px;
-      padding-right: 15px;
-    }
 
-    .navbar {
-      padding: 0.25rem 0;
-      margin-bottom: 0.5rem;
-    }
 
-    .navbar-brand {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
 
-    .nav-link {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    ol {
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    pre {
-      font-size: 0.8rem;
-      padding: 0.5rem;
-      margin: 0.5rem 0;
-    }
-  </style>
-</head>
-
-<body>
   <div class="container-fluid py-1">
         </div>
     <div class="row">

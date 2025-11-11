@@ -1,0 +1,81 @@
+/* Navigation bar customisation */
+
+/* Navbar overall style class */
+.navbar {
+  background: #ffffff;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Navbar brand/logo text style class */
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #000000;
+  text-decoration: none;
+  margin-right: 0;
+}
+
+/* Navbar brands container style class */
+.navbar-brand-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Navbar hamburger menu icon style class */
+.navbar-toggler-icon {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'><path stroke='rgba%2824, 61, 110, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/></svg>")
+}
+
+/* Navbar hamburger menu style class */
+.navbar-nav {
+  display: flex;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+/* Navbar hamburger menu links style class */
+.nav-link {
+  color: #333333;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+/* Navbar hamburger menu links style class during hovering */
+.nav-link:hover {
+  /*color: #183D6E;*/
+  color: #0066cc;
+}
+
+/* Hamburger dropdown menu style class */
+@media (max-width: 992px) {
+  .navbar .navbar-collapse {
+    /* Set width to element length */
+    width: auto;
+    /* Set maximum width */
+    max-width: 16rem;
+    /* Set maximum width */
+    min-width: 8rem;
+    /* Remove dropdown from normal flow */
+    position: absolute;
+    /* Place dropdown below navbar */
+    top: 100%;
+    /* Align dropdown to the right */
+    right: 0;
+    /* Set dropdown background color */
+    background-color: #ffffff;
+    /* Set dropdown borders */
+    border: 1px solid #cccccc;
+    /* Add box shadow */
+    box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
+    /* Add padding */
+    padding: 1rem;
+  }
+}

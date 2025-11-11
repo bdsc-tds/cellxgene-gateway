@@ -1,0 +1,38 @@
+/* Table-related classes */
+
+/* Responsive table style class */
+.table-responsive {
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+/* Base table style class */
+.table {
+  margin-bottom: 0;
+  font-size: 0.8rem;
+}
+
+/* Table header style class */
+.table thead th {
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.25rem;
+}
+
+/* Table body row style class during hovering */
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Table body cell style class */
+.table tbody td {
+  font-size: 0.875rem;
+  vertical-align: middle;
+  padding: 0.5rem 0.25rem;
+}
