@@ -201,8 +201,17 @@ def handle_invalid_process(error):
     )
 
 
-@app.route("/favicon.ico")
+@app.route("/favicon.png")
 def favicon():
+    """
+    Serve custom favicon from static directory.
+
+    Returns:
+    --------
+    flask.Response
+      Favicon.png file with appropriate MIME type.
+    """
+
     return send_from_directory(
         os.path.join(app.root_path, "static"),
         "favicon.png",

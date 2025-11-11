@@ -72,9 +72,9 @@ class TestRenderEntry(unittest.TestCase):
 
         flask_util.include_source_in_url = False
         actual = CacheEntry.for_key(key, 8000).rewrite_text_content(
-            '<link rel="shortcut icon" href="/static/assets/favicon.ico">'
+            '<link rel="shortcut icon" href="/static/assets/favicon.png">'
         )
-        expected = '<link rel="shortcut icon" href="/view/czi/pbmc3k.h5ad/static/assets/favicon.ico">'
+        expected = '<link rel="shortcut icon" href="/view/czi/pbmc3k.h5ad/static/assets/favicon.png">'
         self.assertEqual(actual, expected)
 
     def test_GIVEN_absolute_static_url_include_source_THEN_include_path(self):
@@ -98,9 +98,9 @@ class TestRenderEntry(unittest.TestCase):
 
         flask_util.include_source_in_url = True
         actual = CacheEntry.for_key(key, 8000).rewrite_text_content(
-            '<link rel="shortcut icon" href="/static/assets/favicon.ico">'
+            '<link rel="shortcut icon" href="/static/assets/favicon.png">'
         )
-        expected = '<link rel="shortcut icon" href="/source/local/view/czi/pbmc3k.h5ad/static/assets/favicon.ico">'
+        expected = '<link rel="shortcut icon" href="/source/local/view/czi/pbmc3k.h5ad/static/assets/favicon.png">'
         self.assertEqual(actual, expected)
 
 
