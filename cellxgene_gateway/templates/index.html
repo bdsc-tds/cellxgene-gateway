@@ -32,43 +32,53 @@
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <h1 class="hero-title">
+      Discover the mechanisms of skin health
+    </h1>
+    <p class="hero-subtitle">
+      Download and visually explore data to understand the causes of skin
+      disease at the cellular level with Cellxgene Gateway.
+    </p>
+    <div class="cta-buttons">
+      <a href="{{ url_for('filecrawl') }}" class="btn-primary">Explore
+        Datasets</a>
+      <a href="/cache_status" class="btn-secondary">View Running Instances</a>
+    </div>
+  </section>
 
-
-
-  <div class="container-fluid py-1">
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-number">100K+</div>
+        <div class="stat-label">Cells</div>
+        <div class="stat-description">
+          Access thousands of cells with comprehensive gene expression profiles
+          for analysis
         </div>
-    <div class="row">
-      <div class="col-12">
-        <h1 style="padding-left: 35px">
-          How To Upload Data via SSH and SCP:
-        </h1>
-        <ol style="padding-left: 85px">
-          <li>
-            Confirm that your ssh key has been properly added. Running the
-            following command should connect you to the server:
-          </li>
-          <pre>ssh ec2-user@{{ ip }}</pre>
-          <li>
-            Prepare your data on your own machine. They should be in a common
-            folder called 'USER' and should look <br />similar to the
-            following structure:
-          </li>
-          <pre>
-- USER
-    - hpc.h5ad
-    - pbmc3k.h5ad</pre>
-          <li>
-            Copy your data to the server (replace USER with your username):
-          </li>
-          <pre>
-ssh ec2-user@{{ ip }} 'mkdir -p {{ cellxgene_data }}/USER/'
-ssh ec2-user@{{ ip }} 'mkdir -p {{ cellxgene_data }}/USER/DATA/'
-scp -r pbmc3k.h5ad ec2-user@{{ ip }}:{{ cellxgene_data }}/USER/DATA/</pre>
-          <li>Take a look at your data using the file crawler link above</li>
-        </ol>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-number">10+</div>
+        <div class="stat-label">Datasets</div>
+        <div class="stat-description">
+          Browse and explore standardized single-cell datasets from various
+          studies
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-number">150+</div>
+        <div class="stat-label">Cell Types</div>
+        <div class="stat-description">
+          Investigate diverse cell types with detailed annotations and marker
+          gene information
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 </body>
 
 </html>
