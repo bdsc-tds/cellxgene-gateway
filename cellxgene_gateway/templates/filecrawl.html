@@ -42,16 +42,21 @@
   <!-- Main content with datasets tables and filtering options -->
   <div class="container-fluid py-1">
     <div class="row">
+
       <!-- Sidebar for filters -->
       <div class="col-md-3 sidebar">
         <h5 class="mb-3">Filter Datasets</h5>
         <form id="filter-form">
+
+          <!-- Search form filter -->
           <div class="mb-4">
             <label><strong>Search</strong></label>
             <input type="text" class="form-control" name="search"
               id="search-input" placeholder="Search datasets..."
               value="{{ request.args.get('search', '') }}" />
           </div>
+
+          <!-- Modality filter -->
           <div class="mb-4">
             <label><strong>Modality</strong></label>
             {% for modality in modalities %}
@@ -63,6 +68,8 @@
             </div>
             {% endfor %}
           </div>
+
+          <!-- PI filter -->
           <div class="mb-4">
             <label><strong>Principal Investigator</strong></label>
             <select class="form-control" name="pi">
@@ -72,6 +79,8 @@
               {% endfor %}
             </select>
           </div>
+
+          <!-- Lead filter -->
           <div class="mb-4">
             <label><strong>Lead</strong></label>
             <select class="form-control" name="lead">
@@ -81,6 +90,8 @@
               {% endfor %}
             </select>
           </div>
+
+          <!-- Apply and reset buttons -->
           <button type="submit" class="btn btn-primary btn-sm w-100">
             Apply Filters
           </button>
@@ -91,12 +102,14 @@
           </button>
         </form>
       </div>
+
       <!-- Main area for datasets -->
       <div class="col-md-9">
         <h2 class="mb-4">Browse Datasets</h2>
-
         <div class="table-responsive">
           <table class="table table-hover table-striped table-sm">
+
+            <!-- Table header -->
             <thead class="table-light">
               <tr>
                 <th scope="col" style="width: 25%">Dataset</th>
@@ -107,19 +120,22 @@
                 <th scope="col" style="width: 18%">Actions</th>
               </tr>
             </thead>
+
+            <!-- Table body -->
             <tbody>
               {% for dataset in datasets %}
               <tr>
                 <td>
-                  {% if dataset.versions %}
+
                   <!-- Grouped experiment -->
+                  {% if dataset.versions %}
                   <div>
                     <strong>{{ dataset.experiment_name }}</strong>
                     {% if dataset.has_annotations %}
                     <span class="annotation-indicator">[annotations
                       available]</span>
                     {% endif %}
-                    <br />
+                    <br>
                     <small class="text-muted">
                       {% for version in dataset.versions %}
                       <span class="badge bg-secondary me-1">{{
@@ -127,8 +143,9 @@
                       {% endfor %}
                     </small>
                   </div>
-                  {% else %}
+
                   <!-- Individual dataset -->
+                  {% else %}
                   <div>
                     <strong>{{ dataset.name }}</strong>
                     {% if dataset.has_annotations %} {% set count =
@@ -151,8 +168,9 @@
                   </div>
                 </td>
                 <td>
-                  {% if dataset.versions %}
+
                   <!-- Grouped experiment controls -->
+                  {% if dataset.versions %}
                   <div class="btn-group-vertical" style="width: 100%">
                     <div class="btn-group" style="width: 100%">
                       <button type="button"
@@ -250,8 +268,9 @@
                     </div>
                     {% endif %}
                   </div>
-                  {% elif dataset.file_path %}
+
                   <!-- Individual dataset controls -->
+                  {% elif dataset.file_path %}
                   <div class="btn-group-horizontal" style="width: 100%">
                     <a href="/view/{{ dataset.file_path }}/" target="_blank"
                       rel="noopener noreferrer"
@@ -349,8 +368,11 @@
             aria-label="Close"></button>
         </div>
         <div class="modal-body">
+
           <!-- Tabs -->
           <ul class="nav nav-tabs mb-4" id="downloadTabs" role="tablist">
+
+            <!-- Browser download tab -->
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="browser-tab"
                 data-bs-toggle="tab" data-bs-target="#browser" type="button"
@@ -358,51 +380,38 @@
                 Browser
               </button>
             </li>
+
+            <!-- Python API tab -->
             <!-- <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  id="python-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#python"
-                  type="button"
-                  role="tab"
-                  aria-controls="python"
-                  aria-selected="false"
-                >
-                  Python API
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button
-                  class="nav-link"
-                  id="r-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#r"
-                  type="button"
-                  role="tab"
-                  aria-controls="r"
-                  aria-selected="false"
-                >
-                  R API
-                </button>
-              </li> -->
+              <button class="nav-link" id="python-tab" data-bs-toggle="tab"
+                data-bs-target="#python" type="button" role="tab"
+                aria-controls="python" aria-selected="false">Python</button>
+            </li> -->
+
+            <!-- R API tab -->
+            <!-- <li class="nav-item" role="presentation">
+              <button class="nav-link" id="r-tab" data-bs-toggle="tab"
+                data-bs-target="#r" type="button" role="tab" aria-controls="r"
+                aria-selected="false">R</button>
+            </li> -->
           </ul>
 
           <!-- Tab Content -->
           <div class="tab-content" id="downloadTabContent">
+
+            <!-- Browser download tab -->
             <div class="tab-pane fade show active" id="browser" role="tabpanel"
               aria-labelledby="browser-tab">
-              <!-- NAME Section -->
+
+              <!-- Name section -->
               <div class="mb-4">
-                <label
-                  class="form-label fw-bold text-uppercase small">NAME</label>
+                <label class="form-label fw-bold small">Dataset Name</label>
                 <div id="dataset-name" class="fw-bold"></div>
               </div>
 
-              <!-- GENE MATRIX Section -->
+              <!-- Gene matrix section -->
               <div class="mb-4">
-                <label class="form-label fw-bold text-uppercase small">GENE
-                  MATRIX</label>
+                <label class="form-label fw-bold small">File</label>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value=""
                     id="geneMatrixCheck" checked />
@@ -417,10 +426,9 @@
                 </p>
               </div>
 
-              <!-- DOWNLOAD DETAILS Section -->
+              <!-- Download details section -->
               <div class="mb-4">
-                <label class="form-label fw-bold text-uppercase small">DOWNLOAD
-                  DETAILS</label>
+                <label class="form-label fw-bold small">Download details</label>
                 <div class="input-group">
                   <input type="text" class="form-control" id="download-url"
                     readonly />
@@ -444,43 +452,45 @@
               </div>
             </div>
 
-            <div class="tab-pane fade" id="python" role="tabpanel"
+            <!-- Python API tab -->
+            <!-- <div class="tab-pane fade" id="python" role="tabpanel"
               aria-labelledby="python-tab">
               <div class="mb-4">
-                <label
-                  class="form-label fw-bold text-uppercase small">NAME</label>
+                <label class="form-label fw-bold small">Dataset Name</label>
                 <div id="dataset-name-python" class="fw-bold"></div>
               </div>
               <div class="mb-4">
-                <label class="form-label fw-bold text-uppercase small">PYTHON
-                  CODE</label>
-                <pre class="bg-light p-3 rounded"><code id="python-code">import cellxgene
-# Download dataset
-dataset = cellxgene.download("dataset-id")
-# Load the dataset
-adata = dataset.load()</code></pre>
+                <label class="form-label fw-bold small">Python API</label>
+                <pre class="bg-light p-3 rounded"><code id="python-code">
+                  import cellxgene
+                  # Download dataset
+                  dataset = cellxgene.download("dataset-id")
+                  # Load the dataset
+                  adata = dataset.load()</code></pre>
               </div>
-            </div>
+            </div> -->
 
-            <div class="tab-pane fade" id="r" role="tabpanel"
+            <!-- R API tab -->
+            <!-- <div class="tab-pane fade" id="r" role="tabpanel"
               aria-labelledby="r-tab">
               <div class="mb-4">
-                <label
-                  class="form-label fw-bold text-uppercase small">NAME</label>
+                <label class="form-label fw-bold small">Dataset Name</label>
                 <div id="dataset-name-r" class="fw-bold"></div>
               </div>
               <div class="mb-4">
-                <label class="form-label fw-bold text-uppercase small">R
-                  CODE</label>
-                <pre class="bg-light p-3 rounded"><code id="r-code">library(cellxgene)
-# Download dataset
-dataset <- cellxgene_download("dataset-id")
-# Load the dataset
-adata <- dataset$load()</code></pre>
+                <label class="form-label fw-bold small">R API</label>
+                <pre class="bg-light p-3 rounded"><code id="r-code">
+                  library(cellxgene)
+                  # Download dataset
+                  dataset <- cellxgene_download("dataset-id")
+                  # Load the dataset
+                  adata <- dataset$load()</code></pre>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
+
+        <!-- Download and cancel buttons -->
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary"
             data-bs-dismiss="modal">

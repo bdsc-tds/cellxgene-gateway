@@ -438,6 +438,50 @@ def ip_address():
     return set_no_cache(resp)
 
 
+@app.route("/download/<filename>")
+def download_file(filename):
+    """
+    Serve downloadable .h5ad file from data directory.
+
+    Parameters:
+    -----------
+    filename: str
+      Name of dataset file to download.
+
+    Returns:
+    --------
+    Response
+      Requested file if valid and exists, or an error response.
+    """
+
+    # Security: only allow .h5ad files
+    if not filename.endswith(".h5ad"):
+        return "Invalid file type. Only .h5ad files are allowed.", 400
+
+    # Security: prevent directory traversal
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return "Invalid filename. Directory traversal not allowed.", 400
+
+    # Get data directory path
+    data_dir = env.cellxgene_data
+
+    # Check if file exists
+    file_path = os.path.join(data_dir, filename)
+    if not os.path.exists(file_path):
+        raise CellxgeneException(
+            f"File '{filename}'  not found in {data_dir}",
+            404,
+        )
+
+    # Serve the file
+    return send_from_directory(
+        data_dir,
+        filename,
+        as_attachment=True,
+        mimetype="application/octet-stream",
+    )
+
+
 def start_pruner_thread():
     pruner = PruneProcessCache(cache)
     # Run the pruner as a daemon thread so it won't block interpreter

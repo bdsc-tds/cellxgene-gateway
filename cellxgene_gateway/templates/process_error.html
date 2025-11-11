@@ -36,37 +36,43 @@
   <div class="container-fluid py-1">
     <div class="row">
       <div class="col-12">
-        <h4>Error Details</h4>
-        <table>
-          <tr>
-            <th>Message</th>
-            <td>{{ message }}</td>
-          </tr>
-          <tr>
-            <th>Status</th>
-            <td>{{ http_status }}</td>
-          </tr>
-          <tr>
-            <th>Stdout</th>
-            <td>{{ stdout }}</td>
-          </tr>
-          <tr>
-            <th>Stderr</th>
-            <td>{{ stderr }}</td>
-          </tr>
-        </table>
+
+        <!-- Error table -->
+        <h2>Error Details</h2>
+        <div class="table-responsive">
+          <table class="table table-hover table-striped table-sm">
+            <tr>
+              <th>Message</th>
+              <td>{{ message }}</td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>{{ http_status }}</td>
+            </tr>
+            <tr>
+              <th>Stdout</th>
+              <td>{{ stdout }}</td>
+            </tr>
+            <tr>
+              <th>Stderr</th>
+              <td>{{ stderr }}</td>
+            </tr>
+          </table>
+        </div>
         <br>
-        <h4>Options</h4>
-        Please choose one of the following, or use the back button:
+
+        <!-- Possible actions -->
+        <h2>Options</h2>
+        Please choose one of the following:
         <ul>
           <li><a href="{{ relaunch_url }}">
-              Attempt to relaunch the cellxgene server.
+              Attempt to relaunch cellxgene server
             </a></li>
           <li><a href="{{ url_for('filecrawl') }}">
-              Return to the file directory.
+              Return to datasets list
             </a></li>
           <li><a href="{{ url_for('index') }}">
-              Return to the homepage.
+              Return to homepage
             </a></li>
         </ul>
       </div>

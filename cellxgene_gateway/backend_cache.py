@@ -102,8 +102,8 @@ class BackendCache:
             return matches[0]
         else:
             raise CellxgeneException(
-                HTTPStatus.INTERNAL_SERVER_ERROR,
-                "Found " + str(len(matches)) + " for " + path,
+                f"Found {str(len(matches))} matches for {path}",
+                HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
     def check_entry(self, key):
@@ -135,8 +135,8 @@ class BackendCache:
             return matches[0]
         else:
             raise CellxgeneException(
-                HTTPStatus.INTERNAL_SERVER_ERROR,
-                "Found " + str(len(matches)) + " for " + key.dataset,
+                f"Found {str(len(matches))} matches for {key.dataset}",
+                HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
     def create_entry(self, key: CacheKey, scripts: List[str]):
