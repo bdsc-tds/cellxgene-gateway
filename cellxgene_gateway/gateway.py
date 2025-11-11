@@ -348,7 +348,16 @@ def do_view(path, source_name=None):
 
 
 @app.route("/cache_status", methods=["GET"])
-def do_GET_status():
+def do_instances():
+    """
+    Serve web page displaying current cache entries and statuses.
+
+    Returns:
+    --------
+    Response
+      Rendered HTML template showing cache entry details.
+    """
+
     return render_template(
         "cache_status.html",
         entry_list=cache.entry_list,
@@ -357,7 +366,11 @@ def do_GET_status():
 
 
 @app.route("/cache_status.json", methods=["GET"])
-def do_GET_status_json():
+def do_instances_json():
+    """
+    Return cache status information in JSON format.
+    """
+
     def map_entry(entry):
         dataset = entry.key.h5ad_item.descriptor
         annotation_file = entry.key.annotation_descriptor
@@ -407,7 +420,7 @@ def do_terminate(path):
     match = cache.check_entry(key)
     if not match is None:
         match.terminate()
-    return redirect(url_for("do_GET_status"), code=302)
+    return redirect(url_for("do_instances"), code=302)
 
 
 @app.route("/metadata/ip_address", methods=["GET"])

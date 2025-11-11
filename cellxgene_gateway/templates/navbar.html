@@ -1,0 +1,34 @@
+<!-- Navigation bar used in website pages -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <div class="navbar-brand-container">
+      <!-- Image -->
+      <a class="navbar-brand" href="https://skinsciencefoundation.org">
+        <img src="{{ url_for('static', filename='ssf_logo.png') }}"
+          alt="Skin Science Foundation logo" height="50px"
+          class="d-inline-block align-text-middle" />
+      </a>
+      <!-- Title -->
+      <a class="navbar-brand" href="{{ url_for('index') }}">
+        BioHub
+      </a>
+    </div>
+    <!-- Collapsible menu for small screens -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+      data-bs-target="#navbarNav" aria-controls="navbarNav"
+      aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- Menu pages -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('filecrawl') }}">Datasets</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('do_instances') }}">Instances</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

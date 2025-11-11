@@ -57,6 +57,7 @@ setup(
             "static/js/annotation.js",
             "static/favicon.png",
             "templates/*.html",
+            "static/ssf_logo.png",
         ]
     },
     data_files=[("", ["README.md", "LICENSE"])],
