@@ -20,7 +20,7 @@ from requests import get, post, put
 
 # Import other functions from package
 from cellxgene_gateway import env
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
+from cellxgene_gateway.cache_exception import CacheException
 from cellxgene_gateway.flask_util import querystring
 from cellxgene_gateway.util import current_time_stamp
 
@@ -348,7 +348,7 @@ class CacheEntry:
                     data=request.data,
                 )
             else:
-                raise CellxgeneException(
+                raise CacheException(
                     f"Unexpected method {request.method}", 400
                 )
             content_type = cellxgene_response.headers["content-type"]

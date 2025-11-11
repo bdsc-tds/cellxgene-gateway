@@ -28,11 +28,11 @@ from cellxgene_gateway import env, flask_util
 from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_entry import CacheEntryStatus
 from cellxgene_gateway.cache_key import CacheKey
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
+from cellxgene_gateway.cache_exception import CacheException
 from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
-from cellxgene_gateway.process_exception import ProcessException
+from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.prune_process_cache import PruneProcessCache
 from cellxgene_gateway.util import current_time_stamp
 
@@ -163,13 +163,27 @@ def initialize_data_sources():
     flask_util.include_source_in_url = len(item_sources) > 1
 
 
-@app.errorhandler(CellxgeneException)
+@app.errorhandler(CacheException)
 def handle_invalid_usage(error):
-    message = f"{error.http_status} Error : {error.message}"
+    """
+    Handle CacheException and render custom error page.
+
+    Parameters:
+    -----------
+    error: CacheException
+      Raised exception containing message and HTTP status.
+
+    Returns:
+    --------
+    tuple:
+      Rendered error template and HTTP status code.
+    """
+
+    message = f"{error.http_status} Error: {error.message}"
 
     return (
         render_template(
-            "cellxgene_error.html",
+            "cache_error.html",
             extra_scripts=get_extra_scripts(),
             message=message,
         ),
@@ -177,8 +191,22 @@ def handle_invalid_usage(error):
     )
 
 
-@app.errorhandler(ProcessException)
+@app.errorhandler(CellxgeneException)
 def handle_invalid_process(error):
+    """
+    Handle Cellxgene CellxgeneException raised during process launch.
+
+    Parameters:
+    -----------
+    error: CellxgeneException
+      Raised exception with process context and error details.
+
+    Returns:
+    --------
+    tuple:
+      Rendered error template and HTTP status code.
+    """
+
     message = []
 
     message.append(error.message)
@@ -188,7 +216,7 @@ def handle_invalid_process(error):
 
     return (
         render_template(
-            "process_error.html",
+            "cellxgene_error.html",
             extra_scripts=get_extra_scripts(),
             message=error.message,
             http_status=error.http_status,
@@ -220,9 +248,18 @@ def favicon():
 
 
 @app.route("/")
-def index():
+def homepage():
+    """
+    Render application home page.
+
+    Returns:
+    --------
+    flask.Response
+      Rendered HTML page for homepage.
+    """
+
     return render_template(
-        "index.html",
+        "homepage.html",
         ip=env.ip,
         cellxgene_data=env.cellxgene_data,
         extra_scripts=get_extra_scripts(),
@@ -323,7 +360,7 @@ def do_view(path, source_name=None):
     if match is None:
         lookup = source.lookup(path)
         if lookup is None:
-            raise CellxgeneException(
+            raise CacheException(
                 f"Could not find item for path {path} in source {source.name}",
                 404,
             )
@@ -346,17 +383,12 @@ def do_view(path, source_name=None):
         if source.is_authorized(match.key.descriptor):
             return match.serve_content(path)
         else:
-            raise CellxgeneException("User not authorized to access this data", 403)
+            raise CacheException("User not authorized to access this data", 403)
     elif match.status == CacheEntryStatus.error:
-        raise ProcessException.from_cache_entry(match)
-    else:
-        raise CellxgeneException(
-            f"Unexpected cache entry status {match.status} for key {match.key.descriptor}",
-            500,
-        )
+        raise CellxgeneException.from_cache_entry(match)
 
 
-@app.route("/cache_status", methods=["GET"])
+@app.route("/instances", methods=["GET"])
 def do_instances():
     """
     Serve web page displaying current cache entries and statuses.
@@ -368,13 +400,13 @@ def do_instances():
     """
 
     return render_template(
-        "cache_status.html",
+        "instances.html",
         entry_list=cache.entry_list,
         extra_scripts=get_extra_scripts(),
     )
 
 
-@app.route("/cache_status.json", methods=["GET"])
+@app.route("/instances.json", methods=["GET"])
 def do_instances_json():
     """
     Return cache status information in JSON format.
@@ -468,7 +500,7 @@ def download_file(filename):
     # Check if file exists
     file_path = os.path.join(data_dir, filename)
     if not os.path.exists(file_path):
-        raise CellxgeneException(
+        raise CacheException(
             f"File '{filename}'  not found in {data_dir}",
             404,
         )

@@ -9,7 +9,7 @@
  the specific language governing permissions and limitations under the License.
 -->
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -24,17 +24,57 @@
     href="{{ url_for('static', filename='css/navbar.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/table.css') }}" />
 </head>
 
 <body>
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
-  <!-- Main content with error message -->
+  <!-- Main content with error table -->
   <div class="container-fluid py-1">
     <div class="row">
       <div class="col-12">
-        <h2>{{ message }}</h2>
+
+        <!-- Error table -->
+        <h2>Error Details</h2>
+        <div class="table-responsive">
+          <table class="table table-hover table-striped table-sm">
+            <tr>
+              <th>Message</th>
+              <td>{{ message }}</td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>{{ http_status }}</td>
+            </tr>
+            <tr>
+              <th>Stdout</th>
+              <td>{{ stdout }}</td>
+            </tr>
+            <tr>
+              <th>Stderr</th>
+              <td>{{ stderr }}</td>
+            </tr>
+          </table>
+        </div>
+        <br>
+
+        <!-- Possible actions -->
+        <h2>Options</h2>
+        Please choose one of the following:
+        <ul>
+          <li><a href="{{ relaunch_url }}">
+              Try to relaunch Cellxgene
+            </a></li>
+          <li><a href="{{ url_for('filecrawl') }}">
+              Return to dataset list
+            </a></li>
+          <li><a href="{{ url_for('homepage') }}">
+              Return to homepage
+            </a></li>
+        </ul>
       </div>
     </div>
   </div>

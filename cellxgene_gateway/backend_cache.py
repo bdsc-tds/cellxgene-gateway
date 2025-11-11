@@ -20,7 +20,7 @@ from typing import List
 from cellxgene_gateway import env
 from cellxgene_gateway.cache_entry import CacheEntry, CacheEntryStatus
 from cellxgene_gateway.cache_key import CacheKey
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
+from cellxgene_gateway.cache_exception import CacheException
 from cellxgene_gateway.subprocess_backend import SubprocessBackend
 
 
@@ -83,7 +83,7 @@ class BackendCache:
 
         Returns:
         --------
-        CacheEntry, CellxgeneException or None: object or None
+        CacheEntry, CacheException or None: object or None
           Returns matching cache entry if one is found, raises an exception
           if multiple matches are found, and returns None if no matches exist.
         """
@@ -101,9 +101,9 @@ class BackendCache:
         elif len(matches) == 1:
             return matches[0]
         else:
-            raise CellxgeneException(
+            raise CacheException(
                 f"Found {str(len(matches))} matches for {path}",
-                HTTPStatus.INTERNAL_SERVER_ERROR
+                HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
     def check_entry(self, key):
@@ -118,7 +118,7 @@ class BackendCache:
 
         Returns:
         --------
-        CacheEntry, CellxgeneException or None: object or None
+        CacheEntry, CacheException or None: object or None
           Returns matching cache entry if one is found, raises an exception
           if multiple matches are found, and returns None if no matches exist.
         """
@@ -134,9 +134,9 @@ class BackendCache:
         elif len(matches) == 1:
             return matches[0]
         else:
-            raise CellxgeneException(
+            raise CacheException(
                 f"Found {str(len(matches))} matches for {key.dataset}",
-                HTTPStatus.INTERNAL_SERVER_ERROR
+                HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
     def create_entry(self, key: CacheKey, scripts: List[str]):

@@ -22,7 +22,7 @@ from cellxgene_gateway.env import (
     enable_annotations,
     enable_backed_mode,
 )
-from cellxgene_gateway.process_exception import ProcessException
+from cellxgene_gateway.cellxgene_exception import CellxgeneException
 
 
 # Set up logger for logging messages within this module
@@ -152,7 +152,7 @@ class SubprocessBackend:
                 cache_entry.status = CacheEntryStatus.error
                 cache_entry.set_error(message, stderr, http_status)
 
-                raise ProcessException.from_cache_entry(cache_entry)
+                raise CellxgeneException.from_cache_entry(cache_entry)
             else:
                 cache_entry.append_output(output)
 

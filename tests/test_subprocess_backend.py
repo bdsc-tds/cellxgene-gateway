@@ -9,7 +9,7 @@ from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemType
-from cellxgene_gateway.process_exception import ProcessException
+from cellxgene_gateway.cellxgene_exception import CellxgeneException
 
 
 class TestSubprocessBackend(unittest.TestCase):
@@ -22,9 +22,9 @@ class TestSubprocessBackend(unittest.TestCase):
     """
 
     @patch("subprocess.Popen")
-    def test_launch_GIVEN_no_stdout_THEN_throw_ProcessException(self, popen):
+    def test_launch_GIVEN_no_stdout_THEN_throw_CellxgeneException(self, popen):
         """
-        Test that backend throws `ProcessException` if subprocess fails to
+        Test that backend throws `CellxgeneException` if subprocess fails to
         produce stdout.
 
         Parameters:
@@ -52,7 +52,7 @@ class TestSubprocessBackend(unittest.TestCase):
             "http://example.com/script2.js",
         ]
 
-        with self.assertRaises(ProcessException) as context:
+        with self.assertRaises(CellxgeneException) as context:
             backend.launch(cellxgene_loc, scripts, entry)
         popen.assert_called_once_with(
             [
