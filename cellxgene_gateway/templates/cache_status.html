@@ -26,6 +26,19 @@
     href="{{ url_for('static', filename='css/common.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/table.css') }}" />
+
+  <!-- Miscellaneous -->
+  <script>
+    $(() => {
+      $(".timestamp").each(function() {
+        const el = $(this);
+        const ts = el.text();
+        const dt = new Date(parseInt(ts * 1000));
+        el.prepend(`${dt.toISOString()}<br>(`);
+        el.append(')');
+      });
+    })
+  </script>
 </head>
 
 <body>
@@ -85,18 +98,6 @@
               {% endfor %}
             </tbody>
           </table>
-          <script>
-            $(() => {
-              $(".timestamp").each(function() {
-                const el = $(this);
-                const ts = el.text();
-                const dt = new Date(parseInt(ts * 1000));
-                el.prepend(`${dt.toISOString()}<br>(`);
-                el.append(')');
-
-              });
-            })
-          </script>
         </div>
       </div>
     </div>

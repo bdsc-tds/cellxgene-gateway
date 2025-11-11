@@ -26,6 +26,17 @@
     href="{{ url_for('static', filename='css/common.css') }}" />
 
 
+  <!-- Miscellaneous -->
+  <script>
+    var count = 0
+    window.setInterval(function() {
+      var dots = document.getElementById('dots')
+      dots.textContent = dots.textContent + '.'
+      if (count++ > 5) {
+        window.location.reload()
+      }
+    }, 1000)
+  </script>
   <meta http-equiv="refresh" content="2.5" />
 </head>
 
@@ -48,16 +59,6 @@
       </div>
     </div>
   </div>
-  <script>
-    var count = 0
-    window.setInterval(function() {
-      var dots = document.getElementById('dots')
-      dots.textContent = dots.textContent + '.'
-      if (count++ > 5) {
-        window.location.reload()
-      }
-    }, 1000)
-  </script>
 </body>
 
 </html>
