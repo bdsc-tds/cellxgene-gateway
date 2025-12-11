@@ -1,5 +1,7 @@
 /* Filecrawl page style classes */
 
+/* Sidebar elements customisation */
+
 /* Sidebar container style class */
 .sidebar {
   font-size: 0.875rem;
@@ -9,10 +11,50 @@
   padding: 16px;
 }
 
+/* Hidden sidebar style class */
+.sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+}
+
+/* Form toggle button style class */
+#formToggle {
+  position: static;
+  padding: 8px 12px;
+  border: 1px solid #007bff;
+  background-color: white;
+  color: #007bff;
+  height: 2.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-right: 15px;
+  transform: none;
+}
+
+/* Form toggle button style class during hovering */
+#formToggle:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+
+/* Table elements customisation */
+
 /* Annotation item style class */
 .annotation-item {
   margin-right: 8px;
   white-space: nowrap;
+}
+
+/* Annotation indicator style class */
+.annotation-indicator {
+  color: #28a745;
+  font-size: 0.8em;
+  font-weight: 500;
+  margin-left: 8px;
 }
 
 /* Download link style class */
@@ -36,14 +78,6 @@
   text-decoration: none;
 }
 
-/* Annotation indicator style class */
-.annotation-indicator {
-  color: #28a745;
-  font-size: 0.8em;
-  font-weight: 500;
-  margin-left: 8px;
-}
-
 /* Buttons inside button group style class */
 .btn-group .btn {
   margin-right: 5px;
@@ -60,4 +94,3 @@
 .badge {
   font-size: 0.75em;
 }
-

@@ -33,6 +33,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="{{ url_for('static', filename='js/annotation.js') }}"></script>
   <script src="{{ url_for('static', filename='js/filecrawl.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toggleFilter.js') }}"></script>
 </head>
 
 <body>
@@ -46,6 +47,8 @@
       <!-- Sidebar for filters -->
       <div class="col-md-3 sidebar">
         <h5 class="mb-3">Filter Datasets</h5>
+
+        <!-- Filter form -->
         <form id="filter-form">
 
           <!-- Search form filter -->
@@ -103,9 +106,16 @@
         </form>
       </div>
 
-      <!-- Main area for datasets -->
-      <div class="col-md-9">
-        <h2 class="mb-4">Browse Datasets</h2>
+      <!-- Main area for datasets table -->
+      <div id="mainContent" class="col-md-9">
+
+        <!-- Toggle button -->
+        <div class="d-flex align-items-start" style="margin-bottom: 0.75rem;">
+          <button id="formToggle">◀</button>
+          <h2 class="mb-0">Browse Datasets</h2>
+        </div>
+
+        <!-- Datasets table -->
         <div class="table-responsive">
           <table class="table table-hover table-striped table-sm">
 
@@ -354,6 +364,7 @@
           </table>
         </div>
       </div>
+
     </div>
   </div>
 
