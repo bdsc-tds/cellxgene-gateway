@@ -1,0 +1,29 @@
+/* Cellxgene loading page style classes */
+
+/* Status container style class */
+#status {
+  position: sticky;
+  bottom: 0;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* CSS loader */
+.loader {
+  width: 3.2rem;
+  aspect-ratio: 1;
+  display: inline-block;
+  background:
+    radial-gradient(farthest-side, #0d6efd 92%, #0000) top/8px 8px no-repeat,
+    conic-gradient(#0000 30%, #0d6efd);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
+  border-radius: 50%;
+  animation: l13 1s infinite linear;
+}
+
+/* Loader animation */
+@keyframes l13 {
+  100% {
+    transform: rotate(1turn);
+  }
+}

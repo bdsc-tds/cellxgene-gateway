@@ -24,19 +24,10 @@
     href="{{ url_for('static', filename='css/navbar.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
-
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/loading.css') }}" />
 
   <!-- Miscellaneous -->
-  <script>
-    var count = 0
-    window.setInterval(function() {
-      var dots = document.getElementById('dots')
-      dots.textContent = dots.textContent + '.'
-      if (count++ > 5) {
-        window.location.reload()
-      }
-    }, 1000)
-  </script>
   <meta http-equiv="refresh" content="2.5" />
 </head>
 
@@ -48,15 +39,19 @@
   <div class="container-fluid py-1">
     <div class="row">
       <div class="col-12">
-        <br>
-        <h2>Output:</h2>
+        <h2>Output</h2>
+
+        <!-- Launch time -->
+        <p>Started: <span>{{ launchtime.isoformat(" ", "seconds") }}</span></p>
+
+        <!-- Cellxgene log -->
         <pre>{{ all_output }}</pre>
-        <p>
-          Launch Time:
-          <span id="launch_time"> {{ launchtime.isoformat(' ') }} </span>
-        </p>
-        <p>The page will refresh shortly.</p>
-        <p id="dots">Loading</p>
+
+        <!-- Status div with spinner -->
+        <div id="status">
+          <div class="loader"></div>
+          <p>The page will refresh shortly</p>
+        </div>
       </div>
     </div>
   </div>
