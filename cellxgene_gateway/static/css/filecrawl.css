@@ -5,10 +5,21 @@
 /* Sidebar container style class */
 .sidebar {
   font-size: 0.875rem;
-  background: #fff;
+  background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  padding: 16px;
+  padding: 1rem;
+  padding-top: 0.7rem;
+  height: auto;
+  align-self: flex-start;
+}
+
+/* Hidden sidebar style class */
+.sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+  display: none;
 }
 
 /* Hidden sidebar style class */
@@ -22,22 +33,28 @@
 /* Form toggle button style class */
 #formToggle {
   position: static;
-  padding: 8px 12px;
   border: 1px solid #007bff;
-  background-color: white;
+  background-color: #ffffff;
   color: #007bff;
-  height: 2.5rem;
+  height: 2.2rem;
+  aspect-ratio: 1;
+  padding: 0;
   border-radius: 5px;
   cursor: pointer;
   transition: all 0.3s;
   margin-right: 15px;
   transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 1rem;
 }
 
 /* Form toggle button style class during hovering */
 #formToggle:hover {
   background-color: #007bff;
-  color: white;
+  color: #ffffff;
 }
 
 
