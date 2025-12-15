@@ -50,14 +50,16 @@
     <div class="row">
       <div class="col-12">
         <h2 class="mb-4">Instances</h2>
+
+        <!-- Instance table -->
         <div class="table-responsive">
           <table class="table table-hover table-striped table-sm">
 
             <!-- Table header -->
-            <thead>
+            <thead class="table-light" style="vertical-align: middle;">
               <tr>
+                <th style="padding-left: 0.75rem;">Dataset</th>
                 <th>PID</th>
-                <th>Dataset</th>
                 <th>Annotation File</th>
                 <th>Source</th>
                 <th>Port</th>
@@ -74,12 +76,13 @@
             <tbody>
               {% for entry in entry_list %}
               <tr>
-                <td>{{ entry.pid }}</td>
-                <td><a href="{{ entry.key.view_url }}" target="_blank"
-                    rel="noopener noreferrer">{{
-                    entry.key.h5ad_item.descriptor
-                    }}</a>
+                <td style="padding-left: 0.75rem;"><strong><a
+                      href="{{ entry.key.view_url }}" target="_blank"
+                      rel="noopener noreferrer">{{
+                      entry.key.h5ad_item.descriptor
+                      }}</strong></a>
                 </td>
+                <td>{{ entry.pid }}</td>
                 <td>{{ entry.key.annotation_descriptor }}</td>
                 <td>{{ entry.source_name }}</td>
                 <td>{{ entry.port }}</td>

@@ -110,7 +110,7 @@
       <div id="mainContent" class="col-md-9">
 
         <!-- Toggle button -->
-        <div class="d-flex align-items-start" style="margin-bottom: 0.75rem;">
+        <div class="d-flex align-items-center" style="margin-bottom: 0.75rem;">
           <button id="formToggle">◀</button>
           <h2 class="mb-0">Browse Datasets</h2>
         </div>
@@ -120,9 +120,10 @@
           <table class="table table-hover table-striped table-sm">
 
             <!-- Table header -->
-            <thead class="table-light">
+            <thead class="table-light" style="vertical-align: middle;">
               <tr>
-                <th scope="col" style="width: 25%">Dataset</th>
+                <th scope="col" style="width: 25%; padding-left: 0.75rem;">
+                  Dataset</th>
                 <th scope="col" style="width: 12%">Modality</th>
                 <th scope="col" style="width: 12%">Principal Investigator</th>
                 <th scope="col" style="width: 8%">Lead</th>
@@ -135,11 +136,10 @@
             <tbody>
               {% for dataset in datasets %}
               <tr>
-                <td>
-
+                <td style="padding-left: 0;">
                   <!-- Grouped experiment -->
                   {% if dataset.versions %}
-                  <div>
+                  <div style="padding-left: 0.75rem;">
                     <strong>{{ dataset.experiment_name }}</strong>
                     {% if dataset.has_annotations %}
                     <span class="annotation-indicator">[annotations
@@ -153,10 +153,9 @@
                       {% endfor %}
                     </small>
                   </div>
-
                   <!-- Individual dataset -->
                   {% else %}
-                  <div>
+                  <div style="padding-left: 0.75rem;">
                     <strong>{{ dataset.name }}</strong>
                     {% if dataset.has_annotations %} {% set count =
                     dataset.annotations|length %}
@@ -178,7 +177,6 @@
                   </div>
                 </td>
                 <td>
-
                   <!-- Grouped experiment controls -->
                   {% if dataset.versions %}
                   <div class="btn-group-vertical" style="width: 100%">
@@ -199,7 +197,7 @@
                         {% endfor %}
                       </ul>
                     </div>
-                    <div class="btn-group" style="margin-top: 2px; width: 100%">
+                    <div class="btn-group" style="width: 100%">
                       <button type="button"
                         class="btn btn-outline-primary btn-sm download-btn"
                         data-dataset-name="{{ dataset.experiment_name }}"
@@ -248,7 +246,7 @@
                         {% endif %} {% endif %} {% endfor %}
                       </ul>
                     </div>
-                    <div class="btn-group" style="margin-top: 2px; width: 100%">
+                    <div class="btn-group" style="width: 100%">
                       <button type="button"
                         class="btn btn-outline-secondary btn-sm dropdown-toggle"
                         data-bs-toggle="dropdown" aria-haspopup="true"
@@ -288,8 +286,7 @@
                     <button type="button"
                       class="btn btn-outline-primary btn-sm download-btn"
                       data-dataset-name="{{ dataset.name }}"
-                      data-dataset-file="{{ dataset.file_path }}"
-                      style="margin-top: 2px">
+                      data-dataset-file="{{ dataset.file_path }}">
                       Download
                     </button>
                     {% if enable_annotations %} {% if dataset.annotations %}
@@ -319,7 +316,7 @@
                         </li>
                       </ul>
                     </div>
-                    <div class="btn-group" style="margin-top: 2px">
+                    <div class="btn-group">
                       <button type="button"
                         class="btn btn-outline-secondary btn-sm dropdown-toggle"
                         data-bs-toggle="dropdown" aria-haspopup="true"
