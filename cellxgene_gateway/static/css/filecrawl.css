@@ -107,7 +107,42 @@
   text-overflow: ellipsis;
 }
 
-/* Badges style class */
+/* Badge style class */
 .badge {
   font-size: 0.75em;
+}
+
+/* Primary ¨badge style class */
+.bg-primary {
+  background-color: #0066cc !important;
+  font-weight: 500;
+}
+
+
+/* Buttons customisation */
+
+/* Primary button style class */
+.btn-primary {
+  background: #0066cc;
+  color: white;
+  border-radius: 6px;
+}
+
+/* Primary button style class during hovering */
+.btn-primary:hover {
+  background: #0052a3;
+}
+
+/* Secondary button style class */
+.btn-outline-primary {
+  background: transparent;
+  color: #0066cc;
+  border-radius: 6px;
+  border-color: #0066cc;
+}
+
+/* Secondary button style class during hovering */
+.btn-outline-primary:hover {
+  color: #0066cc;
+  background: #f0f7ff;
 }
