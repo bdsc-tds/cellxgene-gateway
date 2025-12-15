@@ -179,13 +179,14 @@ def handle_invalid_usage(error):
       Rendered error template and HTTP status code.
     """
 
-    message = f"{error.http_status} Error: {error.message}"
+    message = f"Error: {error.message}"
 
     return (
         render_template(
             "cache_error.html",
             extra_scripts=get_extra_scripts(),
             message=message,
+            http_status=error.http_status,
         ),
         error.http_status,
     )

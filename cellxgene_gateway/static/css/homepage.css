@@ -38,59 +38,6 @@
 }
 
 
-/* Buttons customisation */
-
-/* Buttons container style class */
-.cta-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 2rem;
-}
-
-/* Primary button style class */
-.btn-primary {
-  /*background: #183D6E;*/
-  background: #0066cc;
-  color: white;
-  padding: 0.875rem 2rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-/* Primary button style class during hovering */
-.btn-primary:hover {
-  background: #0052a3;
-}
-
-/* Secondary button style class */
-.btn-secondary {
-  background: transparent;
-  /*color: #183D6E;*/
-  color: #0066cc;
-  padding: 0.875rem 2rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1rem;
-  /*border: 2px solid #183D6E;*/
-  border: 2px solid #0066cc;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* Secondary button style class during hovering */
-.btn-secondary:hover {
-  background: #f0f7ff;
-}
-
-
 /* Statistics section customisation */
 
 /* Overall statistics section style class */

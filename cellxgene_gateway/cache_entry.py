@@ -33,6 +33,7 @@ class CacheEntryStatus(Enum):
     """
     Enum class to list possible cache entry statuses.
     """
+
     loaded = "loaded"
     loading = "loading"
     error = "error"
@@ -348,9 +349,7 @@ class CacheEntry:
                     data=request.data,
                 )
             else:
-                raise CacheException(
-                    f"Unexpected method {request.method}", 400
-                )
+                raise CacheException(f"Unexpected method {request.method}", 400)
             content_type = cellxgene_response.headers["content-type"]
             if "text" in content_type:
                 gateway_content = self.rewrite_text_content(

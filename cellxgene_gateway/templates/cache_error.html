@@ -21,9 +21,13 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet"
-    href="{{ url_for('static', filename='css/navbar.css') }}" />
+    href="{{ url_for('static', filename='css/buttons.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/table.css') }}" />
 </head>
 
 <body>
@@ -34,7 +38,31 @@
   <div class="container-fluid py-1">
     <div class="row">
       <div class="col-12">
-        <h2>{{ message }}</h2>
+        <h2>Error Details</h2>
+
+        <!-- Error table -->
+        <div class="table-responsive">
+          <table
+            class="table table-hover table-striped table-sm error-table-col1">
+            <tr>
+              <th>Message</th>
+              <td>{{ message }}</td>
+            </tr>
+            <tr>
+              <th>Status</th>
+              <td>{{ http_status }}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Possible actions -->
+        <div class="cta-buttons">
+          <a href="{{ relaunch_url }}" class="btn-secondary">Relaunch
+            Cellxgene</a>
+          <a href="{{ url_for('filecrawl') }}"
+            class="btn-secondary">Datasets</a>
+          <a href="{{ url_for('homepage') }}" class="btn-secondary">Homepage</a>
+        </div>
       </div>
     </div>
   </div>
