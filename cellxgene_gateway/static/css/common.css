@@ -1,4 +1,4 @@
-/* General customisation with style classes shared across pages */
+/* General customisation with style classes shared across several pages */
 
 /* Base layout for every element */
 * {
@@ -24,7 +24,7 @@ body {
 /* Title style class */
 h2 {
   font-size: 1.4rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 /* Preformatted text style class */
@@ -40,4 +40,5 @@ pre {
   background-color: #f5f5f5;
   border: 1px solid #cccccc;
   border-radius: 3px;
+  margin-bottom: 1.5rem;
 }

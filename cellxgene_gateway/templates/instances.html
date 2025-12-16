@@ -21,9 +21,9 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet"
-    href="{{ url_for('static', filename='css/navbar.css') }}" />
-  <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/table.css') }}" />
 
@@ -46,10 +46,10 @@
   {% include 'navbar.html' %}
 
   <!-- Main content with instance table -->
-  <div class="container-fluid py-1">
+  <div class="container-fluid p-3">
     <div class="row">
       <div class="col-12">
-        <h2 class="mb-4">Instances</h2>
+        <h2>Instances</h2>
 
         <!-- Instance table -->
         <div class="table-responsive">
@@ -63,8 +63,8 @@
                 <th>Annotation File</th>
                 <th>Source</th>
                 <th>Port</th>
-                <th>Launchtime</th>
-                <th>Last access</th>
+                <th>Launch Time</th>
+                <th>Last Access</th>
                 <th>Status</th>
                 <th>Message</th>
                 <th>HTTP Status</th>

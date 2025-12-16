@@ -21,11 +21,11 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet"
-    href="{{ url_for('static', filename='css/navbar.css') }}" />
-  <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/loading.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
 
   <!-- Miscellaneous -->
   <meta http-equiv="refresh" content="2.5" />
@@ -36,10 +36,10 @@
   {% include 'navbar.html' %}
 
   <!-- Cellxgene information -->
-  <div class="container-fluid py-1">
+  <div class="container-fluid p-3">
     <div class="row">
       <div class="col-12">
-        <h2>Output</h2>
+        <h2>Loading Dataset</h2>
 
         <!-- Launch time -->
         <p>Started: <span>{{ launchtime.isoformat(" ", "seconds") }}</span></p>

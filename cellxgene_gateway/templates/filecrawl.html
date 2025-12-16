@@ -21,11 +21,11 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet"
-    href="{{ url_for('static', filename='css/navbar.css') }}" />
-  <link rel="stylesheet"
     href="{{ url_for('static', filename='css/common.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/filecrawl.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
   <link rel="stylesheet"
     href="{{ url_for('static', filename='css/table.css') }}" />
 
@@ -41,7 +41,7 @@
   {% include 'navbar.html' %}
 
   <!-- Main content with datasets tables and filtering options -->
-  <div class="container-fluid py-1">
+  <div class="container-fluid p-3">
     <div class="row">
 
       <!-- Sidebar for filters -->
