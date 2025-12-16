@@ -15,7 +15,6 @@ from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemTree, ItemType
 
 
-
 # Initialise FileItemSource pointing to /tmp directory
 source = FileItemSource("/tmp")
 
@@ -166,7 +165,9 @@ class TestRenderItemSource(unittest.TestCase):
     """
 
     @patch("cellxgene_gateway.items.file.fileitem_source.FileItemSource")
-    def test_GIVEN_some_filter_THEN_includes_filterpart_in_heading(self, item_source):
+    def test_GIVEN_some_filter_THEN_includes_filterpart_in_heading(
+        self, item_source
+    ):
         """
         Test rendering of item source when filter is applied.
 
@@ -181,12 +182,8 @@ class TestRenderItemSource(unittest.TestCase):
         rendered = render_item_source(item_source, "some_filter")
         self.assertEqual(
             rendered,
-            "<h6><a href='/filecrawl.html?source=FakeSource'>FakeSource</a>:some_filter</h6><li><a href='/filecrawl/rootdir?source=FakeSource'>rootdir</a><ul></ul></li>",
+            "<h6><a href='/filecrawl?source=FakeSource'>FakeSource</a>:some_filter</h6><li><a href='/filecrawl/rootdir?source=FakeSource'>rootdir</a><ul></ul></li>",
         )
-
-
-
-
 
 
 class TestRenderItemTree(unittest.TestCase):
@@ -212,7 +209,9 @@ class TestRenderItemTree(unittest.TestCase):
         self.app_context.push()
 
     @patch("cellxgene_gateway.items.file.fileitem_source.FileItemSource")
-    def test_GIVEN_deep_nested_dirs_THEN_includes_dirs_in_output(self, item_source):
+    def test_GIVEN_deep_nested_dirs_THEN_includes_dirs_in_output(
+        self, item_source
+    ):
         """
         Test that deeply nested directories are correctly included in rendered
         output.

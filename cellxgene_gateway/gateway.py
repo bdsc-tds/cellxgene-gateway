@@ -267,7 +267,7 @@ def homepage():
     )
 
 
-@app.route("/filecrawl.html")
+@app.route("/filecrawl")
 @app.route("/filecrawl/<path:path>")
 def filecrawl(path=None):
     # Check if we should use the new metadata-based interface
@@ -362,7 +362,7 @@ def do_view(path, source_name=None):
         lookup = source.lookup(path)
         if lookup is None:
             raise CacheException(
-                f"Could not find item for path {path} in source {source.name}",
+                f"Could not find item for path <{path.rstrip('/')}> in source <{source.name}>",
                 404,
             )
         key = CacheKey.for_lookup(source, lookup)
