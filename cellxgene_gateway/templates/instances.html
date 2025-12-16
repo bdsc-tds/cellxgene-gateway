@@ -34,8 +34,7 @@
         const el = $(this);
         const ts = el.text();
         const dt = new Date(parseInt(ts * 1000));
-        el.prepend(`${dt.toISOString()}<br>(`);
-        el.append(')');
+        el.text(dt.toISOString().slice(0, 19).replace('T', ' '));
       });
     })
   </script>
@@ -88,7 +87,7 @@
                 <td>{{ entry.port }}</td>
                 <td class="timestamp">{{ entry.launchtime }}</td>
                 <td class="timestamp">{{ entry.timestamp }}</td>
-                <td>{{ entry.status.name }}</td>
+                <td>{{ entry.status.value }}</td>
                 <td>{{ entry.message }}</td>
                 <td>{{ entry.http_status }}</td>
                 <!-- Button to terminate instance -->
@@ -96,7 +95,7 @@
                   {% if entry.status.name == 'loaded' %}
                   <a
                     href="{{ url_for('do_terminate', path=entry.key.descriptor, source_name=entry.key.source_name) }}">
-                    terminate </a>
+                    Terminate </a>
                   {% endif %}
                 </td>
               </tr>

@@ -34,10 +34,10 @@ class CacheEntryStatus(Enum):
     Enum class to list possible cache entry statuses.
     """
 
-    loaded = "loaded"
-    loading = "loading"
-    error = "error"
-    terminated = "terminated"
+    loaded = "Loaded"
+    loading = "Loading"
+    error = "Error"
+    terminated = "Terminated"
 
 
 class CacheEntry:
@@ -150,7 +150,7 @@ class CacheEntry:
         self.key.source_name: str
           Source name associated with cache entry's key.
         """
-        return self.key.source_name
+        return self.key.source_name.capitalize()
 
     def set_loaded(self, pid):
         """
@@ -239,7 +239,7 @@ class CacheEntry:
             except psutil.NoSuchProcess:
                 pass
 
-            logger.info(f"terminated {terminated}")
+            logger.info(f"Terminated {terminated}")
         self.status = CacheEntryStatus.terminated
 
     def rewrite_text_content(self, cellxgene_content):
