@@ -32,7 +32,7 @@
 
 /* Secondary button style class */
 .btn-secondary {
-  background: transparent;
+  background: #ffffff;
   color: #0066cc;
   padding: 0.875rem 2rem;
   border-radius: 6px;

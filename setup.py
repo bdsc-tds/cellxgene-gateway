@@ -58,6 +58,7 @@ setup(
             "static/js/*.js",
             "static/favicon.png",
             "static/ssf_logo.png",
+            "static/cell.jpg",
         ]
     },
     data_files=[("", ["README.md", "LICENSE"])],

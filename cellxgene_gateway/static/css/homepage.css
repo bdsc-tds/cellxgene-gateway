@@ -13,10 +13,23 @@
 
 /* Hero section style class */
 .hero-section {
-  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  min-height: 50vh;
   margin: 0 auto;
   padding: 4rem 2rem 6rem;
   text-align: center;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  /* Background image for section */
+  background-image: url('/static/cell.jpg');
+  /* Ensures image covers the entire section */
+  background-size: cover;
+  /* Centers image */
+  background-position: center;
+  /* Prevents image from repeating */
+  background-repeat: no-repeat;
 }
 
 /* Hero title style class */
