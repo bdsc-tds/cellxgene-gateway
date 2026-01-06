@@ -28,6 +28,11 @@
   padding-left: 0.75rem;
 }
 
+/* Error table second column style class */
+.error-table-col1 td {
+  white-space: pre-wrap;
+}
+
 /* Table header style class */
 .table thead th {
   border-bottom: 2px solid #dee2e6;
