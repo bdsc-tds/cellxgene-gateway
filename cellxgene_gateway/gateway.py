@@ -34,7 +34,7 @@ from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.prune_process_cache import PruneProcessCache
-from cellxgene_gateway.util import current_time_stamp
+from cellxgene_gateway.util import current_time_stamp, CustomRequestHandler
 
 app = Flask(__name__)
 
@@ -524,20 +524,42 @@ def start_pruner_thread():
     background_thread.start()
 
 
+
 def launch():
     start_pruner_thread()
 
     app.extensions.setdefault("cellxgene_gateway", {})[
         "launchtime"
     ] = current_time_stamp()
-    app.run(host="0.0.0.0", port=env.gateway_port, debug=False)
+    app.run(
+        host="0.0.0.0",
+        port=env.gateway_port,
+        debug=False,
+        request_handler=CustomRequestHandler,
+    )
 
 
 app.extensions.setdefault("cellxgene_gateway", {})["launchtime"] = None
 
 
 def main():
-    """CLI entry point for Flask development server."""
+    """
+    Configure logging and item sources, then launch gateway.
+
+    Parameters:
+    -----------
+    None
+
+    Returns:
+    --------
+    None
+    """
+
+    logging.basicConfig(
+        level=env.log_level,
+        format="[%(asctime)s]  %(name)8s  %(levelname)-8s  %(message)s",
+        datefmt="%Y.%m.%d - %H:%M:%S",
+    )
     launch()
 
 
