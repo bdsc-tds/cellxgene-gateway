@@ -100,4 +100,4 @@ class CustomRequestHandler(WSGIRequestHandler):
         else:  # 5xx or any other response
             msg = _ansi_style(msg, "bold", "magenta")
 
-        self.log("info", '"%s" %s %s', msg, code, size)
+        self.log("debug", '"%s" %s %s', msg, code, size)

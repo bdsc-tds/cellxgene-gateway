@@ -1,11 +1,12 @@
 # Import utility modules
 import csv
+import logging
 import os
 import re
 
 
-# Import other functions from package
-from cellxgene_gateway.dir_util import annotations_suffix
+# Set up logger for logging messages within this module
+logger = logging.getLogger(__name__)
 
 
 def extract_experiment_info(file_path):
@@ -187,8 +188,8 @@ def load_dataset_metadata(csv_path, data_dir=None):
 
     try:
         if not os.path.exists(csv_path):
-            print(
-                f"Warning: .csv file {csv_path} not found. Using empty dataset list."
+            logger.warning(
+                f".csv file {csv_path} not found. Using empty dataset list."
             )
             return (
                 datasets,
@@ -272,9 +273,11 @@ def load_dataset_metadata(csv_path, data_dir=None):
             group["versions"].sort(key=sort_key)
             datasets.append(group)
 
-        print(f"Loaded {len(datasets)} datasets/groups from {csv_path}")
+        logger.info(f"Loaded {len(datasets)} datasets/groups from {csv_path}")
     except Exception as e:
-        print(f"Error loading.csv {csv_path}: {e}. Using empty dataset list.")
+        logger.warning(
+            f"Error loading.csv {csv_path}: {e}. Using empty dataset list."
+        )
 
     return (
         datasets,

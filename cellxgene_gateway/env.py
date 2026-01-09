@@ -47,7 +47,12 @@ enable_backed_mode = os.environ.get(
     "true",
     "1",
 ]
+
+
+# Set similar logging level for gateway and werkzeug
 log_level = logging.getLevelName(os.environ.get("GATEWAY_LOG_LEVEL", "INFO"))
+logging.getLogger("werkzeug").setLevel(log_level)  # Werkzeug logs
+
 
 # Proxy variables
 proxy_fix_for = int(os.environ.get("PROXY_FIX_FOR", "0"))

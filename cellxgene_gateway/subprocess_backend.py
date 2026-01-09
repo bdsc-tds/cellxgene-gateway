@@ -128,7 +128,7 @@ class SubprocessBackend:
             scripts,
             cache_entry.key.annotation_file_path,
         )
-        logger.info(f"launching {cmd}")
+        logger.info(f"Launching {cmd}")
         process = subprocess.Popen(
             [cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
@@ -159,4 +159,4 @@ class SubprocessBackend:
         cache_entry.set_loaded(process.pid)
         for output in process.communicate():
             logger.debug(f"cellxgene:{output}")
-        logger.info(f"exiting {cmd}")
+        logger.info(f"Exiting {cmd}")

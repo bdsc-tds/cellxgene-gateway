@@ -70,10 +70,10 @@ class PruneProcessCache:
         for process in processes_to_delete:
             try:
                 logger.info(
-                    f"pruning process {process.pid} ({process.key.descriptor})"
+                    f"Pruning process {process.pid} ({process.key.descriptor})"
                 )
                 self.cache.prune(process)
             except Exception:
                 logger.exception(
-                    "failed to prune process {process.pid} ({process.key.descriptor})"
+                    "Failed to prune process {process.pid} ({process.key.descriptor})"
                 )

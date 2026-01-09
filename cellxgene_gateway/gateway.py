@@ -48,6 +48,10 @@ data_sources_initialized = False
 data_sources_init_lock = Lock()
 
 
+# Set up logger for logging messages within this module
+logger = logging.getLogger(__name__)
+
+
 def _force_https(app):
     def wrapper(environ, start_response):
         if env.external_protocol is not None:
@@ -366,8 +370,8 @@ def do_view(path, source_name=None):
                 404,
             )
         key = CacheKey.for_lookup(source, lookup)
-        print(
-            f"view path={path}, source_name={source_name}, dataset={key.file_path}, annotation_file= {key.annotation_file_path}, key={key.descriptor}, source={key.source_name}"
+        logger.info(
+            f"Viewing dataset={key.file_path}, key={key.descriptor}, annotation_file={key.annotation_file_path}, source={key.source_name}, source_name={source_name}, path={path}"
         )
         with entry_lock:
             match = cache.check_entry(key)
