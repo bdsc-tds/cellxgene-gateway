@@ -34,56 +34,68 @@
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div>
-      <h1 class="hero-title">
-        Discover the mechanisms of skin health
-      </h1>
-      <p class="hero-subtitle">
-        Download and visually explore data to understand the causes of skin
-        disease at the cellular level with Cellxgene Gateway.
-      </p>
-      <div class="cta-buttons">
-        <a href="{{ url_for('filecrawl') }}" class="btn-primary">Explore
-          Datasets</a>
-        <a href="{{ url_for('do_instances') }}" class="btn-secondary">View Running
-          Instances</a>
-      </div>
+  <main class="main-content">
+    <!-- Info Banner -->
+    <div class="info-banner">
+      The content is regularly reviewed and updated to ensure accuracy and
+      scientific relevance.
+      <a
+        href="mailto:office@skinsciencefoundation.org?subject=Dataset%20Submission&body=Hi%2C%20I%20would%20like%20to%20add%20a%20dataset.">Contact
+        us</a> if you want to add a dataset!
     </div>
-  </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section">
-    <div class="stats-container">
-      <div class="stat-card">
-        <div class="stat-number">100K+</div>
-        <div class="stat-label">Cells</div>
-        <div class="stat-description">
-          Access thousands of cells with comprehensive gene expression profiles
-          for analysis
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div>
+        <h1 class="hero-title">
+          Discover the mechanisms of skin disease
+        </h1>
+        <p class="hero-subtitle">
+          Download and visually explore data to understand the causes of skin
+          disease at the cellular level with Cellxgene Gateway
+        </p>
+        <div class="cta-buttons">
+          <a href="{{ url_for('filecrawl') }}" class="btn-primary">Explore
+            Datasets</a>
+          <a href="{{ url_for('do_instances') }}" class="btn-secondary">View
+            Running Instances</a>
         </div>
       </div>
+    </section>
 
-      <div class="stat-card">
-        <div class="stat-number">10+</div>
-        <div class="stat-label">Datasets</div>
-        <div class="stat-description">
-          Browse and explore standardized single-cell datasets from various
-          studies
+    <!-- Stats Section -->
+    <section class="stats-section">
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-number">100K+</div>
+          <div class="stat-label">Cells</div>
+          <div class="stat-description">
+            Access thousands of cells with comprehensive gene expression
+            profiles
+            for analysis
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">Datasets</div>
+          <div class="stat-description">
+            Browse and explore standardized single-cell datasets from various
+            studies
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-number">150+</div>
+          <div class="stat-label">Cell Types</div>
+          <div class="stat-description">
+            Investigate diverse cell types with detailed annotations and marker
+            gene information
+          </div>
         </div>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-number">150+</div>
-        <div class="stat-label">Cell Types</div>
-        <div class="stat-description">
-          Investigate diverse cell types with detailed annotations and marker
-          gene information
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 </body>
 
 </html>

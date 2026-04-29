@@ -9,6 +9,43 @@
  the specific language governing permissions and limitations under the License.
 */
 
+
+/* General customisation */
+
+/* body tag style class */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: #ffffff;
+}
+
+/* Main content container style class */
+main.main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto; /* Fill remaining space */
+}
+
+
+/* Info banner customisation */
+
+/* Info banner style class */
+.info-banner {
+  background: #e7f1ff;
+  border-bottom: 2px solid #007bbd;
+  padding: 0.25rem 0.25rem;
+  text-align: center;
+  color: #084298;
+}
+
+/* Info banner bold font style class */
+.info-banner strong {
+  font-weight: 600;
+}
+
+
 /* Hero sections customisation */
 
 /* Hero section style class */
@@ -16,7 +53,6 @@
   display: flex;
   flex-direction: column;
   min-height: 50vh;
-  margin: 0 auto;
   padding: 4rem 2rem 6rem;
   text-align: center;
   justify-content: center;
@@ -50,22 +86,32 @@
   margin: 0 auto 2rem;
 }
 
+/* Buttons style classs */
+.cta-buttons a.btn-primary,
+.cta-buttons a.btn-secondary {
+  margin: 0.5rem;
+}
+
 
 /* Statistics section customisation */
 
 /* Overall statistics section style class */
 .stats-section {
   background: #f8f9fa;
-  padding: 4rem 2rem;
+  padding: 2rem;
+  flex: 1; /* Stretch to fill remaining space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Statistic cards container style class */
 .stats-container {
   max-width: 1200px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
+  width: 100%;
 }
 
 /* Statistic card style class */
@@ -88,7 +134,6 @@
 .stat-number {
   font-size: 3rem;
   font-weight: 700;
-  /*color: #183D6E;*/
   color: #0066cc;
   margin-bottom: 0.5rem;
   line-height: 1;
@@ -107,4 +152,24 @@
   font-size: 0.95rem;
   color: #666;
   line-height: 1.5;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .stats-section {
+    padding: 1.5rem;
+  }
+
+  .stat-card {
+    padding: 1.5rem;
+  }
 }
