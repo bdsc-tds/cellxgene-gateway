@@ -33,10 +33,14 @@
       $(".timestamp").each(function() {
         const el = $(this);
         const ts = el.text();
-        const dt = new Date(parseInt(ts * 1000));
-        el.text(dt.toISOString().slice(0, 19).replace('T', ' '));
+        const dt = new Date(parseInt(ts) * 1000);
+        const pad = n => String(n).padStart(2, '0');
+        el.text(
+          `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())} ` +
+          `${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`
+        );
       });
-    })
+    });
   </script>
 </head>
 
