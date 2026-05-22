@@ -226,6 +226,18 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                 row['all_annotations'] = all_annotations
                 row['has_annotations'] = len(loadable_annotations) > 0
 
+                # Compute file size in bytes
+                fp = row.get('file_path', '')
+                full_path = os.path.join(data_dir, fp) if fp else ''
+                try:
+                    row['file_size_bytes'] = (
+                        os.path.getsize(full_path)
+                        if full_path and os.path.exists(full_path)
+                        else 0
+                    )
+                except OSError:
+                    row['file_size_bytes'] = 0
+
                 # Extract experiment information
                 experiment_name, version, display_name = (
                     extract_experiment_info(row.get('file_path', ''))

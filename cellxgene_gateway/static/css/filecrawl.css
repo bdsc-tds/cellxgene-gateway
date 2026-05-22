@@ -14,8 +14,7 @@ to content beneath*/
   width: var(--sidebar-w);
   height: 100vh;
   z-index: 200;
-  pointer-events: none;
-  /* Let clicks pass through invisible column area */
+  pointer-events: none;  /* Let clicks pass through invisible column area */
 }
 
 #sidebarCol.d-none {
@@ -32,8 +31,7 @@ events */
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   padding: 0.75rem;
   padding-top: 0.6rem;
-  pointer-events: all;
-  /* Re-enable clicks on sidebar itself */
+  pointer-events: all;  /* Re-enable clicks on sidebar itself */
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   margin: 104px 0.75rem 0 0.75rem;
@@ -81,7 +79,7 @@ events */
 }
 
 
-/* Dual range slider style class: overlapping inputs with filled track between
+/* Dual range slider customisation: overlapping inputs with filled track between
 handles */
 
 /* Range value display style class */
@@ -471,4 +469,76 @@ th[data-sort][data-sort-dir="asc"]::after {
 th[data-sort][data-sort-dir="desc"]::after {
   content: ' ▼';
   color: #0066cc;
+}
+
+
+/* Download modal customisation */
+
+/* Download code label style class */
+.dl-code-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+
+/* Download code wrapper style class */
+.dl-code-wrap {
+  position: relative;
+}
+
+/* Download code wrapper style class during hovering */
+.dl-code-wrap:hover .dl-copy-btn {
+  opacity: 1;
+}
+
+/* Download copy button style class */
+.dl-copy-btn {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 3px 5px;
+  cursor: pointer;
+  color: #6c757d;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  z-index: 1;
+}
+
+/* Copy button style class during hovering */
+.dl-copy-btn:hover {
+  color: #0066cc;
+  border-color: #0066cc;
+}
+
+/* Copy button success state style class */
+.dl-copy-btn--ok {
+  opacity: 1 !important;
+  color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+/* Download code block style class */
+.dl-code-block {
+  background: #f4f6f8;
+  border: 1px solid #e0e4e9;
+  border-radius: 6px;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre;
+}
+
+/* Download code block monospace text style class */
+.dl-code-block code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #1a2433;
 }

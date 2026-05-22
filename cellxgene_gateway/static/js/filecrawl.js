@@ -1,6 +1,15 @@
 // Script to handle dataset filtering, with dual-range slider, and Disease/
 // Tissue dropdown logic
 
+// Format byte count as human-readable string (KB / MB / GB)
+function formatBytes(bytes) {
+  if (bytes <= 0) return ''
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+}
+
 // Disease/Tissue multi-select state
 
 const selectedDiseases = new Set()
@@ -299,17 +308,40 @@ $(document).ready(function () {
     }
   })
 
-  // Populate and show download modal with dataset's shareable URL
+  // Populate and show download modal
   $('.download-btn').click(function (e) {
     e.preventDefault()
     const datasetName = $(this).data('dataset-name')
     const datasetFile = $(this).data('dataset-file')
+    const sizeBytes = parseInt($(this).data('dataset-size') || '0', 10)
+    const url = window.location.origin + '/download/' + datasetFile
+
     $('#dataset-name').text(datasetName)
-    $('#download-url').val(window.location.origin + '/download/' + datasetFile)
+    $('#download-url').val(url)
+    $('#dataset-size').text(sizeBytes > 0 ? formatBytes(sizeBytes) : '')
+
+    $('#code-curl').text(`curl -L -o "${datasetFile}" "${url}"`)
+    $('#code-wget').text(`wget -O "${datasetFile}" "${url}"`)
+    $('#code-python').text(
+      `import urllib.request\nimport anndata\n\n` +
+      `urllib.request.urlretrieve("${url}", "${datasetFile}")\n` +
+      `adata = anndata.read_h5ad("${datasetFile}")`
+    )
+    $('#code-r').text(
+      `download.file("${url}", destfile = "${datasetFile}", mode = "wb")\n\n` +
+      `library(zellkonverter)\nsce <- readH5AD("${datasetFile}")`
+    )
+
+    // Reset to Unix tab
+    $('#dlTabs .nav-link').removeClass('active')
+    $('#dlTabContent .tab-pane').removeClass('show active')
+    $('#tab-unix').addClass('active')
+    $('#pane-unix').addClass('show active')
+
     $('#downloadModal').modal('show')
   })
 
-  // Copy download URL to clipboard and briefly flash confirmation state
+  // Copy download URL to clipboard
   $('#copy-url-btn').click(function () {
     const urlInput = document.getElementById('download-url')
     urlInput.select()
@@ -328,6 +360,29 @@ $(document).ready(function () {
     if (url) {
       window.open(url, '_blank')
       $('#downloadModal').modal('hide')
+    }
+  })
+
+  // Copy-code button inside each code block
+  $('#downloadModal').on('click', '.dl-copy-btn', function () {
+    const btn = this
+    const code = $(btn).siblings('pre').find('code').text()
+    const done = () => {
+      $(btn).addClass('dl-copy-btn--ok')
+      setTimeout(() => $(btn).removeClass('dl-copy-btn--ok'), 1500)
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(done)
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = code
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      done()
     }
   })
 })
