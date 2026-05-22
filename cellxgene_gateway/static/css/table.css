@@ -39,8 +39,8 @@
   font-weight: 600;
   color: #495057;
   background-color: #f8f9fa;
-  font-size: 0.875rem;
-  padding: 0.5rem 0.25rem;
+  font-size: clamp(0.6rem, 1.1vw, 0.875rem);
+  padding: 0.35rem 0.25rem;
 }
 
 /* Table body row style class during hovering */
@@ -50,7 +50,7 @@
 
 /* Table body cell style class */
 .table tbody td {
-  font-size: 0.875rem;
+  font-size: clamp(0.65rem, 1.1vw, 0.875rem);
   vertical-align: middle;
-  padding: 0.5rem 0.25rem;
+  padding: 0.35rem 0.25rem;
 }
