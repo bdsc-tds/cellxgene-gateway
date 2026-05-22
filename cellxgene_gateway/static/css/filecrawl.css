@@ -1,36 +1,61 @@
 /* Filecrawl page style classes */
 
-/* Sidebar elements customisation */
+/* Sidebar column style class; fixed overlay, passes pointer events through
+to content beneath*/
 
-/* Sidebar container style class */
+:root {
+  --sidebar-w: 375px;
+}
+
+#sidebarCol {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 100vh;
+  z-index: 200;
+  pointer-events: none;
+  /* Let clicks pass through invisible column area */
+}
+
+#sidebarCol.d-none {
+  display: none !important;
+}
+
+
+/* Sidebar card style class: scrollable panel with shadow, re-enable pointer
+events */
 .sidebar {
   font-size: 0.875rem;
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
-  padding-top: 0.7rem;
-  height: auto;
-  align-self: flex-start;
+  padding: 0.75rem;
+  padding-top: 0.6rem;
+  pointer-events: all;
+  /* Re-enable clicks on sidebar itself */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  margin: 104px 0.75rem 0 0.75rem;
 }
 
-/* Hidden sidebar style class */
-.sidebar.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
-  display: none;
+
+/* Main content wrapper style class */
+
+/* Offset right when sidebar is visible */
+.main-content-wrapper {
+  margin-left: var(--sidebar-w);
 }
 
-/* Hidden sidebar style class */
-.sidebar.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
-  display: none;
+/* Full-width when hidden */
+.main-content-wrapper.full-width {
+  margin-left: 0;
 }
 
-/* Form toggle button style class */
+
+/* Sidebar toggle button style class */
+
+/* Square icon button with blue border */
 #formToggle {
   position: static;
   border: 1px solid #007bff;
@@ -43,27 +68,262 @@
   cursor: pointer;
   transition: all 0.3s;
   margin-right: 15px;
-  transform: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
   font-size: 1rem;
 }
 
-/* Form toggle button style class during hovering */
+/* Sidebar toggle button style class during hovering */
 #formToggle:hover {
   background-color: #007bff;
   color: #ffffff;
 }
 
 
-/* Table elements customisation */
+/* Dual range slider style class: overlapping inputs with filled track between
+handles */
 
-/* Annotation item style class */
-.annotation-item {
-  margin-right: 8px;
-  white-space: nowrap;
+/* Range value display style class */
+.range-display {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-left: 0.4rem;
+  font-weight: normal;
+}
+
+/* Dual range wrapper style class */
+.dual-range-wrap {
+  position: relative;
+  height: 2rem;
+  margin-top: 0.25rem;
+}
+
+/* Range overlap style class: both inputs overlay each other */
+.dual-range-wrap .dual-range {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Range thumb style class: pointer events enabled on thumb only */
+.dual-range-wrap .dual-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0066cc;
+  cursor: pointer;
+  pointer-events: all;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox range thumb style class */
+.dual-range-wrap .dual-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0066cc;
+  cursor: pointer;
+  pointer-events: all;
+  border: 2px solid #fff;
+}
+
+/* Base track style class (grey) */
+.dual-range-wrap::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #dee2e6;
+  border-radius: 2px;
+  z-index: 0;
+}
+
+/* Filled track style class: blue segment between the two handles */
+.dual-range-track {
+  position: absolute;
+  height: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0066cc;
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+
+/* Disease / Tissue dropdown filter customisation */
+
+/* Dropdown filter container style class */
+.dropdown-filter {
+  position: relative;
+}
+
+/* Dropdown trigger button style class */
+.dropdown-filter-btn {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: #495057;
+}
+
+/* Dropdown trigger button during hovering */
+.dropdown-filter-btn:hover {
+  background: #f8f9fa;
+}
+
+/* Dropdown panel style class */
+.dropdown-filter-panel {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 2px);
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  padding: 0.4rem;
+}
+
+/* Dropdown panel open state style class */
+.dropdown-filter-panel.open {
+  display: block;
+}
+
+/* Dropdown search input style class */
+.dropdown-search {
+  width: 100%;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.3rem;
+  box-sizing: border-box;
+}
+
+/* Dropdown option list style class */
+.dropdown-option-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* Dropdown option style class */
+.dropdown-option {
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #495057;
+}
+
+/* Dropdown option during hovering */
+.dropdown-option:hover {
+  background: #e9f2ff;
+}
+
+/* Dropdown option selected state style class */
+.dropdown-option.selected {
+  background: #dceeff;
+  color: #004499;
+  font-weight: 500;
+}
+
+
+/* Selected tags customisation */
+
+/* Selected tags container style class */
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 4px;
+}
+
+/* Selected tag pill style class */
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #0066cc;
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  gap: 4px;
+}
+
+/* Tag remove button style class */
+.tag-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.9rem;
+}
+
+/* Tag remove button during hovering */
+.tag-remove:hover {
+  color: #ffffff;
+}
+
+
+/* Action buttons customisation */
+
+/* Action button vertical stack style class */
+.action-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+/* Full-width button and button group style class */
+.action-btn-stack .btn,
+.action-btn-stack .btn-group {
+  width: 100%;
+}
+
+/* Responsive action button style class */
+.action-btn-stack .btn {
+  font-size: clamp(0.65rem, 1vw, 0.875rem);
+  white-space: normal;
+  word-break: break-word;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+
+
+/* Table cells customisation */
+
+/* Small cell style class */
+.cell-small {
+  font-size: clamp(0.6rem, 1vw, 0.8rem);
+  line-height: 1.3;
 }
 
 /* Annotation indicator style class */
@@ -74,37 +334,19 @@
   margin-left: 8px;
 }
 
-/* Download link style class */
-.download-link {
-  color: #007bff;
-  text-decoration: none;
-  margin-left: 4px;
-  font-size: 0.9em;
-  padding: 2px 4px;
-  border-radius: 3px;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  display: inline-block;
-  line-height: 1;
-}
-
-/* Download link style class during hovering */
-.download-link:hover {
-  color: #0056b3;
-  background: #e9ecef;
-  text-decoration: none;
-}
-
-/* Buttons inside button group style class */
-.btn-group .btn {
-  margin-right: 5px;
-}
-
-/* Truncated text style class */
-.text-truncate {
+/* Truncated cell style class */
+.cell-truncate {
+  max-width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Wrapping cell style class */
+.cell-wrap {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Badge style class */
@@ -112,7 +354,7 @@
   font-size: 0.75em;
 }
 
-/* Primary ¨badge style class */
+/* Primary background style class */
 .bg-primary {
   background-color: #0066cc !important;
   font-weight: 500;
@@ -145,4 +387,40 @@
 .btn-outline-primary:hover {
   color: #0066cc;
   background: #f0f7ff;
+}
+
+/* Button group spacing style class */
+.btn-group .btn {
+  margin-right: 5px;
+}
+/* Sortable column headers customisation */
+
+/* Sortable header style class */
+th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Sortable header during hovering */
+th[data-sort]:hover {
+  background-color: #e9ecef;
+}
+
+/* Sortable header default indicator style class */
+th[data-sort]::after {
+  content: ' ⇅';
+  color: #adb5bd;
+  font-size: 0.7em;
+}
+
+/* Sortable header ascending indicator style class */
+th[data-sort][data-sort-dir="asc"]::after {
+  content: ' ▲';
+  color: #0066cc;
+}
+
+/* Sortable header descending indicator style class */
+th[data-sort][data-sort-dir="desc"]::after {
+  content: ' ▼';
+  color: #0066cc;
 }

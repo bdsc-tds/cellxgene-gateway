@@ -40,328 +40,423 @@
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
-  <!-- Main content with datasets tables and filtering options -->
-  <div class="container-fluid p-3">
-    <div class="row">
+  <!-- Sidebar for filters (fixed) -->
+  <div id="sidebarCol">
+    <div class="sidebar" id="sidebar">
+      <h5 class="mb-3">Filter Datasets</h5>
+      <form id="filter-form">
 
-      <!-- Sidebar for filters -->
-      <div class="col-md-3 sidebar">
-        <h5 class="mb-3">Filter Datasets</h5>
+        <!-- Search form filter -->
+        <div class="mb-3">
+          <label><strong>Search</strong></label>
+          <input type="text" class="form-control form-control-sm" name="search"
+            id="search-input" placeholder="Search datasets..."
+            value="{{ request.args.get('search', '') }}" />
+        </div>
 
-        <!-- Filter form -->
-        <form id="filter-form">
-
-          <!-- Search form filter -->
-          <div class="mb-4">
-            <label><strong>Search</strong></label>
-            <input type="text" class="form-control" name="search"
-              id="search-input" placeholder="Search datasets..."
-              value="{{ request.args.get('search', '') }}" />
+        <!-- Assay checkboxes -->
+        {% if assays is defined %}
+        <div class="mb-3">
+          <label><strong>Assay</strong></label>
+          {% for assay in assays %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="assay"
+              value="{{ assay }}" id="assay-{{ loop.index }}" />
+            <label class="form-check-label" for="assay-{{ loop.index }}">{{
+              assay }}</label>
           </div>
+          {% endfor %}
+        </div>
 
-          <!-- Modality filter -->
-          <div class="mb-4">
-            <label><strong>Modality</strong></label>
-            {% for modality in modalities %}
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="modality"
-                value="{{ modality }}" id="modality-{{ modality }}" />
-              <label class="form-check-label" for="modality-{{ modality }}">{{
-                modality }}</label>
+        <!-- Disease dropdown -->
+        <div class="mb-3">
+          <label><strong>Disease</strong></label>
+          <div class="dropdown-filter" id="disease-dropdown">
+            <button type="button" class="dropdown-filter-btn" id="disease-btn">
+              Select diseases ▾
+            </button>
+            <div class="dropdown-filter-panel" id="disease-panel">
+              <input type="text" class="dropdown-search" id="disease-search"
+                placeholder="Search…" autocomplete="off" />
+              <ul class="dropdown-option-list" id="disease-list">
+                {% for disease in diseases %}
+                <li class="dropdown-option" data-value="{{ disease }}">{{
+                  disease }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <!-- Selected disease tags appear here -->
+          <div class="selected-tags" id="disease-tags"></div>
+        </div>
+
+        <!-- Tissue dropdown -->
+        <div class="mb-3">
+          <label><strong>Tissue</strong></label>
+          <div class="dropdown-filter" id="tissue-dropdown">
+            <button type="button" class="dropdown-filter-btn" id="tissue-btn">
+              Select tissues ▾
+            </button>
+            <div class="dropdown-filter-panel" id="tissue-panel">
+              <input type="text" class="dropdown-search" id="tissue-search"
+                placeholder="Search…" autocomplete="off" />
+              <ul class="dropdown-option-list" id="tissue-list">
+                {% for tissue in tissues %}
+                <li class="dropdown-option" data-value="{{ tissue }}">{{ tissue
+                  }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="selected-tags" id="tissue-tags"></div>
+        </div>
+
+        <!-- Sex checkboxes on single horizontal row -->
+        {% if sexes is defined %}
+        <div class="mb-3">
+          <label><strong>Sex</strong></label>
+          <div class="d-flex flex-wrap gap-3">
+            {% for sex in sexes %}
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" name="sex"
+                value="{{ sex }}" id="sex-{{ loop.index }}" />
+              <label class="form-check-label" for="sex-{{ loop.index }}">{{ sex
+                }}</label>
             </div>
             {% endfor %}
           </div>
+        </div>
+        {% endif %}
 
-          <!-- PI filter -->
-          <div class="mb-4">
-            <label><strong>Principal Investigator</strong></label>
-            <select class="form-control" name="pi">
-              <option value="">Any</option>
-              {% for pi in principal_investigators %}
-              <option value="{{ pi }}">{{ pi }}</option>
-              {% endfor %}
-            </select>
+        <!-- Cells dual-range slider -->
+        {% if cell_count_range is defined and cell_count_range[0] !=
+        cell_count_range[1] %}
+        <div class="mb-3">
+          <label><strong>Cells</strong>
+            <span class="range-display" id="cc-display">
+              {{ cell_count_range[0] }} – {{ cell_count_range[1] }}
+            </span>
+          </label>
+          <div class="dual-range-wrap">
+            <input type="range" class="dual-range" id="cc-min"
+              name="cell_count_min" min="{{ cell_count_range[0] }}"
+              max="{{ cell_count_range[1] }}" value="{{ cell_count_range[0] }}"
+              step="1" />
+            <input type="range" class="dual-range" id="cc-max"
+              name="cell_count_max" min="{{ cell_count_range[0] }}"
+              max="{{ cell_count_range[1] }}" value="{{ cell_count_range[1] }}"
+              step="1" />
+            <div class="dual-range-track" id="cc-track"></div>
           </div>
+        </div>
+        {% endif %}
 
-          <!-- Lead filter -->
-          <div class="mb-4">
-            <label><strong>Lead</strong></label>
-            <select class="form-control" name="lead">
-              <option value="">Any</option>
-              {% for lead in leads %}
-              <option value="{{ lead }}">{{ lead }}</option>
-              {% endfor %}
-            </select>
+        <!-- Genes dual-range slider -->
+        {% if gene_count_range is defined and gene_count_range[0] !=
+        gene_count_range[1] %}
+        <div class="mb-3">
+          <label><strong>Genes</strong>
+            <span class="range-display" id="gc-display">
+              {{ gene_count_range[0] }} – {{ gene_count_range[1] }}
+            </span>
+          </label>
+          <div class="dual-range-wrap">
+            <input type="range" class="dual-range" id="gc-min"
+              name="gene_count_min" min="{{ gene_count_range[0] }}"
+              max="{{ gene_count_range[1] }}" value="{{ gene_count_range[0] }}"
+              step="1" />
+            <input type="range" class="dual-range" id="gc-max"
+              name="gene_count_max" min="{{ gene_count_range[0] }}"
+              max="{{ gene_count_range[1] }}" value="{{ gene_count_range[1] }}"
+              step="1" />
+            <div class="dual-range-track" id="gc-track"></div>
           </div>
+        </div>
+        {% endif %}
 
-          <!-- Apply and reset buttons -->
-          <button type="submit" class="btn btn-primary btn-sm w-100">
-            Apply Filters
-          </button>
-          <button type="button"
-            class="btn btn-outline-secondary btn-sm w-100 mt-2"
-            id="reset-filters-btn">
-            Reset Filters
-          </button>
-        </form>
+        <!-- Year dual-range slider -->
+        {% if year_range is defined and year_range[0] != year_range[1] %}
+        <div class="mb-3">
+          <label><strong>Date</strong>
+            <span class="range-display" id="year-display">
+              {{ year_range[0] }} – {{ year_range[1] }}
+            </span>
+          </label>
+          <div class="dual-range-wrap">
+            <input type="range" class="dual-range" id="year-min" name="year_min"
+              min="{{ year_range[0] }}" max="{{ year_range[1] }}"
+              value="{{ year_range[0] }}" step="1" />
+            <input type="range" class="dual-range" id="year-max" name="year_max"
+              min="{{ year_range[0] }}" max="{{ year_range[1] }}"
+              value="{{ year_range[1] }}" step="1" />
+            <div class="dual-range-track" id="year-track"></div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% endif %}{# end if assays is defined #}
+
+        <!-- Apply and reset buttons -->
+        <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">
+          Apply Filters
+        </button>
+        <button type="button"
+          class="btn btn-outline-secondary btn-sm w-100 mt-2"
+          id="reset-filters-btn">
+          Reset Filters
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main content (scrollable, offset by sidebar width) -->
+  <div id="mainContent" class="main-content-wrapper">
+    <div class="p-3">
+      <!-- Toggle button -->
+      <div class="d-flex align-items-center" style="margin-bottom: 0.75rem;">
+        <button id="formToggle">◀</button>
+        <h2 class="mb-0">Browse Datasets</h2>
       </div>
 
-      <!-- Main area for datasets table -->
-      <div id="mainContent" class="col-md-9">
 
-        <!-- Toggle button -->
-        <div class="d-flex align-items-center" style="margin-bottom: 0.75rem;">
-          <button id="formToggle">◀</button>
-          <h2 class="mb-0">Browse Datasets</h2>
-        </div>
+      <!-- Datasets table -->
+      <div class="table-responsive">
+        <table class="table table-hover table-striped table-sm"
+          style="width:100%; table-layout:fixed;">
 
-        <!-- Datasets table -->
-        <div class="table-responsive">
-          <table class="table table-hover table-striped table-sm">
-
-            <!-- Table header -->
-            <thead class="table-light" style="vertical-align: middle;">
-              <tr>
-                <th scope="col" style="width: 25%; padding-left: 0.75rem;">
-                  Dataset</th>
-                <th scope="col" style="width: 12%">Modality</th>
-                <th scope="col" style="width: 12%">Principal Investigator</th>
-                <th scope="col" style="width: 8%">Lead</th>
-                <th scope="col" style="width: 25%">Description</th>
-                <th scope="col" style="width: 18%">Actions</th>
-              </tr>
-            </thead>
-
-            <!-- Table body -->
-            <tbody>
-              {% for dataset in datasets %}
-              <tr>
-                <td style="padding-left: 0;">
-                  <!-- Grouped experiment -->
-                  {% if dataset.versions %}
-                  <div style="padding-left: 0.75rem;">
-                    <strong>{{ dataset.experiment_name }}</strong>
-                    {% if dataset.has_annotations %}
-                    <span class="annotation-indicator">[annotations
-                      available]</span>
-                    {% endif %}
-                    <br>
-                    <small class="text-muted">
-                      {% for version in dataset.versions %}
-                      <span class="badge bg-secondary me-1">{{
-                        version.display_name }}</span>
-                      {% endfor %}
-                    </small>
-                  </div>
-                  <!-- Individual dataset -->
-                  {% else %}
-                  <div style="padding-left: 0.75rem;">
-                    <strong>{{ dataset.name }}</strong>
-                    {% if dataset.has_annotations %} {% set count =
-                    dataset.annotations|length %}
-                    <span class="annotation-indicator">[{{ count }} annotation{%
-                      if count > 1 %}s{% endif %}
-                      available]</span>
-                    {% endif %}
-                  </div>
-                  {% endif %}
-                </td>
-                <td>
-                  <span class="badge bg-primary">{{ dataset.modality }}</span>
-                </td>
-                <td>{{ dataset.principal_investigator }}</td>
-                <td>{{ dataset.lead }}</td>
-                <td>
-                  <div class="small text-muted" style="line-height: 1.3">
-                    {{ dataset.description }}
-                  </div>
-                </td>
-                <td>
-                  <!-- Grouped experiment controls -->
-                  {% if dataset.versions %}
-                  <div class="btn-group-vertical" style="width: 100%">
-                    <div class="btn-group" style="width: 100%">
-                      <button type="button"
-                        class="btn btn-success btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" style="width: 100%">
-                        Select Version
-                      </button>
-                      <ul class="dropdown-menu" style="width: 100%">
-                        {% for version in dataset.versions %}
-                        <li>
-                          <a class="dropdown-item"
-                            href="/view/{{ version.file_path }}/">{{
-                            version.display_name }}</a>
-                        </li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                    <div class="btn-group" style="width: 100%">
-                      <button type="button"
-                        class="btn btn-outline-primary btn-sm download-btn"
-                        data-dataset-name="{{ dataset.experiment_name }}"
-                        data-dataset-file="{{ dataset.versions[0].file_path if dataset.versions else dataset.file_path }}"
-                        style="width: 100%">
-                        Download
-                      </button>
-                    </div>
-                    {% if enable_annotations %}
-                    <div class="btn-group" style="margin-top: 5px; width: 100%">
-                      <button type="button"
-                        class="btn btn-info btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" style="width: 100%">
-                        Annotations
-                      </button>
-                      <ul class="dropdown-menu" style="width: 100%">
-                        {% for version in dataset.versions %} {% if
-                        version.annotations %}
-                        <li>
-                          <h6 class="dropdown-header">
-                            {{ version.display_name }}
-                          </h6>
-                        </li>
-                        {% for annotation in version.annotations %}
-                        <li>
-                          <a class="dropdown-item"
-                            href="/view/{{ version.file_path.replace('.h5ad', '_annotations') }}/{{ annotation.file }}/">&nbsp;&nbsp;{{
-                            annotation.name }}</a>
-                        </li>
-                        {% endfor %}
-                        <li>
-                          <hr class="dropdown-divider" />
-                        </li>
-                        <li>
-                          <a class="dropdown-item create-new-annotation"
-                            href="#"
-                            data-dataset-file="{{ version.file_path }}">&nbsp;&nbsp;+
-                            Create New for {{
-                            version.display_name }}</a>
-                        </li>
-                        {% if not loop.last %}
-                        <li>
-                          <hr class="dropdown-divider" />
-                        </li>
-                        {% endif %} {% endif %} {% endfor %}
-                      </ul>
-                    </div>
-                    <div class="btn-group" style="width: 100%">
-                      <button type="button"
-                        class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" style="width: 100%">
-                        Download
-                      </button>
-                      <ul class="dropdown-menu" style="width: 100%">
-                        {% for version in dataset.versions %} {% if
-                        version.all_annotations %}
-                        <li>
-                          <h6 class="dropdown-header">
-                            {{ version.display_name }}
-                          </h6>
-                        </li>
-                        {% for annotation in version.all_annotations %}
-                        <li>
-                          <a class="dropdown-item"
-                            href="/download/csv/annotation/{{ version.file_path }}/{{ annotation.file }}"
-                            download>&nbsp;&nbsp;⬇ {{ annotation.name }}</a>
-                        </li>
-                        {% endfor %} {% if not loop.last %}
-                        <li>
-                          <hr class="dropdown-divider" />
-                        </li>
-                        {% endif %} {% endif %} {% endfor %}
-                      </ul>
-                    </div>
-                    {% endif %}
-                  </div>
-
-                  <!-- Individual dataset controls -->
-                  {% elif dataset.file_path %}
-                  <div class="btn-group-horizontal" style="width: 100%">
-                    <a href="/view/{{ dataset.file_path }}/" target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-primary btn-sm">Explore</a>
-                    <button type="button"
-                      class="btn btn-outline-primary btn-sm download-btn"
-                      data-dataset-name="{{ dataset.name }}"
-                      data-dataset-file="{{ dataset.file_path }}">
-                      Download
-                    </button>
-                    {% if enable_annotations %} {% if dataset.annotations %}
-                    <div class="btn-group" style="margin-top: 5px">
-                      <button type="button"
-                        class="btn btn-info btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                        Annotations
-                      </button>
-                      <ul class="dropdown-menu">
-                        {% for annotation in dataset.annotations %}
-                        <li>
-                          <a class="dropdown-item"
-                            href="/view/{{ dataset.file_path.replace('.h5ad', '_annotations') }}/{{ annotation.file }}/">{{
-                            annotation.name }}</a>
-                        </li>
-                        {% endfor %}
-                        <li>
-                          <hr class="dropdown-divider" />
-                        </li>
-                        <li>
-                          <a class="dropdown-item create-new-annotation"
-                            href="#"
-                            data-dataset-file="{{ dataset.file_path }}">+ Create
-                            New Annotation</a>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="btn-group">
-                      <button type="button"
-                        class="btn btn-outline-secondary btn-sm dropdown-toggle"
-                        data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                        Download
-                      </button>
-                      <ul class="dropdown-menu">
-                        {% for annotation in dataset.all_annotations %}
-                        <li>
-                          <a class="dropdown-item"
-                            href="/download/csv/annotation/{{ dataset.file_path }}/{{ annotation.file }}"
-                            download>⬇ {{
-                            annotation.name }}</a>
-                        </li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                    {% else %}
-                    <div style="margin-top: 5px">
-                      <a class="btn btn-outline-info btn-sm create-new-annotation"
-                        href="#" data-dataset-file="{{ dataset.file_path }}">+
-                        Create New</a>
-                    </div>
-                    {% endif %} {% endif %}
-                  </div>
-                  {% else %}
-                  <a href="/view/{{ dataset.id }}"
-                    class="btn btn-success btn-sm">View</a>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %} {% if datasets|length == 0 %}
-              <tr>
-                <td colspan="6" class="text-center text-muted py-4">
-                  <div class="alert alert-info mb-0">
-                    No datasets match the selected filters.
-                  </div>
-                </td>
-              </tr>
+          <!-- Table header -->
+          <thead class="table-light">
+            <tr>
+              {% if assays is defined %}
+              <th style="width:30%;" data-sort="disease" data-sort-type="text">
+                Disease</th>
+              <th style="width:21%;" data-sort="description"
+                data-sort-type="text">Description</th>
+              <th style="width:5%;" data-sort="cells" data-sort-type="number">
+                Cells</th>
+              <th style="width:5%;" data-sort="genes" data-sort-type="number">
+                Genes</th>
+              <th style="width:6%;" data-sort="assay" data-sort-type="text">
+                Assay</th>
+              <th style="width:9%;" data-sort="authors" data-sort-type="text">
+                Authors</th>
+              <th style="width:4%;" data-sort="year" data-sort-type="number">
+                Year</th>
+              <th style="width:8%;" data-sort="journal" data-sort-type="text">
+                Journal</th>
+              <th style="width:4%;" data-sort="doi" data-sort-type="text">DOI
+              </th>
+              <th style="width:8%;">Actions</th>
+              {% else %}
+              <th style="width:25%; padding-left:0.75rem;">Dataset</th>
+              <th style="width:25%">Description</th>
+              <th style="width:18%">Actions</th>
               {% endif %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </tr>
+          </thead>
 
+          <!-- Table body -->
+          <tbody>
+            {% for dataset in datasets %}
+            <tr>
+              {% if assays is defined %}
+
+              <!-- Disease -->
+              <td>
+                <div class="cell-small cell-wrap">{{ dataset.disease or "" }}
+                </div>
+              </td>
+
+              <!-- Description -->
+              {% set desc = dataset.description or "" %}
+              <td>
+                <div class="small cell-wrap" style="line-height:1.3">{{ desc }}
+                </div>
+              </td>
+
+              <!-- Cells -->
+              <td>
+                <span class="cell-small">{{ dataset.cell_count or "" }}</span>
+              </td>
+
+              <!-- Genes -->
+              <td>
+                <span class="cell-small">{{ dataset.gene_count or "" }}</span>
+              </td>
+
+              <!-- Assay -->
+              <td>
+                {% if dataset.assay %}
+                <span class="badge bg-primary">{{ dataset.assay }}</span>
+                {% endif %}
+              </td>
+
+              <!-- Authors (truncated) -->
+              {% set authors = dataset.authors or "" %}
+              <td>
+                <div class="small text-muted cell-truncate"
+                  title="{{ authors }}" style="line-height:1.3">
+                  {% if authors|length > 40 %}{{ authors[:40] }}…{% else %}{{
+                  authors }}{% endif %}
+                </div>
+              </td>
+
+              <!-- Year -->
+              <td>
+                <div class="small text-muted" style="line-height:1.3">{{
+                  dataset.year or "" }}</div>
+              </td>
+
+              <!-- Journal (truncated) -->
+              {% set journal = dataset.journal or "" %}
+              <td>
+                <div class="small text-muted cell-truncate"
+                  title="{{ journal }}" style="line-height:1.3">
+                  {% if journal|length > 30 %}{{ journal[:30] }}…{% else %}{{
+                  journal }}{% endif %}
+                </div>
+              </td>
+
+              <!-- DOI (clickable link) -->
+              <td>
+                {% set doi = dataset.doi or "" %}
+                {% if doi %}
+                <a href="{{ doi }}" target="_blank" rel="noopener noreferrer"
+                  class="small">DOI ↗</a>
+                {% endif %}
+              </td>
+
+              <!-- Actions -->
+              <td>
+                {% if dataset.versions %}
+                <div class="action-btn-stack">
+                  <div class="btn-group" style="width:100%">
+                    <button type="button"
+                      class="btn btn-success btn-sm dropdown-toggle"
+                      data-bs-toggle="dropdown" style="width:100%">
+                      Select Version
+                    </button>
+                    <ul class="dropdown-menu" style="width:100%">
+                      {% for version in dataset.versions %}
+                      <li>
+                        <a class="dropdown-item"
+                          href="/view/{{ version.file_path }}/">
+                          {{ version.display_name }}</a>
+                      </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                  <button type="button"
+                    class="btn btn-outline-primary btn-sm download-btn"
+                    data-dataset-name="{{ dataset.experiment_name }}"
+                    data-dataset-file="{{ dataset.versions[0].file_path }}"
+                    style="width:100%">Download</button>
+                  {% if enable_annotations %}
+                  <div class="btn-group" style="width:100%">
+                    <button type="button"
+                      class="btn btn-info btn-sm dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                      style="width:100%">Annotations</button>
+                    <ul class="dropdown-menu" style="width:100%">
+                      {% for version in dataset.versions %}{% if
+                      version.annotations %}
+                      <li>
+                        <h6 class="dropdown-header">{{ version.display_name }}
+                        </h6>
+                      </li>
+                      {% for ann in version.annotations %}
+                      <li>
+                        <a class="dropdown-item"
+                          href="/view/{{ version.file_path.replace('.h5ad','_annotations') }}/{{ ann.file }}/">
+                          &nbsp;&nbsp;{{ ann.name }}</a>
+                      </li>
+                      {% endfor %}
+                      <li>
+                        <hr class="dropdown-divider" />
+                      </li>
+                      <li>
+                        <a class="dropdown-item create-new-annotation" href="#"
+                          data-dataset-file="{{ version.file_path }}">
+                          &nbsp;&nbsp;+ Create New for {{ version.display_name
+                          }}</a>
+                      </li>
+                      {% if not loop.last %}<li>
+                        <hr class="dropdown-divider" />
+                      </li>{% endif %}
+                      {% endif %}{% endfor %}
+                    </ul>
+                  </div>
+                  {% endif %}
+                </div>
+
+                {% elif dataset.file_path %}
+                <div class="action-btn-stack">
+                  <a href="/view/{{ dataset.file_path }}/" target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-primary btn-sm">Explore</a>
+                  <button type="button"
+                    class="btn btn-outline-primary btn-sm download-btn"
+                    data-dataset-name="{{ dataset.name }}"
+                    data-dataset-file="{{ dataset.file_path }}">Download</button>
+                  {% if enable_annotations %}{% if dataset.annotations %}
+                  <div class="btn-group" style="width:100%">
+                    <button type="button"
+                      class="btn btn-info btn-sm dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                      style="width:100%">Annotations</button>
+                    <ul class="dropdown-menu">
+                      {% for ann in dataset.annotations %}
+                      <li>
+                        <a class="dropdown-item"
+                          href="/view/{{ dataset.file_path.replace('.h5ad','_annotations') }}/{{ ann.file }}/">
+                          {{ ann.name }}</a>
+                      </li>
+                      {% endfor %}
+                      <li>
+                        <hr class="dropdown-divider" />
+                      </li>
+                      <li>
+                        <a class="dropdown-item create-new-annotation" href="#"
+                          data-dataset-file="{{ dataset.file_path }}">
+                          + Create New Annotation</a>
+                      </li>
+                    </ul>
+                  </div>
+                  {% else %}
+                  <a class="btn btn-outline-info btn-sm create-new-annotation"
+                    href="#" data-dataset-file="{{ dataset.file_path }}">+
+                    Create New</a>
+                  {% endif %}{% endif %}
+                </div>
+                {% else %}
+                <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+
+              <!-- Fallback (no datasets.tsv) -->
+              {% else %}
+              <td style="padding-left:0;">
+                <div style="padding-left:0.75rem;">
+                  <strong>{{ dataset.name or dataset.experiment_name }}</strong>
+                </div>
+              </td>
+              <td>
+                <div class="small text-muted">{{ dataset.description }}</div>
+              </td>
+              <td>
+                {% if dataset.file_path %}
+                <a href="/view/{{ dataset.file_path }}/" target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-sm">Explore</a>
+                {% endif %}
+              </td>
+              {% endif %}
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -376,125 +471,33 @@
             aria-label="Close"></button>
         </div>
         <div class="modal-body">
-
-          <!-- Tabs -->
-          <ul class="nav nav-tabs mb-4" id="downloadTabs" role="tablist">
-
-            <!-- Browser download tab -->
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="browser-tab"
-                data-bs-toggle="tab" data-bs-target="#browser" type="button"
-                role="tab" aria-controls="browser" aria-selected="true">
-                Browser
-              </button>
-            </li>
-
-            <!-- Python API tab -->
-            <!-- <li class="nav-item" role="presentation">
-              <button class="nav-link" id="python-tab" data-bs-toggle="tab"
-                data-bs-target="#python" type="button" role="tab"
-                aria-controls="python" aria-selected="false">Python</button>
-            </li> -->
-
-            <!-- R API tab -->
-            <!-- <li class="nav-item" role="presentation">
-              <button class="nav-link" id="r-tab" data-bs-toggle="tab"
-                data-bs-target="#r" type="button" role="tab" aria-controls="r"
-                aria-selected="false">R</button>
-            </li> -->
-          </ul>
-
-          <!-- Tab Content -->
-          <div class="tab-content" id="downloadTabContent">
-
-            <!-- Browser download tab -->
-            <div class="tab-pane fade show active" id="browser" role="tabpanel"
-              aria-labelledby="browser-tab">
-
-              <!-- Name section -->
-              <div class="mb-4">
-                <label class="form-label fw-bold small">Dataset Name</label>
-                <div id="dataset-name" class="fw-bold"></div>
-              </div>
-
-              <!-- Gene matrix section -->
-              <div class="mb-4">
-                <label class="form-label fw-bold small">File</label>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value=""
-                    id="geneMatrixCheck" checked />
-                  <label class="form-check-label" for="geneMatrixCheck">
-                    .h5ad (AnnData v0.10) <span id="file-size">5 GB</span>
-                  </label>
-                </div>
-                <p class="small text-muted mt-2">
-                  Hierarchical data format used to store annotated data
-                  matrices, typically for single-cell omics data, including
-                  gene expression, metadata, and embeddings.
-                </p>
-              </div>
-
-              <!-- Download details section -->
-              <div class="mb-4">
-                <label class="form-label fw-bold small">Download details</label>
-                <div class="input-group">
-                  <input type="text" class="form-control" id="download-url"
-                    readonly />
-                  <button class="btn btn-outline-secondary" type="button"
-                    id="copy-url-btn">
-                    Copy
-                  </button>
-                </div>
-                <p class="small text-muted mt-2">
-                  This download link permanently references this version of
-                  the dataset. If this dataset is updated, a new download link
-                  will be created that permanently references the next version
-                  of this dataset.
-                </p>
-                <p class="small text-muted">
-                  The
-                  <a href="#" class="text-decoration-none">dataset schema</a>
-                  describes the required metadata embedded in all datasets
-                  submitted to CZ CELLXGENE Discover.
-                </p>
-              </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold small">Dataset Name</label>
+            <div id="dataset-name" class="fw-bold"></div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold small">File</label>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox"
+                id="geneMatrixCheck" checked />
+              <label class="form-check-label" for="geneMatrixCheck">
+                .h5ad (AnnData v0.10)
+              </label>
             </div>
-
-            <!-- Python API tab -->
-            <!-- <div class="tab-pane fade" id="python" role="tabpanel"
-              aria-labelledby="python-tab">
-              <div class="mb-4">
-                <label class="form-label fw-bold small">Dataset Name</label>
-                <div id="dataset-name-python" class="fw-bold"></div>
-              </div>
-              <div class="mb-4">
-                <label class="form-label fw-bold small">Python API</label>
-                <pre class="bg-light p-3 rounded"><code id="python-code">
-                  import cellxgene
-                  # Download dataset
-                  dataset = cellxgene.download("dataset-id")
-                  # Load the dataset
-                  adata = dataset.load()</code></pre>
-              </div>
-            </div> -->
-
-            <!-- R API tab -->
-            <!-- <div class="tab-pane fade" id="r" role="tabpanel"
-              aria-labelledby="r-tab">
-              <div class="mb-4">
-                <label class="form-label fw-bold small">Dataset Name</label>
-                <div id="dataset-name-r" class="fw-bold"></div>
-              </div>
-              <div class="mb-4">
-                <label class="form-label fw-bold small">R API</label>
-                <pre class="bg-light p-3 rounded"><code id="r-code">
-                  library(cellxgene)
-                  # Download dataset
-                  dataset <- cellxgene_download("dataset-id")
-                  # Load the dataset
-                  adata <- dataset$load()</code></pre>
-              </div>
-            </div> -->
+            <p class="small text-muted mt-2">
+              Hierarchical data format for single-cell omics data.
+            </p>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-bold small">Download details</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="download-url"
+                readonly />
+              <button class="btn btn-outline-secondary" type="button"
+                id="copy-url-btn">
+                Copy
+              </button>
+            </div>
           </div>
         </div>
 
