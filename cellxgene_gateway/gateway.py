@@ -29,7 +29,7 @@ from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_entry import CacheEntryStatus
 from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.cache_exception import CacheException
-from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata
+from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata_tsv
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
@@ -55,17 +55,32 @@ logger = logging.getLogger(__name__)
 def _force_https(app):
     def wrapper(environ, start_response):
         if env.external_protocol is not None:
-            environ["wsgi.url_scheme"] = env.external_protocol
+            environ['wsgi.url_scheme'] = env.external_protocol
         return app(environ, start_response)
 
     return wrapper
 
 
 def set_no_cache(resp):
-    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    resp.headers["Pragma"] = "no-cache"
-    resp.headers["Expires"] = "0"
-    resp.headers["Cache-Control"] = "public, max-age=0"
+    """
+    Set HTTP headers on Flask response to prevent caching.
+
+    Parameters:
+    -----------
+    resp: flask.Response
+      Response object to modify.
+
+    Returns:
+    --------
+    resp: flask.Response
+      Modified response with no-cache headers.
+    """
+
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    resp.headers['Cache-Control'] = 'public, max-age=0'
+
     return resp
 
 
@@ -183,11 +198,11 @@ def handle_invalid_usage(error):
       Rendered error template and HTTP status code.
     """
 
-    message = f"Error: {error.message}"
+    message = f'Error: {error.message}'
 
     return (
         render_template(
-            "cache_error.html",
+            'cache_error.html',
             extra_scripts=get_extra_scripts(),
             message=message,
             http_status=error.http_status,
@@ -215,13 +230,13 @@ def handle_invalid_process(error):
     message = []
 
     message.append(error.message)
-    message.append(f"{error.http_status} Error.")
-    message.append(f"Stdout: {error.stdout}")
-    message.append(f"Stderr: {error.stderr}")
+    message.append(f'{error.http_status} Error.')
+    message.append(f'Stdout: {error.stdout}')
+    message.append(f'Stderr: {error.stderr}')
 
     return (
         render_template(
-            "cellxgene_error.html",
+            'cellxgene_error.html',
             extra_scripts=get_extra_scripts(),
             message=error.message,
             http_status=error.http_status,
@@ -234,7 +249,7 @@ def handle_invalid_process(error):
     )
 
 
-@app.route("/favicon.png")
+@app.route('/favicon.png')
 def favicon():
     """
     Serve custom favicon from static directory.
@@ -246,13 +261,13 @@ def favicon():
     """
 
     return send_from_directory(
-        os.path.join(app.root_path, "static"),
-        "favicon.png",
-        mimetype="image/vnd.microsof.icon",
+        os.path.join(app.root_path, 'static'),
+        'favicon.png',
+        mimetype='image/vnd.microsof.icon',
     )
 
 
-@app.route("/")
+@app.route('/')
 def homepage():
     """
     Render application home page.
@@ -264,54 +279,210 @@ def homepage():
     """
 
     return render_template(
-        "homepage.html",
+        'homepage.html',
         ip=env.ip,
         cellxgene_data=env.cellxgene_data,
         extra_scripts=get_extra_scripts(),
     )
 
 
-@app.route("/filecrawl")
-@app.route("/filecrawl/<path:path>")
+@app.route('/filecrawl')
+@app.route('/filecrawl/<path:path>')
 def filecrawl(path=None):
-    # Check if we should use the new metadata-based interface
-    csv_path = os.environ.get("DATASET_METADATA_CSV", "datasets.csv")
-    use_metadata = os.path.exists(csv_path)
-    
-    if use_metadata:
-        # Load dataset metadata from CSV
-        data_dir = os.environ.get("CELLXGENE_DATA", "cellxgene_data")
-        datasets, modalities, principal_investigators, leads = load_dataset_metadata(csv_path, data_dir)
+    """
+    Render file crawl page (dataset browser page):
+      - Metadata-based filterable view of datasets if metadata .tsv is present
+      - File list from configured item sources otherwise
 
-        # Filtering logic
-        selected_modality = request.args.getlist("modality")
-        selected_pi = request.args.get("pi")
-        selected_lead = request.args.get("lead")
+    Parameters:
+    -----------
+    path: str, optional
+      Subpath within item source to explore (used in fallback mode).
+
+    Returns:
+    --------
+    flask.Response
+      Rendered HTML page showing datasets or file structure.
+    """
+    # Try to load dataset metadata from TSV file if present
+    data_dir = os.environ.get('CELLXGENE_DATA', 'cellxgene_data')
+    tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
+
+    if os.path.exists(tsv_path):
+        (
+            datasets,
+            assays,
+            diseases,
+            tissues,
+            sexes,
+            cell_count_range,
+            gene_count_range,
+            year_range,
+        ) = load_dataset_metadata_tsv(tsv_path, data_dir)
+
+        selected_assay = request.args.getlist('assay')
+        selected_disease = request.args.getlist('disease')
+        selected_tissue = request.args.getlist('tissue')
+        selected_sex = request.args.getlist('sex')
+        search_term = request.args.get('search', '').strip().lower()
+
+        # Helper function to safely parse integers with a default fallback
+        def _safe_int(val, default):
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                return default
+
+        # Only restrict by range if user moved the slider away from the bound.
+        # This prevents datasets with empty values from being incorrectly
+        # filtered out when the slider is at its default position
+        year_min_param = _safe_int(request.args.get('year_min'), year_range[0])
+        year_max_param = _safe_int(request.args.get('year_max'), year_range[1])
+        cc_min_param = _safe_int(
+            request.args.get('cell_count_min'), cell_count_range[0]
+        )
+        cc_max_param = _safe_int(
+            request.args.get('cell_count_max'), cell_count_range[1]
+        )
+        gc_min_param = _safe_int(
+            request.args.get('gene_count_min'), gene_count_range[0]
+        )
+        gc_max_param = _safe_int(
+            request.args.get('gene_count_max'), gene_count_range[1]
+        )
+
+        # Range is 'active' (restricting) only when moved away from the bound
+        year_min_active = year_min_param > year_range[0]
+        year_max_active = year_max_param < year_range[1]
+        cc_min_active = cc_min_param > cell_count_range[0]
+        cc_max_active = cc_max_param < cell_count_range[1]
+        gc_min_active = gc_min_param > gene_count_range[0]
+        gc_max_active = gc_max_param < gene_count_range[1]
+
+        def _multi_matches(field_value, selected):
+            """
+            Return True if any selected value appears in semicolon field.
+
+            Datasets with empty field always pass through so that missing data
+            does not exclude dataset from filtered results.
+            """
+            if not selected:
+                return True
+            if not field_value or not field_value.strip():
+                return True
+            parts = {v.strip() for v in field_value.split(';')}
+            return bool(parts & set(selected))
+
+        def _in_range(raw_val, lo, hi, lo_active, hi_active):
+            """
+            Return True if the value is within [lo, hi], skipping if empty.
+            """
+            if not raw_val:
+                return True  # Missing value always passes through
+            try:
+                v = int(raw_val)
+            except (ValueError, TypeError):
+                return True
+            if lo_active and v < lo:
+                return False
+            if hi_active and v > hi:
+                return False
+            return True
+
         filtered = []
         for ds in datasets:
-            if selected_modality and ds.get("modality") not in selected_modality:
+            # Apply existing filters
+            if selected_assay and not _multi_matches(
+                ds.get('assay', ''), selected_assay
+            ):
                 continue
-            if selected_pi and ds.get("principal_investigator") != selected_pi:
+            if selected_disease and not _multi_matches(
+                ds.get('disease', ''), selected_disease
+            ):
                 continue
-            if selected_lead and ds.get("lead") != selected_lead:
+            if selected_tissue and not _multi_matches(
+                ds.get('tissue', ''), selected_tissue
+            ):
                 continue
+            if selected_sex and not _multi_matches(
+                ds.get('sex', ''), selected_sex
+            ):
+                continue
+
+            if not _in_range(
+                ds.get('year', ''),
+                year_min_param,
+                year_max_param,
+                year_min_active,
+                year_max_active,
+            ):
+                continue
+            if not _in_range(
+                ds.get('cell_count', ''),
+                cc_min_param,
+                cc_max_param,
+                cc_min_active,
+                cc_max_active,
+            ):
+                continue
+            if not _in_range(
+                ds.get('gene_count', ''),
+                gc_min_param,
+                gc_max_param,
+                gc_min_active,
+                gc_max_active,
+            ):
+                continue
+
+            # Apply search filter if search term provided
+            if search_term:
+                searchable = [
+                    ds.get('name', ''),
+                    ds.get('experiment_name', ''),
+                    ds.get('description', ''),
+                    ds.get('disease', ''),
+                    ds.get('authors', ''),
+                ]
+                if not any(
+                    search_term in (f or '').lower() for f in searchable
+                ):
+                    continue
+
             filtered.append(ds)
+
+        # Calculate totals for displayed datasets
+        total_cells = 0
+        total_patients = 0
+        for ds in filtered:
+            try:
+                total_cells += int(ds.get('cell_count') or 0)
+            except (ValueError, TypeError):
+                pass
+            try:
+                total_patients += int(ds.get('patients') or 0)
+            except (ValueError, TypeError):
+                pass
 
         resp = make_response(
             render_template(
-                "filecrawl.html",
+                'filecrawl.html',
                 extra_scripts=get_extra_scripts(),
                 datasets=filtered,
-                modalities=modalities,
-                principal_investigators=principal_investigators,
-                leads=leads,
+                total_cells=total_cells,
+                total_patients=total_patients,
+                assays=assays,
+                diseases=diseases,
+                tissues=tissues,
+                sexes=sexes,
+                cell_count_range=cell_count_range,
+                gene_count_range=gene_count_range,
+                year_range=year_range,
                 enable_annotations=env.enable_annotations,
-                use_metadata=True,
             )
         )
     else:
-        # Fall back to original file-based interface
-        source_name = request.args.get("source")
+        # Fall back to file-based interface when no datasets.tsv is present
+        source_name = request.args.get('source')
         sources = (
             filter(
                 lambda x: x.name == urllib.parse.unquote_plus(source_name),
@@ -320,15 +491,14 @@ def filecrawl(path=None):
             if source_name
             else item_sources
         )
-        # loop all data sources --
         rendered_sources = [
             render_item_source(item_source, path) for item_source in sources
-        ]  # will we need to make this async in the page???
-        rendered_html = "\n".join(rendered_sources)
+        ]
+        rendered_html = '\n'.join(rendered_sources)
 
         resp = make_response(
             render_template(
-                "filecrawl.html",
+                'filecrawl.html',
                 extra_scripts=get_extra_scripts(),
                 rendered_html=rendered_html,
                 path=path,
@@ -348,16 +518,16 @@ def matching_source(source_name):
         source_name = default_item_source.name
     matching = [i for i in item_sources if i.name == source_name]
     if len(matching) != 1:
-        raise Exception(f"Could not find matching item source {source_name}")
+        raise Exception(f'Could not find matching item source {source_name}')
     source = matching[0]
     return source
 
 
 @app.route(
-    "/source/<path:source_name>/view/<path:path>",
-    methods=["GET", "PUT", "POST"],
+    '/source/<path:source_name>/view/<path:path>',
+    methods=['GET', 'PUT', 'POST'],
 )
-@app.route("/view/<path:path>", methods=["GET", "PUT", "POST"])
+@app.route('/view/<path:path>', methods=['GET', 'PUT', 'POST'])
 def do_view(path, source_name=None):
     source = matching_source(source_name)
     match = cache.check_path(source, path)
@@ -366,12 +536,12 @@ def do_view(path, source_name=None):
         lookup = source.lookup(path)
         if lookup is None:
             raise CacheException(
-                f"Could not find item for path <{path.rstrip('/')}> in source <{source.name}>",
+                f'Could not find item for path <{path.rstrip("/")}> in source <{source.name}>',
                 404,
             )
         key = CacheKey.for_lookup(source, lookup)
         logger.info(
-            f"Viewing dataset={key.file_path}, key={key.descriptor}, annotation_file={key.annotation_file_path}, source={key.source_name}, source_name={source_name}, path={path}"
+            f'Viewing dataset={key.file_path}, key={key.descriptor}, annotation_file={key.annotation_file_path}, source={key.source_name}, source_name={source_name}, path={path}'
         )
         with entry_lock:
             match = cache.check_entry(key)
@@ -388,12 +558,12 @@ def do_view(path, source_name=None):
         if source.is_authorized(match.key.descriptor):
             return match.serve_content(path)
         else:
-            raise CacheException("User not authorized to access this data", 403)
+            raise CacheException('User not authorized to access this data', 403)
     elif match.status == CacheEntryStatus.error:
         raise CellxgeneException.from_cache_entry(match)
 
 
-@app.route("/instances", methods=["GET"])
+@app.route('/instances', methods=['GET'])
 def do_instances():
     """
     Serve web page displaying current cache entries and statuses.
@@ -405,13 +575,13 @@ def do_instances():
     """
 
     return render_template(
-        "instances.html",
+        'instances.html',
         entry_list=cache.entry_list,
         extra_scripts=get_extra_scripts(),
     )
 
 
-@app.route("/instances.json", methods=["GET"])
+@app.route('/instances.json', methods=['GET'])
 def do_instances_json():
     """
     Return cache status information in JSON format.
@@ -421,24 +591,24 @@ def do_instances_json():
         dataset = entry.key.h5ad_item.descriptor
         annotation_file = entry.key.annotation_descriptor
         return {
-            "dataset": dataset,
-            "annotation_file": annotation_file,
-            "launchtime": entry.launchtime,
-            "last_access": entry.timestamp,
-            "status": entry.status.name,
+            'dataset': dataset,
+            'annotation_file': annotation_file,
+            'launchtime': entry.launchtime,
+            'last_access': entry.timestamp,
+            'status': entry.status.name,
         }
 
     return json.dumps(
         {
-            "launchtime": app.extensions.get("cellxgene_gateway", {}).get("launchtime"),
-            "entry_list": [map_entry(entry) for entry in cache.entry_list],
+            'launchtime': app.extensions.get('cellxgene_gateway', {}).get('launchtime'),
+            'entry_list': [map_entry(entry) for entry in cache.entry_list],
         }
     )
 
 
 def get_cache_key(path):
-    if request.args.get("source_name"):
-        source_name = request.args.get("source_name")
+    if request.args.get('source_name'):
+        source_name = request.args.get('source_name')
     elif default_item_source:
         source_name = default_item_source.name
     else:
@@ -448,34 +618,61 @@ def get_cache_key(path):
     return key
 
 
-@app.route("/relaunch/<path:path>", methods=["GET"])
+@app.route('/relaunch/<path:path>', methods=['GET'])
 def do_relaunch(path):
+    """
+    Terminate any existing process for a dataset and redirect to relaunch.
+
+    Parameters:
+    -----------
+    path: str
+      Path of dataset to relaunch.
+
+    Returns:
+    --------
+    Response
+      Redirect response to dataset's view URL.
+    """
+
     key = get_cache_key(path)
     match = cache.check_entry(key)
     if not match is None:
         match.terminate()
-    return redirect(
-        key.view_url,
-        code=302,
-    )
+
+    return redirect(key.view_url, code=302)
 
 
-@app.route("/terminate/<path:path>", methods=["GET"])
+@app.route('/terminate/<path:path>', methods=['GET'])
 def do_terminate(path):
+    """
+    Terminate process serving a dataset and redirect to cache status page.
+
+    Parameters:
+    -----------
+    path: str
+      Path of dataset to terminate.
+
+    Returns:
+    --------
+    Response
+      Redirect response to cache status page.
+    """
+
     key = get_cache_key(path)
     match = cache.check_entry(key)
     if not match is None:
         match.terminate()
-    return redirect(url_for("do_instances"), code=302)
+
+    return redirect(url_for('do_instances'), code=302)
 
 
-@app.route("/metadata/ip_address", methods=["GET"])
+@app.route('/metadata/ip_address', methods=['GET'])
 def ip_address():
     resp = make_response(env.ip)
     return set_no_cache(resp)
 
 
-@app.route("/download/<filename>")
+@app.route('/download/<filename>')
 def download_file(filename):
     """
     Serve downloadable .h5ad file from data directory.
@@ -492,12 +689,12 @@ def download_file(filename):
     """
 
     # Security: only allow .h5ad files
-    if not filename.endswith(".h5ad"):
-        return "Invalid file type. Only .h5ad files are allowed.", 400
+    if not filename.endswith('.h5ad'):
+        return 'Invalid file type. Only .h5ad files are allowed.', 400
 
     # Security: prevent directory traversal
-    if ".." in filename or "/" in filename or "\\" in filename:
-        return "Invalid filename. Directory traversal not allowed.", 400
+    if '..' in filename or '/' in filename or '\\' in filename:
+        return 'Invalid filename. Directory traversal not allowed.', 400
 
     # Get data directory path
     data_dir = env.cellxgene_data
@@ -505,17 +702,14 @@ def download_file(filename):
     # Check if file exists
     file_path = os.path.join(data_dir, filename)
     if not os.path.exists(file_path):
-        raise CacheException(
-            f"File '{filename}'  not found in {data_dir}",
-            404,
-        )
+        raise CacheException(f"File '{filename}'  not found in {data_dir}", 404)
 
     # Serve the file
     return send_from_directory(
         data_dir,
         filename,
         as_attachment=True,
-        mimetype="application/octet-stream",
+        mimetype='application/octet-stream',
     )
 
 
@@ -536,7 +730,7 @@ def launch():
         "launchtime"
     ] = current_time_stamp()
     app.run(
-        host="0.0.0.0",
+        host='0.0.0.0',
         port=env.gateway_port,
         debug=False,
         request_handler=CustomRequestHandler,
@@ -561,11 +755,12 @@ def main():
 
     logging.basicConfig(
         level=env.log_level,
-        format="[%(asctime)s]  %(name)8s  %(levelname)-8s  %(message)s",
-        datefmt="%Y.%m.%d - %H:%M:%S",
+        format='[%(asctime)s]  %(name)8s  %(levelname)-8s  %(message)s',
+        datefmt='%Y.%m.%d - %H:%M:%S',
     )
     launch()
 
 
-if __name__ == "__main__":
+# App execution
+if __name__ == '__main__':
     main()
