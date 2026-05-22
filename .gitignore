@@ -140,3 +140,6 @@ dmypy.json
 
 *.patch
 .vscode
+
+# Avoid importing data
+test_data/

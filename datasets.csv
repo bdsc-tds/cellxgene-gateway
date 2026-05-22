@@ -1,2 +1,0 @@
-id,name,modality,principal_investigator,lead,description,file_path
-1,PBMC 3k,RNA-seq,Dr. Smith,Alice Johnson,Peripheral blood mononuclear cells from healthy donor,pbmc3k.h5ad
