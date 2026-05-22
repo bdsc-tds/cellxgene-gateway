@@ -9,6 +9,7 @@ import re
 logger = logging.getLogger(__name__)
 
 
+# Function to extract experiment information from file path
 def extract_experiment_info(file_path):
     """
     Extract experiment name and version from file path.
@@ -38,55 +39,56 @@ def extract_experiment_info(file_path):
     - qc_ACV02_all.h5ad -> ("ACV02", "all", "ACV02 All")
     - qc_ACV02_atac.pseudorna.h5ad -> ("ACV02", "atac", "ACV02 ATAC")
     """
+    # Return early if file_path is empty or None
     if not file_path:
         return None, None, file_path
 
     # Remove .h5ad extension
-    basename = file_path.replace(".h5ad", "")
+    basename = file_path.replace('.h5ad', '')
 
     # Look for URT pattern (main experiments)
-    urt_match = re.search(r"URT(\d+)", basename)
+    urt_match = re.search(r'URT(\d+)', basename)
     if urt_match:
         experiment_num = urt_match.group(1)
-        experiment_name = f"URT{experiment_num}"
+        experiment_name = f'URT{experiment_num}'
 
         # Look for version pattern (_v\d+)
-        version_match = re.search(r"_v(\d+)$", basename)
+        version_match = re.search(r'_v(\d+)$', basename)
         if version_match:
-            version = f"v{version_match.group(1)}"
-            display_name = f"{experiment_name} {version}"
+            version = f'v{version_match.group(1)}'
+            display_name = f'{experiment_name} {version}'
         else:
-            version = "base"
+            version = 'base'
             display_name = experiment_name
 
         return experiment_name, version, display_name
 
     # Look for ACV pattern with specific subtypes
-    acv_match = re.search(r"(ACV\d+)_(.+)$", basename)
+    acv_match = re.search(r'(ACV\d+)_(.+)$', basename)
     if acv_match:
         experiment_name = acv_match.group(1)
         subtype = acv_match.group(2)
 
         # Map common subtypes to readable names
-        subtype_map = {"all": "All", "atac.pseudorna": "ATAC", "cd4": "CD4"}
+        subtype_map = {'all': 'All', 'atac.pseudorna': 'ATAC', 'cd4': 'CD4'}
         version = subtype
         display_name = (
-            f"{experiment_name} {subtype_map.get(subtype, subtype.title())}"
+            f'{experiment_name} {subtype_map.get(subtype, subtype.title())}'
         )
 
         return experiment_name, version, display_name
 
     # Look for other patterns
-    other_match = re.search(r"(ACV\d+)", basename)
+    other_match = re.search(r'(ACV\d+)', basename)
     if other_match:
         experiment_name = other_match.group(1)
         # Check for version
-        version_match = re.search(r"_v(\d+)$", basename)
+        version_match = re.search(r'_v(\d+)$', basename)
         if version_match:
-            version = f"v{version_match.group(1)}"
-            display_name = f"{experiment_name} {version}"
+            version = f'v{version_match.group(1)}'
+            display_name = f'{experiment_name} {version}'
         else:
-            version = "base"
+            version = 'base'
             display_name = experiment_name
         return experiment_name, version, display_name
 
@@ -94,6 +96,7 @@ def extract_experiment_info(file_path):
     return None, None, file_path
 
 
+# Function to find annotation files for a given dataset file
 def find_annotations_for_file(file_path, data_dir):
     """
     Find annotation files for a given dataset file.
@@ -115,7 +118,7 @@ def find_annotations_for_file(file_path, data_dir):
         - all_annotations (list): list of dictionaries for all annotation files
         available for download in .csv format
     """
-
+    # Return early if file_path is empty or None
     if not file_path:
         return [], []
 
@@ -124,7 +127,7 @@ def find_annotations_for_file(file_path, data_dir):
         return [], []
 
     # Look for annotation directory
-    annotation_dir = full_file_path.replace(".h5ad", "_annotations")
+    annotation_dir = full_file_path.replace('.h5ad', '_annotations')
     if not os.path.exists(annotation_dir):
         return [], []
 
@@ -132,16 +135,16 @@ def find_annotations_for_file(file_path, data_dir):
     all_annotations = []
     try:
         for item in os.listdir(annotation_dir):
-            if item.endswith(".csv"):
+            if item.endswith('.csv'):
                 annotation_dict = {
-                    "name": item.replace(".csv", ""),
-                    "file": item,
-                    "path": os.path.join(annotation_dir, item),
+                    'name': item.replace('.csv', ''),
+                    'file': item,
+                    'path': os.path.join(annotation_dir, item),
                 }
                 # Add to all_annotations for download
                 all_annotations.append(annotation_dict)
-                # Only add to loadable_annotations if it doesn't contain "gene_sets"
-                if "gene_sets" not in item:
+                # Only add to loadable_annotations if no 'gene_sets'
+                if 'gene_sets' not in item:
                     loadable_annotations.append(annotation_dict)
     except Exception:
         pass
@@ -149,139 +152,182 @@ def find_annotations_for_file(file_path, data_dir):
     return loadable_annotations, all_annotations
 
 
-def load_dataset_metadata(csv_path, data_dir=None):
+# Function to load dataset metadata from .tsv file and group by experiment
+def load_dataset_metadata_tsv(tsv_path, data_dir=None):
     """
-    Load dataset metadata from .csv file and group entries by experiment.
+    Load dataset metadata from .tsv file and group entries by experiment.
 
     Parameters:
     -----------
-    csv_path: str
-      Path to dataset metadata .csv file.
+    tsv_path: str
+      Path to dataset metadata .tsv file.
 
     data_dir: str or None
       Directory containing dataset files. If None, value is loaded from
-      CELLXGENE_DATA environment variable (defaults to "cellxgene_data").
+      CELLXGENE_DATA environment variable (defaults to 'cellxgene_data').
 
     Returns:
     --------
     (datasets,
-     sorted(modalities),
-     sorted(principal_investigators),
-     sorted(leads)
+     sorted(assays),
+     sorted(diseases),
+     sorted(tissues),
+     sorted(sexes),
+     cell_count_range,
+     gene_count_range,
+     year_range
     ): tuple
-      Tuple containing 4 elements:
-        - datasets (list): list of grouped experiment dictionaries or individual
-        dataset rows
-        - modalities (list): sorted list of unique modality names
-        - principal_investigators (list): sorted list of unique PI names
-        - leads (list): sorted list of unique project lead names
+      Tuple containing 8 elements:
+        - datasets (list): list of grouped experiment dicts or individual rows
+        - assays (list): sorted list of unique assay values
+        - diseases (list): sorted list of unique disease values
+        - tissues (list): sorted list of unique tissue values
+        - sexes (list): sorted list of unique sex values
+        - cell_count_range (tuple): (min, max) cell count across all datasets
+        - gene_count_range (tuple): (min, max) gene count across all datasets
+        - year_range (tuple): (min, max) year across all datasets
     """
-
     datasets = []
     experiment_groups = {}
-    modalities = set()
-    principal_investigators = set()
-    leads = set()
+    assays = set()
+    diseases = set()
+    tissues = set()
+    sexes = set()
+    cell_counts = []
+    gene_counts = []
+    years = []
 
     if data_dir is None:
-        data_dir = os.environ.get("CELLXGENE_DATA", "cellxgene_data")
+        data_dir = os.environ.get('CELLXGENE_DATA', 'cellxgene_data')
+
+    def _parse_multi(value):
+        """Split a semicolon-separated field into individual stripped values."""
+        if not value:
+            return []
+        return [v.strip() for v in value.split(';') if v.strip()]
 
     try:
-        if not os.path.exists(csv_path):
-            logger.warning(
-                f".csv file {csv_path} not found. Using empty dataset list."
+        if not os.path.exists(tsv_path):
+            print(
+                f'Warning: .tsv file {tsv_path} not found. Using empty dataset list.'
             )
-            return (
-                datasets,
-                sorted(modalities),
-                sorted(principal_investigators),
-                sorted(leads),
-            )
+            return (datasets, [], [], [], [], (0, 0), (0, 0), (0, 0))
 
-        with open(csv_path, newline="") as csvfile:
-            reader = csv.DictReader(csvfile)
+        with open(tsv_path, newline='') as tsvfile:
+            reader = csv.DictReader(tsvfile, delimiter='\t')
             for row in reader:
                 # Find annotations for this dataset
                 loadable_annotations, all_annotations = (
                     find_annotations_for_file(
-                        row.get("file_path", ""), data_dir
+                        row.get('file_path', ''), data_dir
                     )
                 )
-                row["annotations"] = (
-                    loadable_annotations  # For loading/launching
-                )
-                row["all_annotations"] = all_annotations  # For downloading
-                row["has_annotations"] = len(loadable_annotations) > 0
+                row['annotations'] = loadable_annotations
+                row['all_annotations'] = all_annotations
+                row['has_annotations'] = len(loadable_annotations) > 0
 
                 # Extract experiment information
                 experiment_name, version, display_name = (
-                    extract_experiment_info(row.get("file_path", ""))
+                    extract_experiment_info(row.get('file_path', ''))
                 )
-                row["experiment_name"] = experiment_name
-                row["version"] = version
-                row["display_name"] = display_name
+                row['experiment_name'] = experiment_name
+                row['version'] = version
+                row['display_name'] = display_name
 
-                modalities.add(row.get("modality", "").strip())
-                principal_investigators.add(
-                    row.get("principal_investigator", "").strip()
-                )
-                leads.add(row.get("lead", "").strip())
+                # Collect filter values from multi-value fields
+                for val in _parse_multi(row.get('assay', '')):
+                    assays.add(val)
+                for val in _parse_multi(row.get('disease', '')):
+                    diseases.add(val)
+                for val in _parse_multi(row.get('tissue', '')):
+                    tissues.add(val)
+                for val in _parse_multi(row.get('sex', '')):
+                    sexes.add(val)
+
+                # Collect numeric ranges
+                try:
+                    cell_counts.append(int(row.get('cell_count', '') or 0))
+                except (ValueError, TypeError):
+                    pass
+                try:
+                    gene_counts.append(int(row.get('gene_count', '') or 0))
+                except (ValueError, TypeError):
+                    pass
+                try:
+                    years.append(int(row.get('year', '') or 0))
+                except (ValueError, TypeError):
+                    pass
 
                 # Group by experiment if we have one
                 if experiment_name:
                     if experiment_name not in experiment_groups:
                         experiment_groups[experiment_name] = {
-                            "experiment_name": experiment_name,
-                            "versions": [],
-                            "modality": row.get("modality", ""),
-                            "principal_investigator": row.get(
-                                "principal_investigator", ""
-                            ),
-                            "lead": row.get("lead", ""),
-                            "description": row.get("description", ""),
-                            "has_annotations": False,
+                            'experiment_name': experiment_name,
+                            'versions': [],
+                            'assay': row.get('assay', ''),
+                            'disease': row.get('disease', ''),
+                            'tissue': row.get('tissue', ''),
+                            'sex': row.get('sex', ''),
+                            'cell_count': row.get('cell_count', ''),
+                            'gene_count': row.get('gene_count', ''),
+                            'year': row.get('year', ''),
+                            'authors': row.get('authors', ''),
+                            'journal': row.get('journal', ''),
+                            'doi': row.get('doi', ''),
+                            'description': row.get('description', ''),
+                            'has_annotations': False,
                         }
 
-                    # Add version to the group
-                    experiment_groups[experiment_name]["versions"].append(row)
+                    experiment_groups[experiment_name]['versions'].append(row)
 
-                    # Update group-level annotation status
-                    if row["has_annotations"]:
+                    if row['has_annotations']:
                         experiment_groups[experiment_name][
-                            "has_annotations"
+                            'has_annotations'
                         ] = True
                 else:
-                    # Add as individual dataset if no experiment grouping
                     datasets.append(row)
 
         # Convert experiment groups to list and sort versions
         for group in experiment_groups.values():
-            # Sort versions - put base version first, then others alphabetically
+
             def sort_key(x):
-                version = x["version"] or "base"
-                if version == "base":
-                    return (0, "")
-                elif version.startswith("v"):
-                    # Extract number for v1, v2, etc.
+                version = x['version'] or 'base'
+                if version == 'base':
+                    return (0, '')
+                elif version.startswith('v'):
                     try:
                         return (1, int(version[1:]))
-                    except:
+                    except Exception:
                         return (2, version)
                 else:
                     return (3, version)
 
-            group["versions"].sort(key=sort_key)
+            group['versions'].sort(key=sort_key)
             datasets.append(group)
 
-        logger.info(f"Loaded {len(datasets)} datasets/groups from {csv_path}")
+        print(f'Loaded {len(datasets)} datasets/groups from {tsv_path}')
     except Exception as e:
-        logger.warning(
-            f"Error loading.csv {csv_path}: {e}. Using empty dataset list."
-        )
+        print(f'Error loading .tsv {tsv_path}: {e}. Using empty dataset list.')
+
+    # Calculate numeric ranges, ignoring zero values
+    cell_counts_nz = [c for c in cell_counts if c > 0]
+    gene_counts_nz = [g for g in gene_counts if g > 0]
+    years_nz = [y for y in years if y > 0]
+    cell_count_range = (
+        (min(cell_counts_nz), max(cell_counts_nz)) if cell_counts_nz else (0, 0)
+    )
+    gene_count_range = (
+        (min(gene_counts_nz), max(gene_counts_nz)) if gene_counts_nz else (0, 0)
+    )
+    year_range = (min(years_nz), max(years_nz)) if years_nz else (0, 0)
 
     return (
         datasets,
-        sorted(modalities),
-        sorted(principal_investigators),
-        sorted(leads),
+        sorted(assays),
+        sorted(diseases),
+        sorted(tissues),
+        sorted(sexes),
+        cell_count_range,
+        gene_count_range,
+        year_range,
     )
