@@ -413,6 +413,34 @@ handles */
 }
 
 
+/* Empty state customisation */
+
+/* Empty state container style class */
+.empty-state {
+  color: #6c757d;
+}
+
+/* Empty state icon style class */
+.empty-state-icon {
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+  opacity: 0.4;
+}
+
+/* Empty state text style class */
+.empty-state-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Empty state hint style class */
+.empty-state-hint {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  opacity: 0.75;
+}
+
+
 /* Sortable column headers customisation */
 
 /* Sortable header style class */

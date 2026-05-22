@@ -466,7 +466,21 @@
               {% endif %}
             </tr>
 
+            <!-- Warning message if no datasets match filters -->
             {% endfor %}
+            {% if datasets|length == 0 %}
+            <tr>
+              <td colspan="10" class="text-center py-5">
+                <div class="empty-state">
+                  <div class="empty-state-icon">⊘</div>
+                  <div class="empty-state-text">No datasets match the selected
+                    filters.</div>
+                  <div class="empty-state-hint">Try broadening your search or
+                    resetting the filters.</div>
+                </div>
+              </td>
+            </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
