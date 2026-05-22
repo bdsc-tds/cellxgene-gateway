@@ -393,6 +393,26 @@ handles */
 .btn-group .btn {
   margin-right: 5px;
 }
+
+
+/* Filter stats bar customisation */
+
+/* Filter stats bar style class */
+.filter-stats {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+/* Filter stats separator style class */
+.filter-stats-sep {
+  color: #ced4da;
+}
+
+
 /* Sortable column headers customisation */
 
 /* Sortable header style class */

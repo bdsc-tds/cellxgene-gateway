@@ -218,6 +218,19 @@
         <h2 class="mb-0">Browse Datasets</h2>
       </div>
 
+      <!-- General stats -->
+      {% if assays is defined %}
+      <div class="filter-stats">
+        <span>{{ datasets|length }} dataset{{ 's' if datasets|length != 1 else
+          '' }}</span>
+        <span class="filter-stats-sep">·</span>
+        <span>{{ "{:,}".format(total_patients) }} patient{{ 's' if
+          total_patients != 1 else '' }}</span>
+        <span class="filter-stats-sep">·</span>
+        <span>{{ "{:,}".format(total_cells) }} cell{{ 's' if total_cells != 1
+          else '' }}</span>
+      </div>
+      {% endif %}
 
       <!-- Datasets table -->
       <div class="table-responsive">
