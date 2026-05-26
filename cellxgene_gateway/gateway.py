@@ -198,14 +198,14 @@ def handle_invalid_usage(error):
       Rendered error template and HTTP status code.
     """
 
-    message = f'Error: {error.message}'
-
     return (
         render_template(
             'cache_error.html',
             extra_scripts=get_extra_scripts(),
-            message=message,
+            message=error.message,
             http_status=error.http_status,
+            context=getattr(error, 'context', None),
+            filename=getattr(error, 'filename', None),
         ),
         error.http_status,
     )
@@ -690,11 +690,18 @@ def download_file(filename):
 
     # Security: only allow .h5ad files
     if not filename.endswith('.h5ad'):
-        return 'Invalid file type. Only .h5ad files are allowed.', 400
+        raise CacheException(
+            'Only .h5ad files can be downloaded.',
+            400,
+            context='download',
+            filename=filename,
+        )
 
     # Security: prevent directory traversal
     if '..' in filename or '/' in filename or '\\' in filename:
-        return 'Invalid filename. Directory traversal not allowed.', 400
+        raise CacheException(
+            'Invalid filename.', 400, context='download', filename=filename
+        )
 
     # Get data directory path
     data_dir = env.cellxgene_data
@@ -702,7 +709,12 @@ def download_file(filename):
     # Check if file exists
     file_path = os.path.join(data_dir, filename)
     if not os.path.exists(file_path):
-        raise CacheException(f"File '{filename}'  not found in {data_dir}", 404)
+        raise CacheException(
+            f"Dataset file '{filename}' was not found on the server.",
+            404,
+            context='download',
+            filename=filename,
+        )
 
     # Serve the file
     return send_from_directory(

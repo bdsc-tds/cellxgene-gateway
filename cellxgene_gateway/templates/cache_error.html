@@ -17,7 +17,8 @@
   {% include 'header.html' %}
 
   <!-- Page title -->
-  <title>Cache Error - SSF BioHub</title>
+  <title>{% if context == 'download' %}Download Error{% else %}Error{% endif %}
+    - SSF BioHub</title>
 
   <!-- Stylesheets -->
   <link rel="stylesheet"
@@ -36,11 +37,40 @@
 
   <!-- Main content with error message -->
   <div class="container-fluid p-3">
-    <div class="row">
-      <div class="col-12">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-7 col-lg-5">
+        {% if context == 'download' %}
+        <!-- Download-specific error: friendly empty-state card -->
+        <div class="error-card">
+          <div class="error-icon">
+            {% if http_status == 404 %}⬇{% else %}⚠{% endif %}
+          </div>
+          <h2 class="error-title">
+            {% if http_status == 404 %}File not found
+            {% elif http_status == 400 %}Invalid request
+            {% else %}Download failed
+            {% endif %}
+          </h2>
+          {% if filename %}
+          <div class="error-filename">{{ filename }}</div>
+          {% endif %}
+          <p class="error-body">{{ message }}</p>
+          {% if http_status == 404 %}
+          <p class="error-hint">
+            The file may have been moved or renamed. Browse the dataset
+            catalogue to find the correct download link.
+          </p>
+          {% endif %}
+          <div class="cta-buttons" style="margin-top: 1.5rem;">
+            <a href="{{ url_for('filecrawl') }}" class="btn-primary">Browse
+              Datasets</a>
+            <a href="{{ url_for('homepage') }}"
+              class="btn-secondary">Homepage</a>
+          </div>
+        </div>
+        {% else %}
+        <!-- Generic cache error: technical table view -->
         <h2>Error Details</h2>
-
-        <!-- Error table -->
         <div class="table-responsive">
           <table
             class="table table-hover table-striped table-sm error-table-col1">
@@ -63,6 +93,7 @@
             class="btn-secondary">Datasets</a>
           <a href="{{ url_for('homepage') }}" class="btn-secondary">Homepage</a>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>

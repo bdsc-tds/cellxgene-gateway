@@ -14,7 +14,7 @@ class CacheException(Exception):
     This exception is raised when there are issues with Cellxgene file access.
     """
 
-    def __init__(self, message, http_status):
+    def __init__(self, message, http_status, context=None, filename=None):
         """
         Initialise CacheException with a message and an HTTP status.
 
@@ -26,6 +26,12 @@ class CacheException(Exception):
         http_status: int
           HTTP status code related to exception.
 
+        context: str or None
+          Optional hint for the error template (e.g. 'download').
+
+        filename: str or None
+          Optional filename that caused the error, for display in template.
+
         Returns:
         --------
         None
@@ -33,3 +39,5 @@ class CacheException(Exception):
         Exception.__init__(self)
         self.message = message
         self.http_status = http_status
+        self.context = context
+        self.filename = filename
