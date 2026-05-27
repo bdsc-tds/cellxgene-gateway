@@ -252,9 +252,13 @@ def handle_invalid_process(error):
 
 
 @app.route('/favicon.png')
+@app.route('/favicon.ico')
 def favicon():
     """
     Serve custom favicon from static directory.
+
+    Handles both /favicon.png (used by gateway templates) and /favicon.ico
+    (auto-requested by browsers regardless of page path).
 
     Returns:
     --------
@@ -265,8 +269,34 @@ def favicon():
     return send_from_directory(
         os.path.join(app.root_path, 'static'),
         'favicon.png',
-        mimetype='image/vnd.microsof.icon',
+        mimetype='image/png',
     )
+
+
+@app.route('/view/static/<path:path>')
+def view_static(path):
+    """
+    Proxy static asset requests that land at /view/static/ back to a running
+    cellxgene instance.
+
+    Cellxgene's JS bundle references assets with a '../' prefix, so from a page
+    at /view/<dataset>/ the browser resolves them to /view/static/. These assets
+    (e.g. the logo PNG) are bundled with cellxgene, not with the gateway, so we
+    forward the request to any loaded cellxgene process.
+
+    Returns:
+    --------
+    flask.Response
+      Proxied asset content, or 503 if no cellxgene instance is running.
+    """
+
+    loaded = [e for e in cache.entry_list if e.status == CacheEntryStatus.loaded]
+    if not loaded:
+        raise CacheException('No running cellxgene instance to serve static assets', 503)
+    port = loaded[0].port
+    from requests import get as requests_get
+    resp = requests_get(f'http://127.0.0.1:{port}/static/{path}')
+    return make_response(resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'application/octet-stream')})
 
 
 @app.route('/')
