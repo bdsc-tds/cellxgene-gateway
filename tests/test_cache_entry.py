@@ -1,14 +1,16 @@
 import unittest
+import tempfile
+import os
+import shutil
 
 from flask import Flask
-
 from cellxgene_gateway import flask_util
 from cellxgene_gateway.cache_entry import CacheEntry, CacheEntryStatus
 from cellxgene_gateway.cache_key import CacheKey
-from cellxgene_gateway.gateway import app
+from cellxgene_gateway.items.item import ItemType
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
-from cellxgene_gateway.items.item import ItemType
+from cellxgene_gateway.gateway import app
 
 key = CacheKey(
     FileItem("/czi/", name="pbmc3k.h5ad", type=ItemType.h5ad),
@@ -22,6 +24,9 @@ class TestRenderEntry(unittest.TestCase):
         self.app_context = self.app.test_request_context()
         self.app_context.push()
         self.client = self.app.test_client()
+
+    def tearDown(self):
+        self.app_context.pop()
 
     def test_GIVEN_key_and_port_THEN_returns_loading_CacheEntry(self):
         entry = CacheEntry.for_key("some-key", 1)

@@ -1,3 +1,6 @@
+import os
+import shutil
+import tempfile
 import unittest
 from collections import defaultdict
 from unittest.mock import patch
@@ -10,6 +13,7 @@ from cellxgene_gateway.filecrawl import (
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemTree, ItemType
+from cellxgene_gateway.gateway import app
 
 source = FileItemSource("/tmp")
 
@@ -25,6 +29,14 @@ def make_entry(subpath="somepath", annotations=None):
 
 
 class TestRenderEntry(unittest.TestCase):
+    def setUp(self):
+        self.app = app
+        self.app_context = self.app.test_request_context()
+        self.app_context.push()
+
+    def tearDown(self):
+        self.app_context.pop()
+
     def test_GIVEN_path_both_slash_THEN_view_has_single_slash(self):
         entry = make_entry(subpath="/somepath/")
         rendered = render_item(entry, source)
@@ -47,6 +59,15 @@ class TestRenderEntry(unittest.TestCase):
 
 
 class TestRenderAnnotation(unittest.TestCase):
+
+    def setUp(self):
+        self.app = app
+        self.app_context = self.app.test_request_context()
+        self.app_context.push()
+
+    def tearDown(self):
+        self.app_context.pop()
+
     @patch("cellxgene_gateway.filecrawl.enable_annotations", new=True)
     def test_GIVEN_no_annotation_THEN_new_alone(self):
         entry = make_entry(annotations=None)
@@ -103,11 +124,12 @@ class TestRenderItemSource(unittest.TestCase):
 
 class TestRenderItemTree(unittest.TestCase):
     def setUp(self):
-        from cellxgene_gateway.gateway import app
-
         self.app = app
         self.app_context = self.app.test_request_context()
         self.app_context.push()
+
+    def tearDown(self):
+        self.app_context.pop()
 
     @patch("cellxgene_gateway.items.file.fileitem_source.FileItemSource")
     def test_GIVEN_deep_nested_dirs_THEN_includes_dirs_in_output(self, item_source):
