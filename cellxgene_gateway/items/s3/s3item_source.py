@@ -38,7 +38,7 @@ def truthy(val: str):
       True if string is "true" or "1" (case-insensitive), otherwise False.
     """
 
-    return val.lower() in ["true", "1"]
+    return val.lower() in ['true', '1']
 
 
 class S3ItemSource(ItemSource):
@@ -58,7 +58,7 @@ class S3ItemSource(ItemSource):
         name=None,
         h5ad_suffix=dir_util.h5ad_suffix,
         annotation_dir_suffix=dir_util.annotations_suffix,
-        annotation_file_suffix=".csv",
+        annotation_file_suffix='.csv',
     ):
         """
         Initialise S3ItemSource.
@@ -87,14 +87,14 @@ class S3ItemSource(ItemSource):
 
         self._name = name
         enable_cache = os.environ.get(
-            "S3_ENABLE_LISTINGS_CACHE", "false"
+            'S3_ENABLE_LISTINGS_CACHE', 'false'
         ).lower()
-        assert enable_cache in ["0", "1", "false", "true"]
+        assert enable_cache in ['0', '1', 'false', 'true']
         self.use_listings_cache = truthy(enable_cache)
         self.s3 = s3fs.S3FileSystem(use_listings_cache=self.use_listings_cache)
-        if bucket.startswith("s3://"):
+        if bucket.startswith('s3://'):
             raise Exception(
-                f"Bucket name should not include s3:// prefix, got {bucket}"
+                f'Bucket name should not include s3:// prefix, got {bucket}'
             )
         self.bucket = bucket
         self.h5ad_suffix = h5ad_suffix
@@ -116,7 +116,7 @@ class S3ItemSource(ItemSource):
           Full S3 URL (e.g., 's3://bucket/key').
         """
 
-        return "s3://" + self.bucket + "/" + key
+        return 's3://' + self.bucket + '/' + key
 
     def remove_bucket(self, filepath):
         """
@@ -133,7 +133,7 @@ class S3ItemSource(ItemSource):
           Relative key without bucket name.
         """
 
-        return filepath[len(self.bucket) :].lstrip("/")
+        return filepath[len(self.bucket) :].lstrip('/')
 
     @property
     def name(self):
@@ -145,7 +145,7 @@ class S3ItemSource(ItemSource):
         str
           Source name or default representation based on base path.
         """
-        return self._name or f"Items:{self.url('')}"
+        return self._name or f'Items:{self.url("")}'
 
     def is_h5ad_url(self, s3url: str) -> bool:
         """
@@ -247,7 +247,7 @@ class S3ItemSource(ItemSource):
           Tree structure of items and directories.
         """
 
-        item_tree = self.scan_directory("" if filter is None else filter)
+        item_tree = self.scan_directory('' if filter is None else filter)
         return item_tree
 
     @property
@@ -262,11 +262,11 @@ class S3ItemSource(ItemSource):
         """
 
         return (
-            truthy(flask.request.args.get("refresh", default="false"))
+            truthy(flask.request.args.get('refresh', default='false'))
             or not self.use_listings_cache
         )
 
-    def scan_directory(self, directory_key="") -> dict:
+    def scan_directory(self, directory_key='') -> dict:
         """
         Recursively scan S3 directory and build ItemTree.
 
@@ -287,7 +287,7 @@ class S3ItemSource(ItemSource):
             raise Exception(f"S3 url '{url}' does not exist.")
 
         s3key_map = dict(
-            (self.remove_bucket(filepath), "s3://" + filepath)
+            (self.remove_bucket(filepath), 's3://' + filepath)
             for filepath in sorted(self.s3.ls(url, refresh=self.refresh))
         )
 
@@ -422,12 +422,12 @@ class S3ItemSource(ItemSource):
           Result with item and optional annotation.
         """
 
-        descriptor = indescriptor.strip("/")
+        descriptor = indescriptor.strip('/')
         if descriptor.endswith(self.annotation_file_suffix):
             annotation_item = self.shallowitem_from_descriptor(descriptor, True)
             if not self.s3.exists(self.url(annotation_item.s3key)):
-                with self.s3.open(self.url(annotation_item.s3key), "w") as f:
-                    f.write("")
+                with self.s3.open(self.url(annotation_item.s3key), 'w') as f:
+                    f.write('')
             h5ad_descriptor = self.convert_annotation_key_to_h5ad(
                 dirname(annotation_item.s3key)
             )
@@ -510,7 +510,7 @@ class S3ItemSource(ItemSource):
                     self.s3.ls(annotations_fullpath, refresh=self.refresh)
                 )
                 if annotation.endswith(self.annotation_file_suffix)
-                and self.s3.isfile("s3://" + annotation)
+                and self.s3.isfile('s3://' + annotation)
             ]
         else:
             return None

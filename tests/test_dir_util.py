@@ -32,7 +32,7 @@ class TestMakeH5ad(unittest.TestCase):
         "pbmc.h5ad": str
         """
 
-        self.assertEqual(make_h5ad("pbmc_annotations"), "pbmc.h5ad")
+        self.assertEqual(make_h5ad('pbmc_annotations'), 'pbmc.h5ad')
 
 
 class TestMakeAnnotations(unittest.TestCase):
@@ -56,7 +56,7 @@ class TestMakeAnnotations(unittest.TestCase):
         "pbmc_annotations": str
         """
 
-        self.assertEqual(make_annotations("pbmc.h5ad"), "pbmc_annotations")
+        self.assertEqual(make_annotations('pbmc.h5ad'), 'pbmc_annotations')
 
 
 class TestEnsureDirExists(unittest.TestCase):
@@ -67,8 +67,8 @@ class TestEnsureDirExists(unittest.TestCase):
     exist.
     """
 
-    @patch("os.path.exists")
-    @patch("os.makedirs")
+    @patch('os.path.exists')
+    @patch('os.makedirs')
     def test_GIVEN_existing_THEN_does_not_call_makedir(
         self, makedirsMock, existsMock
     ):
@@ -90,11 +90,11 @@ class TestEnsureDirExists(unittest.TestCase):
         """
 
         existsMock.return_value = True
-        ensure_dir_exists("/foo")
+        ensure_dir_exists('/foo')
         makedirsMock.assert_not_called()
 
-    @patch("os.path.exists")
-    @patch("os.makedirs")
+    @patch('os.path.exists')
+    @patch('os.makedirs')
     def test_GIVEN_not_existing_THEN_calls_makedir(
         self, makedirsMock, existsMock
     ):
@@ -116,5 +116,5 @@ class TestEnsureDirExists(unittest.TestCase):
         """
 
         existsMock.return_value = False
-        ensure_dir_exists("/foo")
-        makedirsMock.assert_called_once_with("/foo")
+        ensure_dir_exists('/foo')
+        makedirsMock.assert_called_once_with('/foo')

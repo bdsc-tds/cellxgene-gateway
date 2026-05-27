@@ -43,7 +43,7 @@ def is_port_in_use(port):
       True if port is in use, otherwise False.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
+        return s.connect_ex(('localhost', port)) == 0
 
 
 class BackendCache:
@@ -102,7 +102,7 @@ class BackendCache:
             return matches[0]
         else:
             raise CacheException(
-                f"Found {str(len(matches))} matches for {path}",
+                f'Found {str(len(matches))} matches for {path}',
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -135,7 +135,7 @@ class BackendCache:
             return matches[0]
         else:
             raise CacheException(
-                f"Found {str(len(matches))} matches for {key.dataset}",
+                f'Found {str(len(matches))} matches for {key.dataset}',
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 

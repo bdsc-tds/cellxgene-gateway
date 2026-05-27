@@ -16,8 +16,8 @@ from cellxgene_gateway.items.item import ItemType
 # Create CacheKey instance using FileItem representing an .h5ad file and
 # FileItemSource pointing to local directory
 key = CacheKey(
-    FileItem("/czi/", name="pbmc3k.h5ad", type=ItemType.h5ad),
-    FileItemSource("/tmp", "local"),
+    FileItem('/czi/', name='pbmc3k.h5ad', type=ItemType.h5ad),
+    FileItemSource('/tmp', 'local'),
 )
 
 
@@ -48,7 +48,7 @@ class TestRenderEntry(unittest.TestCase):
         status set to `CacheEntryStatus.loading`.
         """
 
-        entry = CacheEntry.for_key("some-key", 1)
+        entry = CacheEntry.for_key('some-key', 1)
         self.assertEqual(entry.status, CacheEntryStatus.loading)
 
     def test_GIVEN_absolute_static_url_THEN_include_path(self):
@@ -59,9 +59,9 @@ class TestRenderEntry(unittest.TestCase):
 
         flask_util.include_source_in_url = False
         actual = CacheEntry.for_key(key, 8000).rewrite_text_content(
-            "src:url(/static/assets/"
+            'src:url(/static/assets/'
         )
-        expected = "src:url(/view/czi/pbmc3k.h5ad/static/assets/"
+        expected = 'src:url(/view/czi/pbmc3k.h5ad/static/assets/'
         self.assertEqual(actual, expected)
 
     def test_GIVEN_absolute_src_THEN_include_path(self):
@@ -85,9 +85,9 @@ class TestRenderEntry(unittest.TestCase):
 
         flask_util.include_source_in_url = True
         actual = CacheEntry.for_key(key, 8000).rewrite_text_content(
-            "src:url(/static/assets/"
+            'src:url(/static/assets/'
         )
-        expected = "src:url(/source/local/view/czi/pbmc3k.h5ad/static/assets/"
+        expected = 'src:url(/source/local/view/czi/pbmc3k.h5ad/static/assets/'
         self.assertEqual(actual, expected)
 
     def test_GIVEN_absolute_src_include_source_THEN_include_path(self):
@@ -105,5 +105,5 @@ class TestRenderEntry(unittest.TestCase):
 
 
 # Entry point for running test suite
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

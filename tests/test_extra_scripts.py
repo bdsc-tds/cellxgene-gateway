@@ -15,7 +15,7 @@ class TestExtraScripts(unittest.TestCase):
     variable are parsed and handled.
     """
 
-    @patch("cellxgene_gateway.env.extra_scripts", new='["abc","def"]')
+    @patch('cellxgene_gateway.env.extra_scripts', new='["abc","def"]')
     def test_GIVEN_two_scripts_THEN_returns_two_strings(self):
         """
         Test that two scripts in a valid JSON string are parsed into a list of
@@ -30,9 +30,9 @@ class TestExtraScripts(unittest.TestCase):
         ["abc", "def"]
         """
 
-        self.assertEqual(get_extra_scripts(), ["abc", "def"])
+        self.assertEqual(get_extra_scripts(), ['abc', 'def'])
 
-    @patch("cellxgene_gateway.env.extra_scripts", new='["abc", "def"]')
+    @patch('cellxgene_gateway.env.extra_scripts', new='["abc", "def"]')
     def test_GIVEN_two_scripts_space_THEN_returns_two_strings(self):
         """
         Test that two scripts in a JSON string with spaces are correctly parsed.
@@ -46,9 +46,9 @@ class TestExtraScripts(unittest.TestCase):
         ["abc", "def"]
         """
 
-        self.assertEqual(get_extra_scripts(), ["abc", "def"])
+        self.assertEqual(get_extra_scripts(), ['abc', 'def'])
 
-    @patch("cellxgene_gateway.env.extra_scripts", new=None)
+    @patch('cellxgene_gateway.env.extra_scripts', new=None)
     def test_GIVEN_none_THEN_returns_empty_array(self):
         """
         Test that None value for environment variable returns empty list.
@@ -64,7 +64,7 @@ class TestExtraScripts(unittest.TestCase):
 
         self.assertEqual(get_extra_scripts(), [])
 
-    @patch("cellxgene_gateway.env.extra_scripts", new="[]")
+    @patch('cellxgene_gateway.env.extra_scripts', new='[]')
     def test_GIVEN_empty_string_THEN_returns_empty_array(self):
         """
         Test that empty JSON array string returns empty list.
@@ -80,7 +80,7 @@ class TestExtraScripts(unittest.TestCase):
 
         self.assertEqual(get_extra_scripts(), [])
 
-    @patch("cellxgene_gateway.env.extra_scripts", new="'asdf'")
+    @patch('cellxgene_gateway.env.extra_scripts', new="'asdf'")
     def test_GIVEN_bare_string_THEN_throws_Exception(self):
         """
         Test that malformed JSON string raises Exception.
@@ -109,5 +109,5 @@ class TestExtraScripts(unittest.TestCase):
 
 
 # Entry point for running test suite
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

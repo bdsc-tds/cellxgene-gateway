@@ -52,14 +52,10 @@ class CustomRequestHandler(WSGIRequestHandler):
         None
         """
         # IPv6 addresses contains "%" which breaks logging
-        address_string = self.address_string().replace("%", "%%")
-        _log(
-            type,
-            f"{address_string}  {message}\n",
-            *args,
-        )
+        address_string = self.address_string().replace('%', '%%')
+        _log(type, f'{address_string}  {message}\n', *args)
 
-    def log_request(self, code: int | str = "-", size: int | str = " ") -> None:
+    def log_request(self, code: int | str = '-', size: int | str = ' ') -> None:
         """
         Log HTTP request with colored output based on status code.
 
@@ -76,7 +72,7 @@ class CustomRequestHandler(WSGIRequestHandler):
         """
         try:
             path = uri_to_iri(self.path)
-            msg = f"{self.command} {path} {self.request_version}"
+            msg = f'{self.command} {path} {self.request_version}'
         except AttributeError:
             # Path isn't set if requestline was bad
             msg = self.requestline
@@ -85,19 +81,19 @@ class CustomRequestHandler(WSGIRequestHandler):
         msg = msg.translate(self._control_char_table)
         code = str(code)
 
-        if code[0] == "1":  # 1xx Informational
-            msg = _ansi_style(msg, "bold")
-        elif code == "200":  # 2xx Success
+        if code[0] == '1':  # 1xx Informational
+            msg = _ansi_style(msg, 'bold')
+        elif code == '200':  # 2xx Success
             pass
-        elif code == "304":  # 304 Resource Not Modified
-            msg = _ansi_style(msg, "cyan")
-        elif code[0] == "3":  # 3xx Redirection
-            msg = _ansi_style(msg, "green")
-        elif code == "404":  # 404 Resource Not Found
-            msg = _ansi_style(msg, "yellow")
-        elif code[0] == "4":  # 4xx Client Error
-            msg = _ansi_style(msg, "bold", "red")
+        elif code == '304':  # 304 Resource Not Modified
+            msg = _ansi_style(msg, 'cyan')
+        elif code[0] == '3':  # 3xx Redirection
+            msg = _ansi_style(msg, 'green')
+        elif code == '404':  # 404 Resource Not Found
+            msg = _ansi_style(msg, 'yellow')
+        elif code[0] == '4':  # 4xx Client Error
+            msg = _ansi_style(msg, 'bold', 'red')
         else:  # 5xx or any other response
-            msg = _ansi_style(msg, "bold", "magenta")
+            msg = _ansi_style(msg, 'bold', 'magenta')
 
-        self.log("debug", '"%s" %s %s', msg, code, size)
+        self.log('debug', '"%s" %s %s', msg, code, size)

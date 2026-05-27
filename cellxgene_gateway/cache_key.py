@@ -119,7 +119,7 @@ class CacheKey:
         *.view_url: str
           Base URL of gateway associated with cache key.
         """
-        return self.view_url + "/"
+        return self.view_url + '/'
 
     @property
     def view_url(self):

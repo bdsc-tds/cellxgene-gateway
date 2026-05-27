@@ -74,31 +74,31 @@ class SubprocessBackend:
           Full shell command to run Cellxgene.
         """
         if enable_annotations and annotation_file_path is not None:
-            if annotation_file_path == "":
-                extra_args = f" --annotations-dir {make_annotations(file_path)}"
+            if annotation_file_path == '':
+                extra_args = f' --annotations-dir {make_annotations(file_path)}'
             else:
-                extra_args = f" --annotations-file {annotation_file_path}"
+                extra_args = f' --annotations-file {annotation_file_path}'
                 gene_sets_file_path = (
-                    annotation_file_path[:-4] + "_gene_sets.csv"
+                    annotation_file_path[:-4] + '_gene_sets.csv'
                 )
-                extra_args += f" --gene-sets-file {gene_sets_file_path}"
+                extra_args += f' --gene-sets-file {gene_sets_file_path}'
         else:
-            extra_args = " --disable-annotations"
-            extra_args += " --disable-gene-sets-save"
+            extra_args = ' --disable-annotations'
+            extra_args += ' --disable-gene-sets-save'
         if enable_backed_mode:
-            extra_args += " --backed"
+            extra_args += ' --backed'
         if cellxgene_args is not None:
-            extra_args += f" {cellxgene_args}"
+            extra_args += f' {cellxgene_args}'
 
         cmd = (
-            f"yes | {cellxgene_loc} launch {file_path}"
-            + f" --port {port}"
-            + " --host 127.0.0.1"
+            f'yes | {cellxgene_loc} launch {file_path}'
+            + f' --port {port}'
+            + ' --host 127.0.0.1'
             + extra_args
         )
 
         for s in scripts:
-            cmd += f" --scripts {s}"
+            cmd += f' --scripts {s}'
 
         return cmd
 
@@ -128,25 +128,25 @@ class SubprocessBackend:
             scripts,
             cache_entry.key.annotation_file_path,
         )
-        logger.info(f"Launching {cmd}")
+        logger.info(f'Launching {cmd}')
         process = subprocess.Popen(
             [cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
 
         while True:
             output = process.stdout.readline().decode()
-            if output == "[cellxgene] Type CTRL-C at any time to exit.\n":
+            if output == '[cellxgene] Type CTRL-C at any time to exit.\n':
                 break
-            elif output == "":
+            elif output == '':
                 stderr = process.stderr.read().decode()
                 if (
-                    "Error while loading file" in stderr
-                    or "Could not open file" in stderr
+                    'Error while loading file' in stderr
+                    or 'Could not open file' in stderr
                 ):
-                    message = "File was invalid."
+                    message = 'File was invalid.'
                     http_status = HTTPStatus.BAD_REQUEST
                 else:
-                    message = "Cellxgene failed to launch dataset."
+                    message = 'Cellxgene failed to launch dataset.'
                     http_status = HTTPStatus.INTERNAL_SERVER_ERROR
 
                 cache_entry.status = CacheEntryStatus.error
@@ -158,5 +158,5 @@ class SubprocessBackend:
 
         cache_entry.set_loaded(process.pid)
         for output in process.communicate():
-            logger.debug(f"cellxgene:{output}")
-        logger.info(f"Exiting {cmd}")
+            logger.debug(f'cellxgene:{output}')
+        logger.info(f'Exiting {cmd}')

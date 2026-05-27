@@ -27,12 +27,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from cellxgene_gateway import env, flask_util
 from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_entry import CacheEntryStatus
-from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.cache_exception import CacheException
+from cellxgene_gateway.cache_key import CacheKey
+from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata_tsv
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.prune_process_cache import PruneProcessCache
 from cellxgene_gateway.util import current_time_stamp, CustomRequestHandler
 
@@ -42,7 +42,7 @@ item_sources = []
 default_item_source = None
 
 # Guard for lazy initialization so tests can import this module without
-# triggering environment-dependent side effects. initialize_data_sources()
+# triggering environment-dependent side effects. initialise_data_sources()
 # will set this to True when it has run.
 data_sources_initialized = False
 data_sources_init_lock = Lock()
@@ -105,25 +105,27 @@ if (
 # WSGI middleware to ensure data sources are initialized before the first
 # WSGI request is handled. This guarantees initialization works under
 # Gunicorn/uWSGI (which import the module but don't call main()). The
-# initialize_data_sources() function is idempotent-protected by
+# initialise_data_sources() function is idempotent-protected by
 # data_sources_initialized and data_sources_init_lock.
 def _init_on_first_wsgi_request(wsgi_app):
     def middleware(environ, start_response):
         global data_sources_initialized
         if not data_sources_initialized:
             with data_sources_init_lock:
-                if not app.extensions.get("cellxgene_gateway", {}).get("launchtime"):
-                    app.extensions.setdefault("cellxgene_gateway", {})[
-                        "launchtime"
+                if not app.extensions.get('cellxgene_gateway', {}).get(
+                    'launchtime'
+                ):
+                    app.extensions.setdefault('cellxgene_gateway', {})[
+                        'launchtime'
                     ] = current_time_stamp()
 
                 if not data_sources_initialized:
-                    initialize_data_sources()
+                    initialise_data_sources()
 
                     env.validate()
                     if not item_sources or not len(item_sources):
                         raise Exception(
-                            "No data sources specified for Cellxgene Gateway"
+                            'No data sources specified for Cellxgene Gateway'
                         )
 
                     global default_item_source
@@ -138,7 +140,7 @@ def _init_on_first_wsgi_request(wsgi_app):
 
 # Wrap the WSGI app so Gunicorn/uWSGI will trigger initialization when the
 # first request comes in. Tests that need initialization can call
-# initialize_data_sources() directly.
+# initialise_data_sources() directly.
 app.wsgi_app = _init_on_first_wsgi_request(app.wsgi_app)
 
 cache = BackendCache()
@@ -146,7 +148,7 @@ cache = BackendCache()
 
 # Initialize data sources - this is defined later in the file but called here
 # to ensure initialization happens when WSGI servers (Gunicorn) import the module
-def initialize_data_sources():
+def initialise_data_sources():
     """Initialize data sources from environment variables.
     Called at module import time for WSGI server compatibility (Gunicorn).
     Uses a guard flag to prevent double initialization within a process."""
@@ -154,31 +156,31 @@ def initialize_data_sources():
 
     logging.basicConfig(
         level=env.log_level,
-        format="%(asctime)s:%(name)s:%(levelname)s:%(message)s",
+        format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
     )
     logger = logging.getLogger(__name__)
 
-    cellxgene_data = os.environ.get("CELLXGENE_DATA", None)
-    cellxgene_bucket = os.environ.get("CELLXGENE_BUCKET", None)
+    cellxgene_data = os.environ.get('CELLXGENE_DATA', None)
+    cellxgene_bucket = os.environ.get('CELLXGENE_BUCKET', None)
 
     if cellxgene_bucket is not None:
         from cellxgene_gateway.items.s3.s3item_source import S3ItemSource
 
-        s3_source = S3ItemSource(cellxgene_bucket, name="s3")
+        s3_source = S3ItemSource(cellxgene_bucket, name='s3')
         item_sources.append(s3_source)
         default_item_source = s3_source
-        logger.info("Initialized S3 data source")
-        logger.debug(f"S3 bucket: {cellxgene_bucket}")
+        logger.info('Initialized S3 data source')
+        logger.debug(f'S3 bucket: {cellxgene_bucket}')
     if cellxgene_data is not None:
         from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 
-        file_source = FileItemSource(cellxgene_data, name="local")
+        file_source = FileItemSource(cellxgene_data, name='local')
         item_sources.append(file_source)
         default_item_source = file_source
-        logger.info("Initialized local file data source")
-        logger.debug(f"Data directory: {cellxgene_data}")
+        logger.info('Initialized local file data source')
+        logger.debug(f'Data directory: {cellxgene_data}')
     if len(item_sources) == 0:
-        raise Exception("Please specify CELLXGENE_DATA or CELLXGENE_BUCKET")
+        raise Exception('Please specify CELLXGENE_DATA or CELLXGENE_BUCKET')
     flask_util.include_source_in_url = len(item_sources) > 1
 
 
@@ -505,7 +507,7 @@ def filecrawl(path=None):
                 use_metadata=False,
             )
         )
-    
+
     set_no_cache(resp)
     return resp
 
@@ -561,6 +563,11 @@ def do_view(path, source_name=None):
             raise CacheException('User not authorized to access this data', 403)
     elif match.status == CacheEntryStatus.error:
         raise CellxgeneException.from_cache_entry(match)
+    else:
+        raise CacheException(
+            f'Unexpected cache entry status {match.status} for key {match.key.descriptor}',
+            500,
+        )
 
 
 @app.route('/instances', methods=['GET'])
@@ -600,7 +607,9 @@ def do_instances_json():
 
     return json.dumps(
         {
-            'launchtime': app.extensions.get('cellxgene_gateway', {}).get('launchtime'),
+            'launchtime': app.extensions.get('cellxgene_gateway', {}).get(
+                'launchtime'
+            ),
             'entry_list': [map_entry(entry) for entry in cache.entry_list],
         }
     )
@@ -636,7 +645,7 @@ def do_relaunch(path):
 
     key = get_cache_key(path)
     match = cache.check_entry(key)
-    if not match is None:
+    if match is not None:
         match.terminate()
 
     return redirect(key.view_url, code=302)
@@ -660,7 +669,7 @@ def do_terminate(path):
 
     key = get_cache_key(path)
     match = cache.check_entry(key)
-    if not match is None:
+    if match is not None:
         match.terminate()
 
     return redirect(url_for('do_instances'), code=302)
@@ -734,13 +743,12 @@ def start_pruner_thread():
     background_thread.start()
 
 
-
 def launch():
     start_pruner_thread()
 
-    app.extensions.setdefault("cellxgene_gateway", {})[
-        "launchtime"
-    ] = current_time_stamp()
+    app.extensions.setdefault('cellxgene_gateway', {})['launchtime'] = (
+        current_time_stamp()
+    )
     app.run(
         host='0.0.0.0',
         port=env.gateway_port,
@@ -749,7 +757,7 @@ def launch():
     )
 
 
-app.extensions.setdefault("cellxgene_gateway", {})["launchtime"] = None
+app.extensions.setdefault('cellxgene_gateway', {})['launchtime'] = None
 
 
 def main():

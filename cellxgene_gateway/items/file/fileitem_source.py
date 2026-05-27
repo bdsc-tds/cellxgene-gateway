@@ -37,8 +37,8 @@ class FileItemSource(ItemSource):
         name=None,
         h5ad_suffix=dir_util.h5ad_suffix,
         annotation_dir_suffix=dir_util.annotations_suffix,
-        annotation_file_suffix=".csv",
-        gene_set_file_suffix="_gene_sets.csv",
+        annotation_file_suffix='.csv',
+        gene_set_file_suffix='_gene_sets.csv',
     ):
         """
         Initialise FileItemSource.
@@ -86,7 +86,7 @@ class FileItemSource(ItemSource):
           Source name or default representation based on base path.
         """
 
-        return self._name or f"Files:{self.base_path}"
+        return self._name or f'Files:{self.base_path}'
 
     def is_gene_set(self, path: str) -> bool:
         """
@@ -205,10 +205,10 @@ class FileItemSource(ItemSource):
           Tree structure of file items and directories.
         """
 
-        item_tree = self.scan_directory("" if filter is None else filter)
+        item_tree = self.scan_directory('' if filter is None else filter)
         return item_tree
 
-    def scan_directory(self, subpath: str = "") -> ItemTree:
+    def scan_directory(self, subpath: str = '') -> ItemTree:
         """
         Recursively scan directory and build ItemTree.
 
@@ -396,7 +396,7 @@ class FileItemSource(ItemSource):
           Returns None if item is not found.
         """
 
-        descriptor = indescriptor.strip("/")
+        descriptor = indescriptor.strip('/')
         if descriptor.endswith(self.annotation_file_suffix):
             annotation_item = self.shallowitem_from_descriptor(descriptor, True)
             h5ad_descriptor = self.convert_annotation_path_to_h5ad(
@@ -435,10 +435,7 @@ class FileItemSource(ItemSource):
         subpath = os.path.dirname(descriptor)
 
         return self.make_fileitem_from_path(
-            filename,
-            subpath,
-            is_annotation,
-            True,
+            filename, subpath, is_annotation, True
         )
 
     def make_fileitem_from_path(
@@ -472,7 +469,7 @@ class FileItemSource(ItemSource):
             ext = self.annotation_file_suffix
         else:
             name = filename
-            ext = ""
+            ext = ''
         item = FileItem(
             subpath=subpath,
             name=name,
@@ -520,7 +517,7 @@ class FileItemSource(ItemSource):
             # Catch gene sets without accompanying [annotations].csv
             gene_sets_files = [
                 self.make_fileitem_from_path(
-                    annotation[: -len(self.gene_set_file_suffix)] + ".csv",
+                    annotation[: -len(self.gene_set_file_suffix)] + '.csv',
                     annotations_subpath,
                     True,
                 )

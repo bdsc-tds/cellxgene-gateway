@@ -2,7 +2,6 @@
 
 /* Sidebar column style class; fixed overlay, passes pointer events through
 to content beneath*/
-
 :root {
   --sidebar-w: 375px;
 }

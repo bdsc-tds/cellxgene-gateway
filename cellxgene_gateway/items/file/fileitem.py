@@ -26,7 +26,7 @@ class FileItem(Item):
     Item: Abstract base class defining core interface for data items.
     """
 
-    def __init__(self, subpath: str, ext: str = "", *args, **kwargs):
+    def __init__(self, subpath: str, ext: str = '', *args, **kwargs):
         """
         Initialise FileItem. Item superclass expects 'name' and 'type'.
 
@@ -66,4 +66,4 @@ class FileItem(Item):
           Item relative path.
         """
 
-        return os.path.join(self.subpath, self.name + self.ext).strip("/")
+        return os.path.join(self.subpath, self.name + self.ext).strip('/')

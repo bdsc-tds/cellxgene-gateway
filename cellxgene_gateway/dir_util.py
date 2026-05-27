@@ -12,13 +12,9 @@
 import os
 
 
-# Import other functions from package
-from cellxgene_gateway import env
-
-
 # General variables
-annotations_suffix = "_annotations"
-h5ad_suffix = ".h5ad"
+annotations_suffix = '_annotations'
+h5ad_suffix = '.h5ad'
 
 
 def make_h5ad(el):

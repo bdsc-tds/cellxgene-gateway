@@ -64,16 +64,16 @@ class PruneProcessCache:
         ]
 
         logger.debug(
-            f"Cutoff {cutoff} = timestamp {timestamp} - expire seconds {self.expire_seconds} , keeping {processes_to_keep}, pruning {processes_to_delete}"
+            f'Cutoff {cutoff} = timestamp {timestamp} - expire seconds {self.expire_seconds} , keeping {processes_to_keep}, pruning {processes_to_delete}'
         )
 
         for process in processes_to_delete:
             try:
                 logger.info(
-                    f"Pruning process {process.pid} ({process.key.descriptor})"
+                    f'Pruning process {process.pid} ({process.key.descriptor})'
                 )
                 self.cache.prune(process)
             except Exception:
                 logger.exception(
-                    "Failed to prune process {process.pid} ({process.key.descriptor})"
+                    'Failed to prune process {process.pid} ({process.key.descriptor})'
                 )

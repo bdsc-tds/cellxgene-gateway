@@ -26,7 +26,7 @@ def querystring():
       Decoded query string with "?" prefix, or an empty string if none.
     """
     qs = request.query_string.decode()
-    return f"?{qs}" if len(qs) > 0 else ""
+    return f'?{qs}' if len(qs) > 0 else ''
 
 
 def url(endpoint, descriptor, source_name):
@@ -73,7 +73,7 @@ def view_url(descriptor, source_name):
     str
       URL string pointing to dataset view endpoint.
     """
-    return url("do_view", descriptor, source_name)
+    return url('do_view', descriptor, source_name)
 
 
 def relaunch_url(descriptor, source_name):
@@ -93,4 +93,4 @@ def relaunch_url(descriptor, source_name):
     str
       URL string pointing to dataset relaunch endpoint.
     """
-    return url("do_relaunch", descriptor, source_name)
+    return url('do_relaunch', descriptor, source_name)

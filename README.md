@@ -18,7 +18,7 @@ $ python --version
 
 ```bash
 python -m venv .cellxgene-gateway
-source .cellxgene-gateway/bin/activate # type `deactivate` to deactivate the venv
+source .cellxgene-gateway/bin/activate  # Type `deactivate` to deactivate venv
 ```
 
 ## Install cellxgene-gateway
@@ -29,6 +29,7 @@ source .cellxgene-gateway/bin/activate # type `deactivate` to deactivate the ven
 pip install git+https://github.com/Novartis/cellxgene-gateway
 ```
 Note: you may need to downgrade h5py with `pip install h5py==2.9.0` due to an [issue](https://github.com/theislab/scanpy/issues/832) in a dependency.
+
 ### Option 2: Install from PyPI
 
 ```bash
@@ -44,11 +45,10 @@ mkdir ../cellxgene_data
 wget https://raw.githubusercontent.com/chanzuckerberg/cellxgene/master/example-dataset/pbmc3k.h5ad -O ../cellxgene_data/pbmc3k.h5ad
 ```
 
-
 2. Set your environment variables correctly:
 
 ```bash
-export CELLXGENE_DATA=../cellxgene_data  # change this directory if you put data in a different place.
+export CELLXGENE_DATA=../cellxgene_data  # Change this if you put data in a different place
 export CELLXGENE_LOCATION=`which cellxgene`
 ```
 
@@ -115,6 +115,7 @@ docker run -it --rm \
 -p 8080:8080 \
 cellxgene-gateway
 ```
+
 ## Running cellxgene gateway with start scripts
 
 For your convenience, we provide start scripts for flask, gunicorn and uwsgi.
@@ -153,8 +154,8 @@ If you want to develop the code, you will need to clone the repo. Make sure you 
 1. Clone the repo
 
 ```bash
-    git clone https://github.com/Novartis/cellxgene-gateway.git
-    cd cellxgene-gateway
+git clone https://github.com/Novartis/cellxgene-gateway.git
+cd cellxgene-gateway
 ```
 
 2. Install requirements with
@@ -178,19 +179,18 @@ conda install -c conda-forge pre-commit
 pre-commit install
 ```
 
-
 ## Running Tests
 
 [![Build Status](https://travis-ci.org/Novartis/cellxgene-gateway.svg?branch=master)](https://travis-ci.org/Novartis/cellxgene-gateway)
 
 ```bash
-    python -m unittest discover tests
+python -m unittest discover tests
 ```
 
 ## Code Coverage
 ```bash
-    coverage run -m unittest discover tests
-    coverage html
+coverage run -m unittest discover tests
+coverage html
 ```
 
 ## Running Linters

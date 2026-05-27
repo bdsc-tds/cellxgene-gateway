@@ -19,7 +19,6 @@ from requests import get, post, put
 
 
 # Import other functions from package
-from cellxgene_gateway import env
 from cellxgene_gateway.cache_exception import CacheException
 from cellxgene_gateway.flask_util import querystring
 from cellxgene_gateway.util import current_time_stamp
@@ -34,10 +33,10 @@ class CacheEntryStatus(Enum):
     Enum class to list possible cache entry statuses.
     """
 
-    loaded = "Loaded"
-    loading = "Loading"
-    error = "Error"
-    terminated = "Terminated"
+    loaded = 'Loaded'
+    loading = 'Loading'
+    error = 'Error'
+    terminated = 'Terminated'
 
 
 class CacheEntry:
@@ -239,7 +238,7 @@ class CacheEntry:
             except psutil.NoSuchProcess:
                 pass
 
-            logger.info(f"Terminated {terminated}")
+            logger.info(f'Terminated {terminated}')
         self.status = CacheEntryStatus.terminated
 
     def rewrite_text_content(self, cellxgene_content):
@@ -262,10 +261,10 @@ class CacheEntry:
         gateway_content = (
             re.sub(
                 '(="|\()/static/',
-                f"\\1{self.key.gateway_basepath()}static/",
+                f'\\1{self.key.gateway_basepath()}static/',
                 cellxgene_content,
             )
-            .replace("http://fonts.gstatic.com", "https://fonts.gstatic.com")
+            .replace('http://fonts.gstatic.com', 'https://fonts.gstatic.com')
             .replace(self.cellxgene_basepath(), self.key.gateway_basepath())
         )
         return gateway_content
@@ -279,7 +278,7 @@ class CacheEntry:
         str
           Base URL for Cellxgene, including port.
         """
-        return f"http://127.0.0.1:{self.port}"
+        return f'http://127.0.0.1:{self.port}'
 
     def serve_content(self, path):
         """
@@ -298,34 +297,34 @@ class CacheEntry:
         gateway_basepath = self.key.gateway_basepath()
         subpath = path[len(self.key.descriptor) :]  # noqa: E203
         if len(subpath) == 0:
-            r = make_response(f"Redirect to {gateway_basepath}\n", 302)
-            r.headers["location"] = gateway_basepath + querystring()
+            r = make_response(f'Redirect to {gateway_basepath}\n', 302)
+            r.headers['location'] = gateway_basepath + querystring()
             return r
         elif self.status == CacheEntryStatus.loading:
             launch_time = datetime.datetime.fromtimestamp(self.launchtime)
             return render_template(
-                "loading.html",
+                'loading.html',
                 launchtime=launch_time,
                 all_output=self.all_output,
             )
 
         headers = {}
         copy_headers = [
-            "accept",
+            'accept',
             # "accept-encoding" - removed: let requests library handle compression/decompression
-            "accept-language",
-            "cache-control",
-            "connection",
-            "content-length",
-            "content-type",
-            "cookie",
-            "host",
-            "origin",
-            "pragma",
-            "referer",
-            "sec-fetch-mode",
-            "sec-fetch-site",
-            "user-agent",
+            'accept-language',
+            'cache-control',
+            'connection',
+            'content-length',
+            'content-type',
+            'cookie',
+            'host',
+            'origin',
+            'pragma',
+            'referer',
+            'sec-fetch-mode',
+            'sec-fetch-site',
+            'user-agent',
         ]
         for h in copy_headers:
             if h in request.headers:
@@ -334,24 +333,20 @@ class CacheEntry:
         full_path = self.cellxgene_basepath() + subpath + querystring()
         cellxgene_response = None
         try:
-            if request.method in ["GET", "HEAD", "OPTIONS"]:
+            if request.method in ['GET', 'HEAD', 'OPTIONS']:
                 cellxgene_response = get(full_path, headers=headers)
-            elif request.method == "PUT":
+            elif request.method == 'PUT':
                 cellxgene_response = put(
-                    full_path,
-                    headers=headers,
-                    data=request.data,
+                    full_path, headers=headers, data=request.data
                 )
-            elif request.method == "POST":
+            elif request.method == 'POST':
                 cellxgene_response = post(
-                    full_path,
-                    headers=headers,
-                    data=request.data,
+                    full_path, headers=headers, data=request.data
                 )
             else:
-                raise CacheException(f"Unexpected method {request.method}", 400)
-            content_type = cellxgene_response.headers["content-type"]
-            if "text" in content_type:
+                raise CacheException(f'Unexpected method {request.method}', 400)
+            content_type = cellxgene_response.headers['content-type']
+            if 'text' in content_type:
                 gateway_content = self.rewrite_text_content(
                     cellxgene_response.content.decode()
                 )
@@ -364,9 +359,7 @@ class CacheEntry:
                     resp_headers[h] = cellxgene_response.headers[h]
 
             gateway_response = make_response(
-                gateway_content,
-                cellxgene_response.status_code,
-                resp_headers,
+                gateway_content, cellxgene_response.status_code, resp_headers
             )
         finally:
             if cellxgene_response is not None:

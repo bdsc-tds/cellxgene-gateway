@@ -27,8 +27,8 @@ class ItemType(Enum):
       Represents an h5ad dataset file.
     """
 
-    annotation = "annotation"
-    h5ad = "h5ad"
+    annotation = 'annotation'
+    h5ad = 'h5ad'
 
 
 class Item(ABC):
@@ -37,7 +37,7 @@ class Item(ABC):
     """
 
     def __init__(
-        self, name: str, type: ItemType, annotations: List["Item"] = None
+        self, name: str, type: ItemType, annotations: List['Item'] = None
     ):
         """
         Initialise new Item.
@@ -81,7 +81,7 @@ class ItemTree:
         self,
         descriptor: str,
         items: List[Item] = None,
-        branches: List["ItemTree"] = None,
+        branches: List['ItemTree'] = None,
     ):
         """
         Initialise new ItemTree node.

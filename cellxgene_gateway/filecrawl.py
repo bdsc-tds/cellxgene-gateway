@@ -38,7 +38,7 @@ def render_annotations(item, item_source):
       disabled.
     """
     if not enable_annotations:
-        return ""
+        return ''
     url = flask_util.view_url(
         item_source.get_annotations_subpath(item), item_source.name
     )
@@ -52,7 +52,7 @@ def render_annotations(item, item_source):
         if item.annotations
         else []
     )
-    return "| annotations: " + ", ".join(new_annotation + annotations)
+    return '| annotations: ' + ', '.join(new_annotation + annotations)
 
 
 def render_item(item, item_source):
@@ -94,22 +94,22 @@ def render_item_tree(item_tree, item_source):
       HTML string representing item tree.
     """
     items = (
-        "\n".join([render_item(i, item_source) for i in item_tree.items])
+        '\n'.join([render_item(i, item_source) for i in item_tree.items])
         if item_tree.items
-        else ""
+        else ''
     )
     branches = (
-        "\n".join([
-            render_item_tree(b, item_source) for b in item_tree.branches
-        ])
+        '\n'.join(
+            [render_item_tree(b, item_source) for b in item_tree.branches]
+        )
         if item_tree.branches
-        else ""
+        else ''
     )
-    html = "<ul>" + items + branches + "</ul>"
+    html = '<ul>' + items + branches + '</ul>'
     if item_tree.descriptor:
-        descriptor = item_tree.descriptor.lstrip("/")
-        url = f"/filecrawl/{descriptor}?source={item_source.name}"
-        name = descriptor.rsplit("/", 1)[-1]
+        descriptor = item_tree.descriptor.lstrip('/')
+        url = f'/filecrawl/{descriptor}?source={item_source.name}'
+        name = descriptor.rsplit('/', 1)[-1]
         return f"<li><a href='{url}'>{name}</a>{html}</li>"
     else:
         return html
@@ -133,6 +133,6 @@ def render_item_source(item_source, filter=None):
         HTML content representing item source and its contents.
     """
     item_tree = item_source.list_items(filter)
-    filterpart = "" if filter is None else ":" + filter
+    filterpart = '' if filter is None else ':' + filter
     heading = f"<h6><a href='/filecrawl?source={urllib.parse.quote_plus(item_source.name)}'>{item_source.name}</a>{filterpart}</h6>"
     return heading + render_item_tree(item_tree, item_source)
