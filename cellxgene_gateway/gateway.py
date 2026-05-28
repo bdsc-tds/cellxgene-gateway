@@ -53,6 +53,20 @@ logger = logging.getLogger(__name__)
 
 
 def _force_https(app):
+    """
+    WSGI middleware to override URL scheme based on EXTERNAL_PROTOCOL env var.
+
+    Parameters:
+    -----------
+    app: callable
+      WSGI application to wrap.
+
+    Returns:
+    --------
+    callable
+      Wrapped WSGI application that sets wsgi.url_scheme before delegating.
+    """
+
     def wrapper(environ, start_response):
         if env.external_protocol is not None:
             environ['wsgi.url_scheme'] = env.external_protocol
@@ -147,11 +161,25 @@ cache = BackendCache()
 
 
 # Initialize data sources - this is defined later in the file but called here
-# to ensure initialization happens when WSGI servers (Gunicorn) import the module
+# to ensure initialization happens when WSGI servers (Gunicorn) import module
 def initialise_data_sources():
-    """Initialize data sources from environment variables.
-    Called at module import time for WSGI server compatibility (Gunicorn).
-    Uses a guard flag to prevent double initialization within a process."""
+    """
+    Initialise data sources from environment variables.
+
+    Reads CELLXGENE_DATA and CELLXGENE_BUCKET to set up local file and S3
+    item sources. Called lazily on the first WSGI request so Gunicorn workers
+    can import the module without triggering side effects at import time.
+
+    Returns:
+    --------
+    None
+
+    Raises:
+    -------
+    Exception
+      If neither CELLXGENE_DATA nor CELLXGENE_BUCKET is set.
+    """
+
     global default_item_source
 
     logging.basicConfig(
@@ -546,6 +574,26 @@ entry_lock = Lock()
 
 
 def matching_source(source_name):
+    """
+    Return item source matching given name.
+
+    Parameters:
+    -----------
+    source_name: str or None
+      Name of item source to look up. Falls back to default_item_source name
+      when None.
+
+    Returns:
+    --------
+    ItemSource
+      Matching item source object.
+
+    Raises:
+    -------
+    Exception
+      If no single item source matches given name.
+    """
+
     if source_name is None and default_item_source is not None:
         source_name = default_item_source.name
     matching = [i for i in item_sources if i.name == source_name]
@@ -561,6 +609,26 @@ def matching_source(source_name):
 )
 @app.route('/view/<path:path>', methods=['GET', 'PUT', 'POST'])
 def do_view(path, source_name=None):
+    """
+    Proxy requests to a running cellxgene instance serving given dataset.
+
+    Looks up or launches a cellxgene process for dataset, then proxies request
+    to it. Creates a new cache entry if none exists for key.
+
+    Parameters:
+    -----------
+    path: str
+      Dataset path within item source.
+    source_name: str or None
+      Name of item source. Uses default source when None.
+
+    Returns:
+    --------
+    flask.Response
+      Proxied response from cellxgene process, or a loading page if the process
+      is still starting up.
+    """
+
     source = matching_source(source_name)
     match = cache.check_path(source, path)
 
@@ -621,7 +689,14 @@ def do_instances():
 @app.route('/instances.json', methods=['GET'])
 def do_instances_json():
     """
-    Return cache status information in JSON format.
+    Return cache status information as a JSON response.
+
+    Returns:
+    --------
+    str
+      JSON-encoded object with gateway launchtime and a list of active cache
+      entries, each including dataset path, annotation file, status, and
+      timestamps.
     """
 
     def map_entry(entry):
@@ -646,6 +721,20 @@ def do_instances_json():
 
 
 def get_cache_key(path):
+    """
+    Build a CacheKey for given path using source from request args.
+
+    Parameters:
+    -----------
+    path: str
+      Dataset path to look up within item source.
+
+    Returns:
+    --------
+    CacheKey
+      Cache key identifying dataset and its source.
+    """
+
     if request.args.get('source_name'):
         source_name = request.args.get('source_name')
     elif default_item_source:
@@ -707,6 +796,15 @@ def do_terminate(path):
 
 @app.route('/metadata/ip_address', methods=['GET'])
 def ip_address():
+    """
+    Return configured gateway IP address as a plain-text response.
+
+    Returns:
+    --------
+    flask.Response
+      Plain-text response containing IP address with no-cache headers.
+    """
+
     resp = make_response(env.ip)
     return set_no_cache(resp)
 
@@ -765,15 +863,33 @@ def download_file(filename):
 
 
 def start_pruner_thread():
+    """
+    Start background thread that prunes expired cellxgene processes.
+
+    Thread is started as a daemon so it does not block interpreter shutdown when
+    main thread exits (e.g. on Ctrl-C). This avoids "Exception ignored in:
+    <module 'threading'...>" at exit.
+
+    Returns:
+    --------
+    None
+    """
+
     pruner = PruneProcessCache(cache)
-    # Run the pruner as a daemon thread so it won't block interpreter
-    # shutdown (for example when Ctrl-C is used in the main thread).
-    # This avoids "Exception ignored in: <module 'threading'...>" at exit.
     background_thread = Thread(target=pruner, daemon=True)
+    # daemon=True ensures pruner thread does not block interpreter shutdown.
     background_thread.start()
 
 
 def launch():
+    """
+    Start pruner thread, record launchtime, and run Flask dev server.
+
+    Returns:
+    --------
+    None
+    """
+
     start_pruner_thread()
 
     app.extensions.setdefault('cellxgene_gateway', {})['launchtime'] = (
