@@ -16,6 +16,7 @@ set -e
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+
 # Source environment variables
 echo "Loading environment variables..."
 if [ -f "$SCRIPT_DIR/.env" ]; then
@@ -38,13 +39,19 @@ if [ -z "$CELLXGENE_DATA" ] && [ -z "$CELLXGENE_BUCKET" ]; then
 fi
 
 # Gunicorn configuration
-# WARNING: Multi-worker mode has cache synchronization issues (see plans/002-shared-cache-implementation.md)
-# Each worker maintains its own in-memory cache, causing 404s for static assets when different
-# workers handle requests for the same dataset. Use GUNICORN_WORKERS=1 until shared cache is implemented.
+# WARNING: Multi-worker mode has cache synchronization issues (see
+# https://github.com/Novartis/cellxgene-gateway/pull/99). Each worker maintains
+# its own in-memory cache, causing 404s for static assets when different workers
+# handle requests for the same dataset. Use GUNICORN_WORKERS=1 until shared
+# cache is implemented
 WORKERS=${GUNICORN_WORKERS:-1}
+# Use gthread worker class to enable concurrent request handling via threads.
+# Threads share the same in-memory BackendCache, avoiding the cache
+# synchronization issues that arise with multiple workers.
+WORKER_CLASS=${GUNICORN_WORKER_CLASS:-gthread}
+THREADS=${GUNICORN_THREADS:-4}
 BIND=${GATEWAY_IP:-0.0.0.0}:${GATEWAY_PORT:-5005}
 TIMEOUT=${GUNICORN_TIMEOUT:-120}
-WORKER_CLASS=${GUNICORN_WORKER_CLASS:-sync}
 KEEPALIVE=${GUNICORN_KEEPALIVE:-5}
 LOG_LEVEL=${GUNICORN_LOG_LEVEL:-info}
 
@@ -60,10 +67,12 @@ fi
 # Display configuration
 echo "Starting Cellxgene Gateway with Gunicorn..."
 echo "Configuration:"
+echo "  Cellxgene executable: ${CELLXGENE_LOCATION}"
 echo "  Data source: ${CELLXGENE_DATA:-$CELLXGENE_BUCKET}"
 echo "  Binding to: $BIND"
 echo "  Workers: $WORKERS"
 echo "  Worker class: $WORKER_CLASS"
+echo "  Threads per worker: $THREADS"
 echo "  Timeout: ${TIMEOUT}s"
 echo "  Keepalive: ${KEEPALIVE}s"
 echo "  Log level: $LOG_LEVEL"
@@ -74,15 +83,15 @@ cd "$SCRIPT_DIR"
 
 # Start Gunicorn with optimized settings
 # Additional options you can add via environment variables:
-# - GUNICORN_MAX_REQUESTS: Restart worker after N requests (prevents memory leaks)
+# - GUNICORN_MAX_REQUESTS: Restart worker after N requests (avoids memory leaks)
 # - GUNICORN_MAX_REQUESTS_JITTER: Add randomness to max-requests
 exec gunicorn cellxgene_gateway.gateway:app \
     --workers "$WORKERS" \
     --worker-class "$WORKER_CLASS" \
+    --threads "$THREADS" \
     --bind "$BIND" \
     --timeout "$TIMEOUT" \
     --keep-alive "$KEEPALIVE" \
-    --access-logfile - \
     --error-logfile - \
     --log-level "$LOG_LEVEL" \
     --preload \

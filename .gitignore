@@ -142,4 +142,4 @@ dmypy.json
 .vscode
 
 # Avoid importing data
-test_data/
+data/

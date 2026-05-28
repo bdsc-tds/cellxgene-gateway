@@ -134,6 +134,11 @@ def _init_on_first_wsgi_request(wsgi_app):
                     ] = current_time_stamp()
 
                 if not data_sources_initialized:
+                    logging.basicConfig(
+                        level=env.log_level,
+                        format='[%(asctime)s]  %(name)8s  %(levelname)-8s  %(message)s',
+                        datefmt='%Y.%m.%d - %H:%M:%S',
+                    )
                     initialise_data_sources()
 
                     env.validate()
@@ -147,6 +152,7 @@ def _init_on_first_wsgi_request(wsgi_app):
                         default_item_source = item_sources[0]
 
                     data_sources_initialized = True
+                    start_pruner_thread()
         return wsgi_app(environ, start_response)
 
     return middleware
@@ -181,12 +187,6 @@ def initialise_data_sources():
     """
 
     global default_item_source
-
-    logging.basicConfig(
-        level=env.log_level,
-        format='%(asctime)s:%(name)s:%(levelname)s:%(message)s',
-    )
-    logger = logging.getLogger(__name__)
 
     cellxgene_data = os.environ.get('CELLXGENE_DATA', None)
     cellxgene_bucket = os.environ.get('CELLXGENE_BUCKET', None)
@@ -883,14 +883,12 @@ def start_pruner_thread():
 
 def launch():
     """
-    Start pruner thread, record launchtime, and run Flask dev server.
+    Record launchtime and run Flask dev server.
 
     Returns:
     --------
     None
     """
-
-    start_pruner_thread()
 
     app.extensions.setdefault('cellxgene_gateway', {})['launchtime'] = (
         current_time_stamp()

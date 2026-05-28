@@ -16,6 +16,7 @@ set -e
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+
 # Source environment variables
 echo "Loading environment variables..."
 if [ -f "$SCRIPT_DIR/.env" ]; then
