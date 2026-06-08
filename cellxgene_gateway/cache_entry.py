@@ -318,8 +318,8 @@ class CacheEntry:
             'content-length',
             'content-type',
             'cookie',
-            'host',
-            'origin',
+            # 'host' removed: let requests set correct Host for internal target
+            # 'origin' removed: external origin must not reach internal cellxgene
             'pragma',
             'referer',
             'sec-fetch-mode',
