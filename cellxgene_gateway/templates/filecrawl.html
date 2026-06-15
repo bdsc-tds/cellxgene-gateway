@@ -341,69 +341,7 @@
 
               <!-- Actions -->
               <td>
-                {% if dataset.versions %}
-                <div class="action-btn-stack">
-                  <div class="btn-group" style="width:100%">
-                    <button type="button"
-                      class="btn btn-success btn-sm dropdown-toggle"
-                      data-bs-toggle="dropdown" style="width:100%">
-                      Select Version
-                    </button>
-                    <ul class="dropdown-menu" style="width:100%">
-                      {% for version in dataset.versions %}
-                      <li>
-                        <a class="dropdown-item"
-                          href="/view/{{ version.file_path }}/">
-                          {{ version.display_name }}</a>
-                      </li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-                  <button type="button"
-                    class="btn btn-outline-primary btn-sm download-btn"
-                    data-dataset-name="{{ dataset.experiment_name }}"
-                    data-dataset-file="{{ dataset.versions[0].file_path }}"
-                    data-dataset-size="{{ dataset.versions[0].file_size_bytes }}"
-                    style="width:100%">Download</button>
-                  {% if enable_annotations %}
-                  <div class="btn-group" style="width:100%">
-                    <button type="button"
-                      class="btn btn-info btn-sm dropdown-toggle"
-                      data-bs-toggle="dropdown"
-                      style="width:100%">Annotations</button>
-                    <ul class="dropdown-menu" style="width:100%">
-                      {% for version in dataset.versions %}{% if
-                      version.annotations %}
-                      <li>
-                        <h6 class="dropdown-header">{{ version.display_name }}
-                        </h6>
-                      </li>
-                      {% for ann in version.annotations %}
-                      <li>
-                        <a class="dropdown-item"
-                          href="/view/{{ version.file_path.replace('.h5ad','_annotations') }}/{{ ann.file }}/">
-                          &nbsp;&nbsp;{{ ann.name }}</a>
-                      </li>
-                      {% endfor %}
-                      <li>
-                        <hr class="dropdown-divider" />
-                      </li>
-                      <li>
-                        <a class="dropdown-item create-new-annotation" href="#"
-                          data-dataset-file="{{ version.file_path }}">
-                          &nbsp;&nbsp;+ Create New for {{ version.display_name
-                          }}</a>
-                      </li>
-                      {% if not loop.last %}<li>
-                        <hr class="dropdown-divider" />
-                      </li>{% endif %}
-                      {% endif %}{% endfor %}
-                    </ul>
-                  </div>
-                  {% endif %}
-                </div>
-
-                {% elif dataset.file_path %}
+                {% if dataset.file_path %}
                 <div class="action-btn-stack">
                   <a href="/view/{{ dataset.file_path }}/" target="_blank"
                     rel="noopener noreferrer"
@@ -452,7 +390,7 @@
               {% else %}
               <td style="padding-left:0;">
                 <div style="padding-left:0.75rem;">
-                  <strong>{{ dataset.name or dataset.experiment_name }}</strong>
+                  <strong>{{ dataset.name }}</strong>
                 </div>
               </td>
               <td>
@@ -628,6 +566,7 @@
       </div>
     </div>
   </div>
+
 </body>
 
 </html>

@@ -498,7 +498,6 @@ def filecrawl(path=None):
             if search_term:
                 searchable = [
                     ds.get('name', ''),
-                    ds.get('experiment_name', ''),
                     ds.get('description', ''),
                     ds.get('disease', ''),
                     ds.get('authors', ''),
