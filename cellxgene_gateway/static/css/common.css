@@ -81,6 +81,37 @@ h2 {
   margin-bottom: 0;
 }
 
+/* Back to top button style class */
+.back-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Back to top button visible state style class */
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Back to top button style class during hovering */
+.back-to-top:hover {
+  background: #0052a3;
+}
+
+
 /* Preformatted text style class */
 pre {
   display: block;

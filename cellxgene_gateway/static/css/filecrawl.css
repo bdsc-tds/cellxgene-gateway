@@ -42,6 +42,7 @@ events */
 /* Offset right when sidebar is visible */
 .main-content-wrapper {
   margin-left: var(--sidebar-w);
+  padding-bottom: 2rem;
 }
 
 /* Full-width when hidden */
@@ -384,6 +385,20 @@ handles */
 .btn-outline-primary:hover {
   color: #0066cc;
   background: #f0f7ff;
+}
+
+/* Tertiary outline button style class */
+.btn-outline-secondary {
+  border-radius: 6px;
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+/* Tertiary outline button style class during hovering */
+.btn-outline-secondary:hover {
+  background: #f0f0f0;
+  color: #495057;
+  border-color: #495057;
 }
 
 /* Button group spacing style class */

@@ -1,5 +1,5 @@
-// Script to handle dataset filtering, with dual-range slider, and Disease/
-// Tissue dropdown logic
+// Script to handle dataset filtering, dual-range slider, Disease/Tissue
+// dropdown logic, and back-to-top button
 
 // Format byte count as human-readable string (KB / MB / GB)
 function formatBytes(bytes) {
@@ -385,4 +385,17 @@ $(document).ready(function () {
       done()
     }
   })
+})
+
+// Back to top button (deferred until DOM is ready since script loads in <head>)
+document.addEventListener('DOMContentLoaded', function () {
+  const backToTopFilecrawl = document.getElementById('back-to-top')
+  if (backToTopFilecrawl) {
+    window.addEventListener('scroll', function () {
+      backToTopFilecrawl.classList.toggle('visible', window.scrollY > 80)
+    })
+    backToTopFilecrawl.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  }
 })
