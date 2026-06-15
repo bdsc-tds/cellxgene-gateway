@@ -7,12 +7,15 @@
 # OR CONDITIONS OF ANY KIND, either express or implied. See the License for
 # the specific language governing permissions and limitations under the License.
 # import BaseHTTPServer
+
+
+# Import utility modules
+import csv
 import json
 import logging
 import os
+import re
 import urllib.parse
-from threading import Lock, Thread
-
 from flask import (
     Flask,
     make_response,
@@ -22,8 +25,11 @@ from flask import (
     send_from_directory,
     url_for,
 )
+from threading import Lock, Thread
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+
+# Import other functions from package
 from cellxgene_gateway import env, flask_util
 from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_entry import CacheEntryStatus
@@ -318,13 +324,26 @@ def view_static(path):
       Proxied asset content, or 503 if no cellxgene instance is running.
     """
 
-    loaded = [e for e in cache.entry_list if e.status == CacheEntryStatus.loaded]
+    loaded = [
+        e for e in cache.entry_list if e.status == CacheEntryStatus.loaded
+    ]
     if not loaded:
-        raise CacheException('No running cellxgene instance to serve static assets', 503)
+        raise CacheException(
+            'No running cellxgene instance to serve static assets', 503
+        )
     port = loaded[0].port
     from requests import get as requests_get
+
     resp = requests_get(f'http://127.0.0.1:{port}/static/{path}')
-    return make_response(resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'application/octet-stream')})
+    return make_response(
+        resp.content,
+        resp.status_code,
+        {
+            'Content-Type': resp.headers.get(
+                'Content-Type', 'application/octet-stream'
+            )
+        },
+    )
 
 
 @app.route('/')
@@ -806,6 +825,200 @@ def ip_address():
 
     resp = make_response(env.ip)
     return set_no_cache(resp)
+
+
+def _walk_images(root_path, qc_dir):
+    """
+    Walk a directory tree and return combined and per-sample image lists.
+
+    Parameters:
+    -----------
+    root_path: str
+      Absolute path of directory to walk.
+    qc_dir: str
+      Absolute path of dataset QC root (used to compute relative paths).
+
+    Returns:
+    --------
+    (combined_imgs, per_sample): tuple
+      combined_imgs is a sorted list of relative image paths.
+      per_sample is an ordered dict mapping sample id to list of relative paths.
+    """
+    combined_imgs = []
+    per_sample = {}
+
+    for root, dirs, files in os.walk(root_path):
+        dirs.sort()
+        rel_root = os.path.relpath(root, qc_dir)
+        imgs = sorted(
+            f
+            for f in files
+            if f.lower().endswith(('.jpg', '.jpeg', '.png', '.svg'))
+        )
+        for img in imgs:
+            rel_path = os.path.join(rel_root, img)
+            if 'per_sample' in rel_path or '3_doublets' in rel_path:
+                # Group by sample id: strip known QC/doublet suffixes
+                m = re.match(r'^(.+?)(?:_QC_|_doublet_)', img)
+                sample = m.group(1) if m else img
+                per_sample.setdefault(sample, []).append(rel_path)
+            else:
+                combined_imgs.append(rel_path)
+
+    return combined_imgs, per_sample
+
+
+@app.route('/qc/<dataset_id>')
+def qc_report(dataset_id):
+    """
+    Render QC report page for a dataset.
+
+    Parameters:
+    -----------
+    dataset_id: str
+      Dataset identifier matching a subfolder in QC base directory.
+
+    Returns:
+    --------
+    flask.Response
+      Rendered QC report page, or 404 if no QC folder exists.
+    """
+    qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+    qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
+
+    # Security: reject traversal attempts
+    if not qc_dir.startswith(os.path.normpath(qc_base)):
+        raise CacheException('Invalid dataset id.', 400)
+
+    if not os.path.isdir(qc_dir):
+        raise CacheException(
+            f"No QC data found for dataset '{dataset_id}'.", 404
+        )
+
+    # Map top-level subdirectories to human-readable step names
+    step_labels = {
+        '1_preprocessing': 'Preprocessing',
+        '2_normalisation': 'Normalisation',
+        '3_dimensionality_reduction': 'Dimensionality Reduction',
+        '4_clustering_unintegrated': 'Clustering',
+        '5_integration_annotation': 'Integration & Annotation',
+    }
+
+    # Sub-labels for named subdirectories inside a step (used as headings)
+    sub_labels = {
+        '1_raw': 'Raw Data',
+        '2_filtered': 'Filtered Data',
+        '3_doublets': 'Doublets',
+        'results': 'Results',
+        'training': 'Model Training',
+    }
+
+    steps = []
+    for step_dir in sorted(os.listdir(qc_dir)):
+        step_path = os.path.join(qc_dir, step_dir)
+        if not os.path.isdir(step_path):
+            continue
+
+        label = step_labels.get(step_dir, step_dir.replace('_', ' ').title())
+
+        # Each step is a list of sections: {'label': str, 'combined': [],
+        # 'per_sample': {}}. Most steps have one implicit section; integration
+        # has named subsections
+        raw_subdirs = sorted(
+            d
+            for d in os.listdir(step_path)
+            if os.path.isdir(os.path.join(step_path, d))
+        )
+        named_subdirs = [d for d in raw_subdirs if d in sub_labels]
+
+        if named_subdirs:
+            # Walk each named subdir as its own section
+            sections = []
+            for sub in named_subdirs:
+                sub_path = os.path.join(step_path, sub)
+                combined_imgs, per_sample = _walk_images(sub_path, qc_dir)
+                sections.append(
+                    {
+                        'label': sub_labels[sub],
+                        'combined': combined_imgs,
+                        'per_sample': per_sample,
+                    }
+                )
+        else:
+            # Single implicit section — walk whole step directory
+            combined_imgs, per_sample = _walk_images(step_path, qc_dir)
+            sections = [
+                {
+                    'label': None,
+                    'combined': combined_imgs,
+                    'per_sample': per_sample,
+                }
+            ]
+
+        # Cap combined figure height for tabs where figures are wide (not tall)
+        cap_combined = step_dir in (
+            '2_normalisation',
+            '3_dimensionality_reduction',
+            '4_clustering_unintegrated',
+            '5_integration_annotation',
+        )
+        steps.append(
+            {
+                'id': step_dir,
+                'label': label,
+                'sections': sections,
+                'cap_combined': cap_combined,
+            }
+        )
+
+    # Find dataset name from TSV for page title
+    tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
+    dataset_name = dataset_id
+    if os.path.exists(tsv_path):
+        with open(tsv_path, newline='') as f:
+            for row in csv.DictReader(f, delimiter='\t'):
+                if row.get('dataset_id') == dataset_id:
+                    dataset_name = row.get('name', dataset_id)
+                    break
+
+    return render_template(
+        'qc_report.html',
+        extra_scripts=get_extra_scripts(),
+        dataset_id=dataset_id,
+        dataset_name=dataset_name,
+        steps=steps,
+    )
+
+
+@app.route('/qc-image/<dataset_id>/<path:image_path>')
+def qc_image(dataset_id, image_path):
+    """
+    Serve a QC image file for a dataset.
+
+    Parameters:
+    -----------
+    dataset_id: str
+      Dataset identifier.
+    image_path: str
+      Relative path to image within dataset QC folder.
+
+    Returns:
+    --------
+    flask.Response
+      Image file response.
+    """
+    qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+    qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
+
+    # Security: reject traversal in either segment
+    if not qc_dir.startswith(os.path.normpath(qc_base)):
+        raise CacheException('Invalid dataset id.', 400)
+    if '..' in image_path:
+        raise CacheException('Invalid image path.', 400)
+
+    img_dir = os.path.dirname(image_path)
+    img_file = os.path.basename(image_path)
+    return send_from_directory(os.path.join(qc_dir, img_dir), img_file)
 
 
 @app.route('/download/<filename>')

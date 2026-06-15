@@ -1,0 +1,341 @@
+/* QC Report page style classes */
+
+
+/* Page layout customisation */
+
+/* Page wrapper style class */
+.qc-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+/* Page header style class */
+.qc-header {
+  margin-bottom: 1.5rem;
+}
+
+/* Page title style class */
+.qc-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+/* Page subtitle style class */
+.qc-subtitle {
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+
+
+/* Step tabs customisation */
+
+/* Tab list style class */
+.qc-tabs {
+  margin-bottom: 0;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Tab button style class */
+.qc-tabs .nav-link {
+  font-size: 0.85rem;
+  color: #495057;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+
+/* Tab button style class during hovering */
+.qc-tabs .nav-link:hover {
+  color: #0066cc;
+  border-bottom-color: #0066cc44;
+}
+
+/* Active tab button style class */
+.qc-tabs .nav-link.active {
+  color: #0066cc;
+  font-weight: 600;
+  border-bottom: 2px solid #0066cc;
+  background: transparent;
+}
+
+/* Tab content wrapper style class */
+.qc-tab-content {
+  padding-top: 1.25rem;
+}
+
+
+/* In-tab jump menu customisation */
+
+/* Jump menu container style class */
+.qc-jumpmenu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e4e9;
+  border-radius: 6px;
+}
+
+/* Jump menu link style class */
+.qc-jumplink {
+  font-size: 0.78rem;
+  color: #0066cc;
+  text-decoration: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #e9f2ff;
+}
+
+/* Jump menu link style class during hovering */
+.qc-jumplink:hover {
+  background: #d0e6ff;
+  color: #004499;
+}
+
+
+/* Section heading customisation (named subsections within a tab) */
+
+/* Section heading style class */
+.qc-section-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #343a40;
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+
+/* Section labels customisation */
+
+/* Section label style class */
+.qc-section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+/* Section label top margin style class (when combined figures precede
+per-sample section) */
+.qc-section-label--top {
+  margin-top: 1.5rem;
+}
+
+/* Anchor target style class: offset scroll position to clear sticky navbar */
+.qc-anchor-target {
+  scroll-margin-top: 5rem;
+}
+
+
+/* Image grid customisation */
+
+/* Image grid style class */
+.qc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Smaller image grid style class (used inside accordion per-sample panels) */
+.qc-grid--sm {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+/* Image card style class */
+.qc-card {
+  background: #fff;
+  border: 1px solid #e0e4e9;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: box-shadow 0.15s;
+}
+
+/* Image card style class during hovering */
+.qc-card:hover {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* Image container style class */
+.qc-card-img-wrap {
+  width: 100%;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+/* Image container style class with fixed height cap (used for wide figures
+that would otherwise render as very thin strips) */
+.qc-card-img-wrap--capped {
+  max-height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image style class inside card: full width, natural height */
+.qc-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Image style class inside capped container: contain within the height cap */
+.qc-card-img-wrap--capped img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+
+/* Per-sample accordion customisation */
+
+/* Accordion button style class */
+.qc-accordion .accordion-button {
+  font-size: 0.82rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  color: #343a40;
+}
+
+/* Expanded accordion button style class */
+.qc-accordion .accordion-button:not(.collapsed) {
+  background: #e9f2ff;
+  color: #0066cc;
+  box-shadow: none;
+}
+
+/* Accordion body style class */
+.qc-accordion .accordion-body {
+  padding: 0.75rem;
+  background: #fdfdfd;
+}
+
+
+/* Lightbox customisation */
+
+/* Lightbox overlay style class: scrollable so large images can be panned */
+.qc-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 9000;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 4rem;
+}
+
+/* Hidden lightbox style class */
+.qc-lightbox[hidden] {
+  display: none;
+}
+
+/* Lightbox image style class with minimum readable width */
+.qc-lb-img {
+  min-width: min(900px, 100%);
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+/* Lightbox close button style class */
+.qc-lb-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2.2rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  z-index: 9001;
+}
+
+/* Lightbox close button style class during hovering */
+.qc-lb-close:hover {
+  opacity: 1;
+}
+
+/* Lightbox navigation button style class */
+.qc-lb-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font-size: 2.5rem;
+  line-height: 1;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+  z-index: 9001;
+  opacity: 0.7;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+/* Lightbox navigation button style class during hovering */
+.qc-lb-nav:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Previous image button style class */
+.qc-lb-prev {
+  left: 0.75rem;
+}
+
+/* Next image button style class */
+.qc-lb-next {
+  right: 0.75rem;
+}
+
+
+/* Back to top button customisation */
+
+/* Back to top button style class */
+.back-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: #0066cc;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* Back to top button visible state style class */
+.back-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Back to top button style class during hovering */
+.back-to-top:hover {
+  background: #0052a3;
+}

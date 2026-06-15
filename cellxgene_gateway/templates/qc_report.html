@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Default header -->
+  {% include 'header.html' %}
+
+  <!-- Page title -->
+  <title>QC Report – {{ dataset_name }}</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/qc_report.css') }}" />
+
+  <!-- Miscellaneous -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+
+  <div class="qc-page">
+
+    <!-- Page header with dataset name -->
+    <div class="qc-header">
+      <h2 class="qc-title">QC Report</h2>
+      <div class="qc-subtitle">{{ dataset_name }}</div>
+    </div>
+
+    {% if steps %}
+    <!-- Step tabs, one per processing stage -->
+    <ul class="nav nav-tabs qc-tabs" id="qcTabs" role="tablist">
+      {% for step in steps %}
+      <li class="nav-item" role="presentation">
+        <button class="nav-link {% if loop.first %}active{% endif %}"
+          id="tab-{{ step.id }}" data-bs-toggle="tab"
+          data-bs-target="#pane-{{ step.id }}" type="button" role="tab">
+          {{ step.label }}
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <div class="tab-content qc-tab-content" id="qcTabContent">
+      {% for step in steps %}
+      <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+        id="pane-{{ step.id }}" role="tabpanel">
+
+        {# Collect anchors: one per section with content, plus Overview and Per
+        Sample within each #}
+        {% set anchors = [] %}
+        {% for sec in step.sections %}
+        {% set sec_slug = (step.id ~ '-sec' ~ loop.index) %}
+        {% if sec.combined %}
+        {% if sec.label %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
+        'label': sec.label ~ ' – All Samples'}) %}
+        {% else %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
+        'label': 'Figures'}) %}
+        {% endif %}
+        {% endif %}
+        {% if sec.per_sample %}
+        {% if sec.label %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
+        'label': sec.label ~ ' – Per Sample'}) %}
+        {% else %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
+        'label': 'Per Sample'}) %}
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
+        <!-- In-tab anchor navigation, shown only with multiple anchors -->
+        {% if anchors | length > 1 %}
+        <nav class="qc-jumpmenu" aria-label="Jump to section">
+          {% for a in anchors %}
+          <a class="qc-jumplink" href="{{ a.href }}">{{ a.label }}</a>
+          {% endfor %}
+        </nav>
+        {% endif %}
+
+        <!-- Sections (one per named subdir, or one implicit section) -->
+        {% for sec in step.sections %}
+        {% set sec_slug = (step.id ~ '-sec' ~ loop.index) %}
+
+        <!-- Named section heading (e.g. Results / Model Training) -->
+        {% if sec.label %}
+        <div class="qc-section-heading">{{ sec.label }}</div>
+        {% endif %}
+
+        <!-- Combined (all-sample) figures -->
+        {% if sec.combined %}
+        <div id="{{ sec_slug }}-overview" class="qc-anchor-target">
+          {% if sec.label and sec.per_sample %}
+          <div class="qc-section-label">All Samples</div>
+          {% endif %}
+          <div class="qc-grid">
+            {% for img_path in sec.combined %}
+            <div class="qc-card"
+              data-src="/qc-image/{{ dataset_id }}/{{ img_path }}">
+              <div
+                class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--capped{% endif %}">
+                <img src="/qc-image/{{ dataset_id }}/{{ img_path }}"
+                  alt="{{ img_path | replace('/', ' / ') }}" loading="lazy" />
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Per-sample figures grouped in a collapsible accordion -->
+        {% if sec.per_sample %}
+        <div id="{{ sec_slug }}-persample" class="qc-anchor-target">
+          <div
+            class="qc-section-label {% if sec.combined %}qc-section-label--top{% endif %}">
+            Per Sample
+          </div>
+          <div class="accordion qc-accordion" id="acc-{{ sec_slug }}">
+            {% for sample, imgs in sec.per_sample.items() %}
+            <!-- Accordion panel for one sample -->
+            <div class="accordion-item">
+              <h2 class="accordion-header"
+                id="h-{{ sec_slug }}-{{ loop.index }}">
+                <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#c-{{ sec_slug }}-{{ loop.index }}"
+                  aria-expanded="false">
+                  {{ sample }}
+                </button>
+              </h2>
+              <div id="c-{{ sec_slug }}-{{ loop.index }}"
+                class="accordion-collapse collapse"
+                data-bs-parent="#acc-{{ sec_slug }}">
+                <div class="accordion-body qc-grid qc-grid--sm">
+                  {% for img_path in imgs %}
+                  <div class="qc-card"
+                    data-src="/qc-image/{{ dataset_id }}/{{ img_path }}">
+                    <div class="qc-card-img-wrap">
+                      <img src="/qc-image/{{ dataset_id }}/{{ img_path }}"
+                        alt="{{ img_path | replace('/', ' / ') }}"
+                        loading="lazy" />
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if not sec.combined and not sec.per_sample %}
+        <p class="text-muted mt-3">No figures found for this section.</p>
+        {% endif %}
+
+        {% endfor %}{# end sections loop #}
+
+      </div>
+      {% endfor %}{# end steps loop #}
+    </div>
+
+    {% else %}
+    <p class="text-muted mt-4">No QC figures found.</p>
+    {% endif %}
+
+  </div>
+
+  <!-- Lightbox overlay for full-size image viewing -->
+  <div id="qc-lightbox" class="qc-lightbox" role="dialog" aria-modal="true"
+    hidden>
+    <!-- Close button -->
+    <button class="qc-lb-close" id="qc-lb-close"
+      aria-label="Close">&times;</button>
+    <!-- Previous image button -->
+    <button class="qc-lb-nav qc-lb-prev" id="qc-lb-prev"
+      aria-label="Previous">&#8249;</button>
+    <!-- Full-size image -->
+    <img class="qc-lb-img" id="qc-lb-img" src="" alt="" />
+    <!-- Next image button -->
+    <button class="qc-lb-nav qc-lb-next" id="qc-lb-next"
+      aria-label="Next">&#8250;</button>
+  </div>
+
+  <!-- Back to top button -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top">↑
+    Top</button>
+
+  <!-- QC report lightbox script -->
+  <script src="{{ url_for('static', filename='js/qc_report.js') }}"></script>
+</body>
+
+</html>

@@ -149,6 +149,13 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                 except OSError:
                     row['file_size_bytes'] = 0
 
+                # Check whether a QC folder exists for this dataset
+                qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+                did = row.get('dataset_id', '')
+                row['has_qc'] = bool(
+                    did and os.path.isdir(os.path.join(qc_base, did))
+                )
+
                 # Collect filter values from multi-value fields
                 for val in _parse_multi(row.get('assay', '')):
                     assays.add(val)
