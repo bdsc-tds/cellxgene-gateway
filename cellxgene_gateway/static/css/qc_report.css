@@ -135,6 +135,19 @@ per-sample section) */
 }
 
 
+/* Thematic row label customisation */
+
+/* Row label style class */
+.qc-row-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #0066cc;
+  margin: 1rem 0 0.4rem;
+}
+
+
 /* Image grid customisation */
 
 /* Image grid style class */

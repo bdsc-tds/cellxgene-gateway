@@ -95,8 +95,13 @@
           {% if sec.label and sec.per_sample %}
           <div class="qc-section-label">All Samples</div>
           {% endif %}
+          {% for row in sec.rows %}
+          <!-- Thematic row label (if defined) -->
+          {% if row.label %}
+          <div class="qc-row-label">{{ row.label }}</div>
+          {% endif %}
           <div class="qc-grid">
-            {% for row in sec.rows %}{% for fig in row.imgs %}
+            {% for fig in row.imgs %}
             <div class="qc-card"
               data-src="/qc-image/{{ dataset_id }}/{{ fig.path }}">
               <div class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--sq{% endif %}">
@@ -114,8 +119,9 @@
                 </span>
               </div>
             </div>
-            {% endfor %}{% endfor %}
+            {% endfor %}
           </div>
+          {% endfor %}
         </div>
         {% endif %}
 

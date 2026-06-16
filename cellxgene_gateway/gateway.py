@@ -912,6 +912,111 @@ def _figure_title(stem):
     return stem.replace('_', ' ').replace('all ', '').title()
 
 
+# Ordered row definitions for tabs with thematic groupings.
+# Each entry: (row_label, list_of_filename_stems_in_order)
+_ROW_DEFS = {
+    '2_normalisation': [
+        ('Distribution', ['all_normalisation_distributions']),
+        ('Statistical QC', [
+            'all_normalisation_qc_mean_var',
+            'all_normalisation_qc_qq',
+            'all_normalisation_qc_cv',
+            'all_normalisation_qc_corr',
+        ]),
+    ],
+    '3_dimensionality_reduction': [
+        ('Feature Selection', [
+            'all_highly_variable_genes',
+            'all_highly_variable_genes_batches',
+        ]),
+        ('PCA', [
+            'all_pca_variance_ratio',
+            'all_pca_loadings',
+            'all_pca_qc',
+        ]),
+        ('UMAP', ['all_umap_qc']),
+    ],
+    '5_integration_annotation/results': [
+        ('Integration QC', ['all_scanvi_qc_integration']),
+        ('UMAP', [
+            'all_scanvi_label_transfer_umap',
+            'all_scanvi_umap_qc',
+            'joint_scanvi_umap_cell_origin',
+        ]),
+        ('Clustering', [
+            'all_scanvi_clusters_resolutions',
+            'annotation_qc_res0.5',
+            'annotation_qc_res1.0',
+            'annotation_qc_res1.5',
+            'annotation_qc_res2.0',
+        ]),
+    ],
+}
+
+
+def _arrange_into_rows(imgs, step_key):
+    """
+    Function to arrange a flat list of image paths into labelled thematic rows.
+
+    Parameters:
+    -----------
+    imgs: list of str
+      Relative image paths.
+    step_key: str
+      Key into _ROW_DEFS (e.g. '2_normalisation').
+
+    Returns:
+    --------
+    rows: list of dicts
+      Each dict has 'label' (str or None) and 'imgs' (list of dicts with
+      'path' and 'title' keys). Figures not matched by any row definition are
+      appended in a final unlabelled row.
+    """
+    if step_key not in _ROW_DEFS:
+        # No thematic arrangement — single row with all figures
+        return [{'label': None, 'imgs': [
+            {'path': p, 'title': _figure_title(os.path.splitext(os.path.basename(p))[0])}
+            for p in imgs
+        ]}]
+
+    # Build stem→path lookup
+    stem_to_path = {}
+    for p in imgs:
+        stem = os.path.splitext(os.path.basename(p))[0]
+        stem_to_path[stem] = p
+
+    rows = []
+    placed = set()
+    for row_label, stems in _ROW_DEFS[step_key]:
+        row_imgs = []
+        for stem in stems:
+            if stem in stem_to_path:
+                row_imgs.append({
+                    'path': stem_to_path[stem],
+                    'title': _figure_title(stem),
+                })
+                placed.add(stem)
+            else:
+                # Try prefix match for annotation_qc with varying resolutions
+                for s, p in stem_to_path.items():
+                    if s.startswith(stem) and s not in placed:
+                        row_imgs.append({'path': p, 'title': _figure_title(s)})
+                        placed.add(s)
+        if row_imgs:
+            rows.append({'label': row_label, 'imgs': row_imgs})
+
+    # Append any figures not captured by the row definitions
+    leftover = [
+        {'path': p, 'title': _figure_title(os.path.splitext(os.path.basename(p))[0])}
+        for p in imgs
+        if os.path.splitext(os.path.basename(p))[0] not in placed
+    ]
+    if leftover:
+        rows.append({'label': None, 'imgs': leftover})
+
+    return rows
+
+
 def _annotate_per_sample(per_sample):
     """
     Function to attach display titles to per-sample image paths.
@@ -1051,11 +1156,8 @@ def qc_report(dataset_id):
             for sub in named_subdirs:
                 sub_path = os.path.join(step_path, sub)
                 combined_imgs, per_sample = _walk_images(sub_path, qc_dir)
-                rows = [{'label': None, 'imgs': [
-                    {'path': p, 'title': _figure_title(
-                        os.path.splitext(os.path.basename(p))[0])}
-                    for p in combined_imgs
-                ]}]
+                sub_key = f'{step_dir}/{sub}'
+                rows = _arrange_into_rows(combined_imgs, sub_key)
                 sections.append({
                     'label': sub_labels[sub],
                     'rows': rows,
@@ -1064,11 +1166,7 @@ def qc_report(dataset_id):
         else:
             # Single implicit section — walk whole step directory
             combined_imgs, per_sample = _walk_images(step_path, qc_dir)
-            rows = [{'label': None, 'imgs': [
-                {'path': p, 'title': _figure_title(
-                    os.path.splitext(os.path.basename(p))[0])}
-                for p in combined_imgs
-            ]}]
+            rows = _arrange_into_rows(combined_imgs, step_dir)
             sections = [{
                 'label': None,
                 'rows': rows,
