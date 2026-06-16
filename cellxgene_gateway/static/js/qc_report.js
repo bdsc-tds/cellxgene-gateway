@@ -1,6 +1,31 @@
-// Script to handle lightbox image viewer and back-to-top button for QC report page
+// Script to handle lightbox image viewer, tab URL sync, and back-to-top button for QC report page
 
 (function () {
+  // Tab URL sync: update hash when a tab is activated, restore on page load
+  const tabButtons = document.querySelectorAll('#qcTabs .nav-link');
+
+  tabButtons.forEach(function (btn) {
+    btn.addEventListener('shown.bs.tab', function () {
+      const target = btn.getAttribute('data-bs-target'); // e.g. "#pane-1_preprocessing"
+      if (target) {
+        history.replaceState(null, '', target.replace('pane-', 'tab-'));
+      }
+    });
+  });
+
+  // Restore the active tab from the URL hash on page load
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#tab-')) {
+    const stepId = hash.slice('#tab-'.length); // e.g. "1_preprocessing"
+    const btn = document.querySelector(`#qcTabs [data-bs-target="#pane-${stepId}"]`);
+    if (btn) {
+      bootstrap.Tab.getOrCreateInstance(btn).show();
+      // Prevent the browser from jumping to the anchor
+      window.scrollTo(0, 0);
+    }
+  }
+
+
   const lightbox = document.getElementById('qc-lightbox');
   const lbImg = document.getElementById('qc-lb-img');
   const btnClose = document.getElementById('qc-lb-close');
