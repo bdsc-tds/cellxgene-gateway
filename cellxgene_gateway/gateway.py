@@ -827,6 +827,119 @@ def ip_address():
     return set_no_cache(resp)
 
 
+# Map filename suffixes (without extension) to short display titles
+_FIGURE_TITLES = {
+    # Preprocessing — combined
+    'all_QC_raw_data_total_counts': 'Total counts',
+    'all_QC_raw_data_n_genes_by_counts': 'Genes per cell',
+    'all_QC_raw_data_pct_counts_mt': 'MT fraction',
+    'all_QC_raw_data_pct_counts_ribo': 'Ribosomal fraction',
+    'all_QC_raw_data_pct_counts_globin': 'Globin fraction',
+    'all_QC_raw_data_pct_counts_in_top_20_genes': 'Top 20 gene fraction',
+    'all_QC_filtered_data_total_counts': 'Total counts',
+    'all_QC_filtered_data_n_genes_by_counts': 'Genes per cell',
+    'all_QC_filtered_data_pct_counts_mt': 'MT fraction',
+    'all_QC_filtered_data_pct_counts_ribo': 'Ribosomal fraction',
+    'all_QC_filtered_data_pct_counts_globin': 'Globin fraction',
+    'all_QC_filtered_data_pct_counts_in_top_20_genes': 'Top 20 gene fraction',
+    # Preprocessing — per sample
+    'QC_raw_data_counts_metrics': 'QC metrics',
+    'QC_raw_data_counts_mt': 'Mitochondrial counts',
+    'QC_raw_data_highest_expression': 'Highest expressed genes',
+    'QC_filtered_data_counts_metrics': 'QC metrics (filtered)',
+    'QC_filtered_data_counts_mt': 'Mitochondrial counts (filtered)',
+    'QC_filtered_data_highest_expression': 'Highest expressed genes (filtered)',
+    'doublet_score_distribution': 'Doublet score distribution',
+    'doublet_score_stats': 'Doublet score statistics',
+    # Normalisation
+    'all_normalisation_distributions': 'Normalisation effect',
+    'all_normalisation_qc_mean_var': 'Mean–variance relationship',
+    'all_normalisation_qc_qq': 'QQ plots',
+    'all_normalisation_qc_cv': 'Coefficient of variation',
+    'all_normalisation_qc_corr': 'Cell–cell correlation',
+    # Dimensionality reduction
+    'all_highly_variable_genes': 'Highly variable genes',
+    'all_highly_variable_genes_batches': 'HVG batch consistency',
+    'all_pca_variance_ratio': 'PCA variance ratio',
+    'all_pca_loadings': 'Gene loadings by PC',
+    'all_pca_qc': 'PCA QC metrics',
+    'all_umap_qc': 'UMAP QC metrics',
+    # Clustering
+    'all_clusters_resolutions': 'Clustering resolutions',
+    # Integration & Annotation — results
+    'all_scanvi_qc_integration': 'Integration quality',
+    'all_scanvi_label_transfer_umap': 'Label transfer UMAP',
+    'all_scanvi_umap_qc': 'scANVI UMAP QC',
+    'all_scanvi_clusters_resolutions': 'Clustering resolutions',
+    'joint_scanvi_umap_cell_origin': 'Cell origin UMAP',
+    # Integration & Annotation — training
+    'all_scanvi_qc_elbo': 'ELBO',
+    'all_scanvi_qc_kl': 'KL divergence',
+    'all_scanvi_qc_reconstruction': 'Reconstruction loss',
+}
+
+# annotation_qc figures use a dynamic suffix (resolution value)
+_ANNOTATION_QC_RE = re.compile(r'^annotation_qc_res([\d.]+)$')
+
+
+def _figure_title(stem):
+    """
+    Function to return the display title for a figure filename stem.
+
+    Parameters:
+    -----------
+    stem: str
+      Filename without extension.
+
+    Returns:
+    --------
+    title: str
+      Human-readable title, or a cleaned-up version of the stem.
+    """
+    if stem in _FIGURE_TITLES:
+        return _FIGURE_TITLES[stem]
+    # Per-sample figures: strip leading sample prefix then look up the suffix
+    m_qc = re.match(r'^.+?_(QC_(?:raw|filtered)_data_.+)$', stem)
+    if m_qc and m_qc.group(1) in _FIGURE_TITLES:
+        return _FIGURE_TITLES[m_qc.group(1)]
+    m_db = re.match(r'^.+?(doublet_score_(?:distribution|stats))$', stem)
+    if m_db and m_db.group(1) in _FIGURE_TITLES:
+        return _FIGURE_TITLES[m_db.group(1)]
+    m_ann = _ANNOTATION_QC_RE.match(stem)
+    if m_ann:
+        return f'Annotation QC (res {m_ann.group(1)})'
+    # Fallback: convert underscores to spaces and title-case
+    return stem.replace('_', ' ').replace('all ', '').title()
+
+
+def _annotate_per_sample(per_sample):
+    """
+    Function to attach display titles to per-sample image paths.
+
+    Parameters:
+    -----------
+    per_sample: dict
+      Mapping of sample id to list of relative image paths.
+
+    Returns:
+    --------
+    annotated: dict
+      Same structure but each path replaced with {'path': str, 'title': str}.
+    """
+    annotated = {}
+    for sample, paths in per_sample.items():
+        annotated[sample] = [
+            {
+                'path': p,
+                'title': _figure_title(
+                    os.path.splitext(os.path.basename(p))[0]
+                ),
+            }
+            for p in paths
+        ]
+    return annotated
+
+
 def _walk_images(root_path, qc_dir):
     """
     Walk a directory tree and return combined and per-sample image lists.
@@ -904,11 +1017,12 @@ def qc_report(dataset_id):
         '5_integration_annotation': 'Integration & Annotation',
     }
 
-    # Sub-labels for named subdirectories inside a step (used as headings)
+    # Sub-labels for named subdirectories inside a step (used as headings).
+    # 3_doublets is intentionally excluded: all its figures are per-sample so
+    # it has no combined images and needs no section heading.
     sub_labels = {
         '1_raw': 'Raw Data',
         '2_filtered': 'Filtered Data',
-        '3_doublets': 'Doublets',
         'results': 'Results',
         'training': 'Model Training',
     }
@@ -937,39 +1051,43 @@ def qc_report(dataset_id):
             for sub in named_subdirs:
                 sub_path = os.path.join(step_path, sub)
                 combined_imgs, per_sample = _walk_images(sub_path, qc_dir)
-                sections.append(
-                    {
-                        'label': sub_labels[sub],
-                        'combined': combined_imgs,
-                        'per_sample': per_sample,
-                    }
-                )
+                rows = [{'label': None, 'imgs': [
+                    {'path': p, 'title': _figure_title(
+                        os.path.splitext(os.path.basename(p))[0])}
+                    for p in combined_imgs
+                ]}]
+                sections.append({
+                    'label': sub_labels[sub],
+                    'rows': rows,
+                    'per_sample': _annotate_per_sample(per_sample),
+                })
         else:
             # Single implicit section — walk whole step directory
             combined_imgs, per_sample = _walk_images(step_path, qc_dir)
-            sections = [
-                {
-                    'label': None,
-                    'combined': combined_imgs,
-                    'per_sample': per_sample,
-                }
-            ]
+            rows = [{'label': None, 'imgs': [
+                {'path': p, 'title': _figure_title(
+                    os.path.splitext(os.path.basename(p))[0])}
+                for p in combined_imgs
+            ]}]
+            sections = [{
+                'label': None,
+                'rows': rows,
+                'per_sample': _annotate_per_sample(per_sample),
+            }]
 
-        # Cap combined figure height for tabs where figures are wide (not tall)
+        # Square-crop combined thumbnails for tabs with wide figures
         cap_combined = step_dir in (
             '2_normalisation',
             '3_dimensionality_reduction',
             '4_clustering_unintegrated',
             '5_integration_annotation',
         )
-        steps.append(
-            {
-                'id': step_dir,
-                'label': label,
-                'sections': sections,
-                'cap_combined': cap_combined,
-            }
-        )
+        steps.append({
+            'id': step_dir,
+            'label': label,
+            'sections': sections,
+            'cap_combined': cap_combined,
+        })
 
     # Find dataset name from TSV for page title
     tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')

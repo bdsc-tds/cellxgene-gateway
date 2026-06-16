@@ -51,28 +51,23 @@
       <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
         id="pane-{{ step.id }}" role="tabpanel">
 
-        {# Collect anchors: one per section with content, plus Overview and Per
-        Sample within each #}
+        {# Collect jump-menu anchors #}
         {% set anchors = [] %}
         {% for sec in step.sections %}
         {% set sec_slug = (step.id ~ '-sec' ~ loop.index) %}
-        {% if sec.combined %}
-        {% if sec.label %}
-        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
-        'label': sec.label ~ ' – All Samples'}) %}
-        {% else %}
-        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
-        'label': 'Figures'}) %}
-        {% endif %}
+        {% if sec.rows %}
+          {% if sec.label %}
+            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview', 'label': sec.label ~ ' – All Samples'}) %}
+          {% else %}
+            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview', 'label': 'Figures'}) %}
+          {% endif %}
         {% endif %}
         {% if sec.per_sample %}
-        {% if sec.label %}
-        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
-        'label': sec.label ~ ' – Per Sample'}) %}
-        {% else %}
-        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
-        'label': 'Per Sample'}) %}
-        {% endif %}
+          {% if sec.label %}
+            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample', 'label': sec.label ~ ' – Per Sample'}) %}
+          {% else %}
+            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample', 'label': 'Per Sample'}) %}
+          {% endif %}
         {% endif %}
         {% endfor %}
 
@@ -94,23 +89,32 @@
         <div class="qc-section-heading">{{ sec.label }}</div>
         {% endif %}
 
-        <!-- Combined (all-sample) figures -->
-        {% if sec.combined %}
+        <!-- Combined figures, arranged in thematic rows -->
+        {% if sec.rows %}
         <div id="{{ sec_slug }}-overview" class="qc-anchor-target">
           {% if sec.label and sec.per_sample %}
           <div class="qc-section-label">All Samples</div>
           {% endif %}
           <div class="qc-grid">
-            {% for img_path in sec.combined %}
+            {% for row in sec.rows %}{% for fig in row.imgs %}
             <div class="qc-card"
-              data-src="/qc-image/{{ dataset_id }}/{{ img_path }}">
-              <div
-                class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--capped{% endif %}">
-                <img src="/qc-image/{{ dataset_id }}/{{ img_path }}"
-                  alt="{{ img_path | replace('/', ' / ') }}" loading="lazy" />
+              data-src="/qc-image/{{ dataset_id }}/{{ fig.path }}">
+              <div class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--sq{% endif %}">
+                <img src="/qc-image/{{ dataset_id }}/{{ fig.path }}"
+                  alt="{{ fig.title }}" loading="lazy" />
+                <!-- Figure title overlay (bottom) -->
+                <div class="qc-card-title">{{ fig.title }}</div>
+                <!-- Permanent zoom icon (top-right) -->
+                <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+                    viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                    <path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/>
+                  </svg>
+                </span>
               </div>
             </div>
-            {% endfor %}
+            {% endfor %}{% endfor %}
           </div>
         </div>
         {% endif %}
@@ -119,7 +123,7 @@
         {% if sec.per_sample %}
         <div id="{{ sec_slug }}-persample" class="qc-anchor-target">
           <div
-            class="qc-section-label {% if sec.combined %}qc-section-label--top{% endif %}">
+            class="qc-section-label {% if sec.rows %}qc-section-label--top{% endif %}">
             Per Sample
           </div>
           <div class="accordion qc-accordion" id="acc-{{ sec_slug }}">
@@ -139,13 +143,22 @@
                 class="accordion-collapse collapse"
                 data-bs-parent="#acc-{{ sec_slug }}">
                 <div class="accordion-body qc-grid qc-grid--sm">
-                  {% for img_path in imgs %}
+                  {% for fig in imgs %}
                   <div class="qc-card"
-                    data-src="/qc-image/{{ dataset_id }}/{{ img_path }}">
-                    <div class="qc-card-img-wrap">
-                      <img src="/qc-image/{{ dataset_id }}/{{ img_path }}"
-                        alt="{{ img_path | replace('/', ' / ') }}"
-                        loading="lazy" />
+                    data-src="/qc-image/{{ dataset_id }}/{{ fig.path }}">
+                    <div class="qc-card-img-wrap qc-card-img-wrap--sq">
+                      <img src="/qc-image/{{ dataset_id }}/{{ fig.path }}"
+                        alt="{{ fig.title }}" loading="lazy" />
+                      <!-- Figure title overlay (bottom) -->
+                      <div class="qc-card-title">{{ fig.title }}</div>
+                      <!-- Permanent zoom icon (top-right) -->
+                      <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+                          viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                          <path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/>
+                        </svg>
+                      </span>
                     </div>
                   </div>
                   {% endfor %}
@@ -157,7 +170,7 @@
         </div>
         {% endif %}
 
-        {% if not sec.combined and not sec.per_sample %}
+        {% if not sec.rows and not sec.per_sample %}
         <p class="text-muted mt-3">No figures found for this section.</p>
         {% endif %}
 
