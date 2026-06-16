@@ -189,21 +189,21 @@ per-sample section) */
   position: relative;
 }
 
-/* Square image container style class: enforced 1:1 crop */
+/* Square image container style class (enforced 1:1 crop) */
 .qc-card-img-wrap--sq {
   aspect-ratio: 1 / 1;
   width: 100%;
   overflow: hidden;
 }
 
-/* Image style class inside card: full width, natural height */
+/* Image style class inside card (full width, natural height) */
 .qc-card img {
   width: 100%;
   height: auto;
   display: block;
 }
 
-/* Image style class inside square container: cover to fill the 1:1 box */
+/* Image style class inside square container (cover to fill 1:1 box) */
 .qc-card-img-wrap--sq img {
   width: 100%;
   height: 100%;
@@ -211,7 +211,7 @@ per-sample section) */
   object-position: center top;
 }
 
-/* Figure title overlay style class: sits inside the image container */
+/* Figure title overlay style class (inside image container) */
 .qc-card-title {
   position: absolute;
   bottom: 0;
@@ -243,7 +243,7 @@ per-sample section) */
   pointer-events: none;
 }
 
-/* Fixed zoom icon style class: always visible top-right inside img-wrap */
+/* Fixed zoom icon style class (always visible top-right inside img-wrap) */
 .qc-card-zoom-icon--fixed {
   top: 0.4rem;
   right: 0.4rem;
@@ -252,7 +252,7 @@ per-sample section) */
   background: rgba(20, 20, 20, 0.82);
 }
 
-/* Fixed zoom icon slightly brighter on card hover */
+/* Fixed zoom icon (darker on card hover) */
 .qc-card:hover .qc-card-zoom-icon--fixed {
   opacity: 1;
 }
@@ -302,7 +302,7 @@ per-sample section) */
   display: none;
 }
 
-/* Lightbox image style class: fit to screen by default */
+/* Lightbox image style class (fit to screen by default) */
 .qc-lb-img {
   max-width: calc(100vw - 8rem);
   max-height: calc(100vh - 6rem);
@@ -315,7 +315,7 @@ per-sample section) */
   transition: none;
 }
 
-/* Lightbox image zoomed style class: native resolution, scrollable */
+/* Lightbox image zoomed style class (native resolution, scrollable) */
 .qc-lb-img--zoomed {
   max-width: none;
   max-height: none;

@@ -56,18 +56,22 @@
         {% for sec in step.sections %}
         {% set sec_slug = (step.id ~ '-sec' ~ loop.index) %}
         {% if sec.rows %}
-          {% if sec.label %}
-            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview', 'label': sec.label ~ ' – All Samples'}) %}
-          {% else %}
-            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview', 'label': 'Figures'}) %}
-          {% endif %}
+        {% if sec.label %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
+        'label': sec.label ~ ' – All Samples'}) %}
+        {% else %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
+        'label': 'Figures'}) %}
+        {% endif %}
         {% endif %}
         {% if sec.per_sample %}
-          {% if sec.label %}
-            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample', 'label': sec.label ~ ' – Per Sample'}) %}
-          {% else %}
-            {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample', 'label': 'Per Sample'}) %}
-          {% endif %}
+        {% if sec.label %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
+        'label': sec.label ~ ' – Per Sample'}) %}
+        {% else %}
+        {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
+        'label': 'Per Sample'}) %}
+        {% endif %}
         {% endif %}
         {% endfor %}
 
@@ -104,17 +108,21 @@
             {% for fig in row.imgs %}
             <div class="qc-card"
               data-src="/qc-image/{{ dataset_id }}/{{ fig.path }}">
-              <div class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--sq{% endif %}">
+              <div
+                class="qc-card-img-wrap{% if step.cap_combined %} qc-card-img-wrap--sq{% endif %}">
                 <img src="/qc-image/{{ dataset_id }}/{{ fig.path }}"
                   alt="{{ fig.title }}" loading="lazy" />
                 <!-- Figure title overlay (bottom) -->
                 <div class="qc-card-title">{{ fig.title }}</div>
                 <!-- Permanent zoom icon (top-right) -->
-                <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed" aria-hidden="true">
+                <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed"
+                  aria-hidden="true">
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
                     viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-                    <path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/>
+                    <path
+                      d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
+                    <path
+                      d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z" />
                   </svg>
                 </span>
               </div>
@@ -158,11 +166,14 @@
                       <!-- Figure title overlay (bottom) -->
                       <div class="qc-card-title">{{ fig.title }}</div>
                       <!-- Permanent zoom icon (top-right) -->
-                      <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
-                          viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-                          <path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/>
+                      <span class="qc-card-zoom-icon qc-card-zoom-icon--fixed"
+                        aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11"
+                          height="11" viewBox="0 0 16 16" fill="currentColor">
+                          <path
+                            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
+                          <path
+                            d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z" />
                         </svg>
                       </span>
                     </div>

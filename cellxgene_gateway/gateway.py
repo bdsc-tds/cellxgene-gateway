@@ -827,9 +827,9 @@ def ip_address():
     return set_no_cache(resp)
 
 
-# Map filename suffixes (without extension) to short display titles
+# Map filename suffixes to short display titles
 _FIGURE_TITLES = {
-    # Preprocessing — combined
+    # Preprocessing (combined)
     'all_QC_raw_data_total_counts': 'Total counts',
     'all_QC_raw_data_n_genes_by_counts': 'Genes per cell',
     'all_QC_raw_data_pct_counts_mt': 'MT fraction',
@@ -842,7 +842,7 @@ _FIGURE_TITLES = {
     'all_QC_filtered_data_pct_counts_ribo': 'Ribosomal fraction',
     'all_QC_filtered_data_pct_counts_globin': 'Globin fraction',
     'all_QC_filtered_data_pct_counts_in_top_20_genes': 'Top 20 gene fraction',
-    # Preprocessing — per sample
+    # Preprocessing (per sample)
     'QC_raw_data_counts_metrics': 'QC metrics',
     'QC_raw_data_counts_mt': 'Mitochondrial counts',
     'QC_raw_data_highest_expression': 'Highest expressed genes',
@@ -866,13 +866,13 @@ _FIGURE_TITLES = {
     'all_umap_qc': 'UMAP QC metrics',
     # Clustering
     'all_clusters_resolutions': 'Clustering resolutions',
-    # Integration & Annotation — results
+    # Integration & Annotation (results)
     'all_scanvi_qc_integration': 'Integration quality',
     'all_scanvi_label_transfer_umap': 'Label transfer UMAP',
     'all_scanvi_umap_qc': 'scANVI UMAP QC',
     'all_scanvi_clusters_resolutions': 'Clustering resolutions',
     'joint_scanvi_umap_cell_origin': 'Cell origin UMAP',
-    # Integration & Annotation — training
+    # Integration & Annotation (training)
     'all_scanvi_qc_elbo': 'ELBO',
     'all_scanvi_qc_kl': 'KL divergence',
     'all_scanvi_qc_reconstruction': 'Reconstruction loss',
@@ -884,7 +884,7 @@ _ANNOTATION_QC_RE = re.compile(r'^annotation_qc_res([\d.]+)$')
 
 def _figure_title(stem):
     """
-    Function to return the display title for a figure filename stem.
+    Function to return display title for figure filename stem.
 
     Parameters:
     -----------
@@ -894,11 +894,11 @@ def _figure_title(stem):
     Returns:
     --------
     title: str
-      Human-readable title, or a cleaned-up version of the stem.
+      Human-readable title, or cleaned-up version of stem.
     """
     if stem in _FIGURE_TITLES:
         return _FIGURE_TITLES[stem]
-    # Per-sample figures: strip leading sample prefix then look up the suffix
+    # Per-sample figures: strip leading sample prefix then look up suffix
     m_qc = re.match(r'^.+?_(QC_(?:raw|filtered)_data_.+)$', stem)
     if m_qc and m_qc.group(1) in _FIGURE_TITLES:
         return _FIGURE_TITLES[m_qc.group(1)]
@@ -912,44 +912,49 @@ def _figure_title(stem):
     return stem.replace('_', ' ').replace('all ', '').title()
 
 
-# Ordered row definitions for tabs with thematic groupings.
+# Ordered row definitions for tabs with thematic groupings
 # Each entry: (row_label, list_of_filename_stems_in_order)
 _ROW_DEFS = {
     '2_normalisation': [
         ('Distribution', ['all_normalisation_distributions']),
-        ('Statistical QC', [
-            'all_normalisation_qc_mean_var',
-            'all_normalisation_qc_qq',
-            'all_normalisation_qc_cv',
-            'all_normalisation_qc_corr',
-        ]),
+        (
+            'Statistical QC',
+            [
+                'all_normalisation_qc_mean_var',
+                'all_normalisation_qc_qq',
+                'all_normalisation_qc_cv',
+                'all_normalisation_qc_corr',
+            ],
+        ),
     ],
     '3_dimensionality_reduction': [
-        ('Feature Selection', [
-            'all_highly_variable_genes',
-            'all_highly_variable_genes_batches',
-        ]),
-        ('PCA', [
-            'all_pca_variance_ratio',
-            'all_pca_loadings',
-            'all_pca_qc',
-        ]),
+        (
+            'Feature Selection',
+            ['all_highly_variable_genes', 'all_highly_variable_genes_batches'],
+        ),
+        ('PCA', ['all_pca_variance_ratio', 'all_pca_loadings', 'all_pca_qc']),
         ('UMAP', ['all_umap_qc']),
     ],
     '5_integration_annotation/results': [
         ('Integration QC', ['all_scanvi_qc_integration']),
-        ('UMAP', [
-            'all_scanvi_label_transfer_umap',
-            'all_scanvi_umap_qc',
-            'joint_scanvi_umap_cell_origin',
-        ]),
-        ('Clustering', [
-            'all_scanvi_clusters_resolutions',
-            'annotation_qc_res0.5',
-            'annotation_qc_res1.0',
-            'annotation_qc_res1.5',
-            'annotation_qc_res2.0',
-        ]),
+        (
+            'UMAP',
+            [
+                'all_scanvi_label_transfer_umap',
+                'all_scanvi_umap_qc',
+                'joint_scanvi_umap_cell_origin',
+            ],
+        ),
+        (
+            'Clustering',
+            [
+                'all_scanvi_clusters_resolutions',
+                'annotation_qc_res0.5',
+                'annotation_qc_res1.0',
+                'annotation_qc_res1.5',
+                'annotation_qc_res2.0',
+            ],
+        ),
     ],
 }
 
@@ -974,10 +979,20 @@ def _arrange_into_rows(imgs, step_key):
     """
     if step_key not in _ROW_DEFS:
         # No thematic arrangement — single row with all figures
-        return [{'label': None, 'imgs': [
-            {'path': p, 'title': _figure_title(os.path.splitext(os.path.basename(p))[0])}
-            for p in imgs
-        ]}]
+        return [
+            {
+                'label': None,
+                'imgs': [
+                    {
+                        'path': p,
+                        'title': _figure_title(
+                            os.path.splitext(os.path.basename(p))[0]
+                        ),
+                    }
+                    for p in imgs
+                ],
+            }
+        ]
 
     # Build stem→path lookup
     stem_to_path = {}
@@ -991,10 +1006,9 @@ def _arrange_into_rows(imgs, step_key):
         row_imgs = []
         for stem in stems:
             if stem in stem_to_path:
-                row_imgs.append({
-                    'path': stem_to_path[stem],
-                    'title': _figure_title(stem),
-                })
+                row_imgs.append(
+                    {'path': stem_to_path[stem], 'title': _figure_title(stem)}
+                )
                 placed.add(stem)
             else:
                 # Try prefix match for annotation_qc with varying resolutions
@@ -1007,7 +1021,10 @@ def _arrange_into_rows(imgs, step_key):
 
     # Append any figures not captured by the row definitions
     leftover = [
-        {'path': p, 'title': _figure_title(os.path.splitext(os.path.basename(p))[0])}
+        {
+            'path': p,
+            'title': _figure_title(os.path.splitext(os.path.basename(p))[0]),
+        }
         for p in imgs
         if os.path.splitext(os.path.basename(p))[0] not in placed
     ]
@@ -1122,9 +1139,9 @@ def qc_report(dataset_id):
         '5_integration_annotation': 'Integration & Annotation',
     }
 
-    # Sub-labels for named subdirectories inside a step (used as headings).
+    # Sub-labels for named subdirectories inside a step (used as headings)
     # 3_doublets is intentionally excluded: all its figures are per-sample so
-    # it has no combined images and needs no section heading.
+    # it has no combined images and needs no section heading
     sub_labels = {
         '1_raw': 'Raw Data',
         '2_filtered': 'Filtered Data',
@@ -1158,20 +1175,24 @@ def qc_report(dataset_id):
                 combined_imgs, per_sample = _walk_images(sub_path, qc_dir)
                 sub_key = f'{step_dir}/{sub}'
                 rows = _arrange_into_rows(combined_imgs, sub_key)
-                sections.append({
-                    'label': sub_labels[sub],
-                    'rows': rows,
-                    'per_sample': _annotate_per_sample(per_sample),
-                })
+                sections.append(
+                    {
+                        'label': sub_labels[sub],
+                        'rows': rows,
+                        'per_sample': _annotate_per_sample(per_sample),
+                    }
+                )
         else:
             # Single implicit section — walk whole step directory
             combined_imgs, per_sample = _walk_images(step_path, qc_dir)
             rows = _arrange_into_rows(combined_imgs, step_dir)
-            sections = [{
-                'label': None,
-                'rows': rows,
-                'per_sample': _annotate_per_sample(per_sample),
-            }]
+            sections = [
+                {
+                    'label': None,
+                    'rows': rows,
+                    'per_sample': _annotate_per_sample(per_sample),
+                }
+            ]
 
         # Square-crop combined thumbnails for tabs with wide figures
         cap_combined = step_dir in (
@@ -1180,12 +1201,14 @@ def qc_report(dataset_id):
             '4_clustering_unintegrated',
             '5_integration_annotation',
         )
-        steps.append({
-            'id': step_dir,
-            'label': label,
-            'sections': sections,
-            'cap_combined': cap_combined,
-        })
+        steps.append(
+            {
+                'id': step_dir,
+                'label': label,
+                'sections': sections,
+                'cap_combined': cap_combined,
+            }
+        )
 
     # Find dataset name from TSV for page title
     tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')

@@ -1,4 +1,5 @@
-// Script to handle lightbox image viewer, tab URL sync, and back-to-top button for QC report page
+// Script to handle lightbox image viewer, tab URL sync, and back-to-top button
+// for QC report page
 
 (function () {
   // Tab URL sync: update hash when a tab is activated, restore on page load
@@ -13,14 +14,14 @@
     });
   });
 
-  // Restore the active tab from the URL hash on page load
+  // Restore active tab from URL hash on page load
   const hash = window.location.hash;
   if (hash && hash.startsWith('#tab-')) {
     const stepId = hash.slice('#tab-'.length); // e.g. "1_preprocessing"
     const btn = document.querySelector(`#qcTabs [data-bs-target="#pane-${stepId}"]`);
     if (btn) {
       bootstrap.Tab.getOrCreateInstance(btn).show();
-      // Prevent the browser from jumping to the anchor
+      // Prevent browser from jumping to anchor
       window.scrollTo(0, 0);
     }
   }
@@ -32,11 +33,11 @@
   const btnPrev = document.getElementById('qc-lb-prev');
   const btnNext = document.getElementById('qc-lb-next');
 
-  // All qc-card elements in the active tab pane and current index
+  // All qc-card elements in active tab pane and current index
   let gallery = [];
   let current = 0;
 
-  // Resets lightbox to fit-to-screen view (clears zoom state)
+  // Reset lightbox to fit-to-screen view (clear zoom state)
   function resetZoom() {
     lbImg.classList.remove('qc-lb-img--zoomed');
     lightbox.style.alignItems = 'center';
@@ -44,7 +45,7 @@
     lightbox.scrollLeft = 0;
   }
 
-  // Opens lightbox with all cards from the clicked card's tab pane
+  // Open lightbox with all cards from clicked card's tab pane
   function openLightbox(cards, index) {
     gallery = cards;
     current = index;
@@ -56,13 +57,13 @@
     btnClose.focus();
   }
 
-  // Closes lightbox and restores page scroll
+  // Close lightbox and restore page scroll
   function closeLightbox() {
     lightbox.hidden = true;
     document.body.style.overflow = '';
   }
 
-  // Navigates to a given index, resetting zoom each time
+  // Navigate to a given index, resetting zoom each time
   function showImage(index) {
     current = (index + gallery.length) % gallery.length;
     lbImg.src = gallery[current].dataset.src;
@@ -70,7 +71,7 @@
     resetZoom();
   }
 
-  // Toggle zoom on the lightbox image: fit-to-screen ↔ native resolution
+  // Toggle zoom on lightbox image: fit-to-screen ↔ native resolution
   lbImg.addEventListener('click', function (e) {
     e.stopPropagation();
     const zoomed = lbImg.classList.toggle('qc-lb-img--zoomed');
