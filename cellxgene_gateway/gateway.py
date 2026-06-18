@@ -1001,6 +1001,9 @@ def _arrange_into_rows(imgs, step_key):
       'path' and 'title' keys). Figures not matched by any row definition are
       appended in a final unlabelled row.
     """
+    if not imgs:
+        return []
+
     if step_key not in _ROW_DEFS:
         # No thematic arrangement — single row with all figures
         return [
@@ -1164,11 +1167,10 @@ def qc_report(dataset_id):
     }
 
     # Sub-labels for named subdirectories inside a step (used as headings)
-    # 3_doublets is intentionally excluded: all its figures are per-sample so
-    # it has no combined images and needs no section heading
     sub_labels = {
         '1_raw': 'Raw Data',
         '2_filtered': 'Filtered Data',
+        '3_doublets': 'Doublets',
         'results': 'Results',
         'training': 'Model Training',
     }
