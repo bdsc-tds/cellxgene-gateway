@@ -40,6 +40,7 @@
   // Reset lightbox to fit-to-screen view (clear zoom state)
   function resetZoom() {
     lbImg.classList.remove('qc-lb-img--zoomed', 'qc-lb-img--zoomed2');
+    lbImg.style.maxWidth = '';
     lightbox.style.alignItems = 'center';
     lightbox.scrollTop = 0;
     lightbox.scrollLeft = 0;
@@ -71,17 +72,22 @@
     resetZoom();
   }
 
-  // Cycle zoom on lightbox image: fit → 100vw → native → fit
+  // Cycle zoom on lightbox image: fit → adaptive intermediate → native → fit
   lbImg.addEventListener('click', function (e) {
     e.stopPropagation();
     const z1 = lbImg.classList.contains('qc-lb-img--zoomed');
     const z2 = lbImg.classList.contains('qc-lb-img--zoomed2');
     if (!z1 && !z2) {
-      // fit → 120vw
+      // fit → intermediate: geometric mean of fit width and native width
+      const fitW = lbImg.getBoundingClientRect().width;
+      const nativeW = lbImg.naturalWidth;
+      const midW = Math.round(Math.sqrt(fitW * nativeW));
+      lbImg.style.maxWidth = midW + 'px';
       lbImg.classList.add('qc-lb-img--zoomed');
       lightbox.style.alignItems = 'flex-start';
     } else if (z1) {
-      // 120vw → native
+      // intermediate → native
+      lbImg.style.maxWidth = '';
       lbImg.classList.remove('qc-lb-img--zoomed');
       lbImg.classList.add('qc-lb-img--zoomed2');
     } else {

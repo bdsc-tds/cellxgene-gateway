@@ -315,15 +315,15 @@ per-sample section) */
   transition: none;
 }
 
-/* Lightbox image zoomed style class (100 viewport width, scrollable) */
+/*Lightbox image intermediate zoom style class (adaptive resolution, set by JS,
+scrollable) */
 .qc-lb-img--zoomed {
-  max-width: 100vw;
   max-height: none;
   cursor: zoom-in;
   align-self: flex-start;
 }
 
-/* Lightbox image fully zoomed style class (native resolution, scrollable) */
+/* Lightbox image full zoom style class (native resolution, scrollable) */
 .qc-lb-img--zoomed2 {
   max-width: none;
   max-height: none;
