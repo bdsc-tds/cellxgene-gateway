@@ -39,7 +39,7 @@
 
   // Reset lightbox to fit-to-screen view (clear zoom state)
   function resetZoom() {
-    lbImg.classList.remove('qc-lb-img--zoomed');
+    lbImg.classList.remove('qc-lb-img--zoomed', 'qc-lb-img--zoomed2');
     lightbox.style.alignItems = 'center';
     lightbox.scrollTop = 0;
     lightbox.scrollLeft = 0;
@@ -71,13 +71,23 @@
     resetZoom();
   }
 
-  // Toggle zoom on lightbox image: fit-to-screen ↔ native resolution
+  // Cycle zoom on lightbox image: fit → 100vw → native → fit
   lbImg.addEventListener('click', function (e) {
     e.stopPropagation();
-    const zoomed = lbImg.classList.toggle('qc-lb-img--zoomed');
-    // When zooming in, align content to top-left so scroll starts there
-    lightbox.style.alignItems = zoomed ? 'flex-start' : 'center';
-    if (!zoomed) {
+    const z1 = lbImg.classList.contains('qc-lb-img--zoomed');
+    const z2 = lbImg.classList.contains('qc-lb-img--zoomed2');
+    if (!z1 && !z2) {
+      // fit → 120vw
+      lbImg.classList.add('qc-lb-img--zoomed');
+      lightbox.style.alignItems = 'flex-start';
+    } else if (z1) {
+      // 120vw → native
+      lbImg.classList.remove('qc-lb-img--zoomed');
+      lbImg.classList.add('qc-lb-img--zoomed2');
+    } else {
+      // native → fit
+      lbImg.classList.remove('qc-lb-img--zoomed2');
+      lightbox.style.alignItems = 'center';
       lightbox.scrollTop = 0;
       lightbox.scrollLeft = 0;
     }
