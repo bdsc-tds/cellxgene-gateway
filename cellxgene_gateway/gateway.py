@@ -812,6 +812,30 @@ def do_terminate(path):
     return redirect(url_for('do_instances'), code=302)
 
 
+@app.route('/terminate-back/<path:path>', methods=['GET'])
+def do_terminate_back(path):
+    """
+    Terminate process serving a dataset and redirect to filecrawl page.
+
+    Parameters:
+    -----------
+    path: str
+      Path of dataset to terminate.
+
+    Returns:
+    --------
+    Response
+      Redirect response to filecrawl page.
+    """
+
+    key = get_cache_key(path)
+    match = cache.check_entry(key)
+    if match is not None:
+        match.terminate()
+
+    return redirect(url_for('filecrawl'), code=302)
+
+
 @app.route('/metadata/ip_address', methods=['GET'])
 def ip_address():
     """

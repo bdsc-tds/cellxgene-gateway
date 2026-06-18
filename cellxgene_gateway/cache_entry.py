@@ -267,6 +267,18 @@ class CacheEntry:
             .replace('http://fonts.gstatic.com', 'https://fonts.gstatic.com')
             .replace(self.cellxgene_basepath(), self.key.gateway_basepath())
         )
+        if '</body>' in gateway_content:
+            btn = (
+                f'<a href="/terminate-back/{self.key.descriptor}" style="'
+                'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;'
+                'background:#0066cc;color:#fff;border-radius:6px;'
+                'padding:0.55rem 1.1rem;font-size:1rem;text-decoration:none;'
+                'box-shadow:0 2px 8px rgba(0,0,0,0.18);'
+                '">&#8592;&nbsp; Datasets</a>'
+            )
+            gateway_content = gateway_content.replace(
+                '</body>', btn + '</body>', 1
+            )
         return gateway_content
 
     def cellxgene_basepath(self):
@@ -295,7 +307,7 @@ class CacheEntry:
           Response containing content or redirection.
         """
         gateway_basepath = self.key.gateway_basepath()
-        subpath = path[len(self.key.descriptor) :]  # noqa: E203
+        subpath = path[len(self.key.descriptor) :]
         if len(subpath) == 0:
             r = make_response(f'Redirect to {gateway_basepath}\n', 302)
             r.headers['location'] = gateway_basepath + querystring()
