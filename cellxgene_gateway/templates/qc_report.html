@@ -58,7 +58,7 @@
         {% if sec.rows %}
         {% if sec.label %}
         {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
-        'label': sec.label ~ ' – All Samples'}) %}
+        'label': sec.label ~ ' – All ' ~ sec.group_label ~ 's'}) %}
         {% else %}
         {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-overview',
         'label': 'Figures'}) %}
@@ -67,10 +67,10 @@
         {% if sec.per_sample %}
         {% if sec.label %}
         {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
-        'label': sec.label ~ ' – Per Sample'}) %}
+        'label': sec.label ~ ' – Per ' ~ sec.group_label}) %}
         {% else %}
         {% set _ = anchors.append({'href': '#' ~ sec_slug ~ '-persample',
-        'label': 'Per Sample'}) %}
+        'label': 'Per ' ~ sec.group_label}) %}
         {% endif %}
         {% endif %}
         {% endfor %}
@@ -97,7 +97,7 @@
         {% if sec.rows %}
         <div id="{{ sec_slug }}-overview" class="qc-anchor-target">
           {% if sec.label and sec.per_sample %}
-          <div class="qc-section-label">All Samples</div>
+          <div class="qc-section-label">All {{ sec.group_label }}s</div>
           {% endif %}
           {% for row in sec.rows %}
           <!-- Thematic row label (if defined) -->
@@ -138,7 +138,7 @@
         <div id="{{ sec_slug }}-persample" class="qc-anchor-target">
           <div
             class="qc-section-label {% if sec.rows %}qc-section-label--top{% endif %}">
-            Per Sample
+            Per {{ sec.group_label }}
           </div>
           <div class="accordion qc-accordion" id="acc-{{ sec_slug }}">
             {% for sample, imgs in sec.per_sample.items() %}

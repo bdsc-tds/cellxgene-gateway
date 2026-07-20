@@ -1102,12 +1102,16 @@ def _walk_images(root_path, qc_dir):
 
     Returns:
     --------
-    (combined_imgs, per_sample): tuple
+    (combined_imgs, per_sample, group_label): tuple
       combined_imgs is a sorted list of relative image paths.
-      per_sample is an ordered dict mapping sample id to list of relative paths.
+      per_sample is an ordered dict mapping sample/dataset id to list of
+      relative paths.
+      group_label is 'Sample' or 'Dataset', depending on which grouping was
+      detected in the walked paths.
     """
     combined_imgs = []
     per_sample = {}
+    group_label = 'Sample'
 
     for root, dirs, files in os.walk(root_path):
         dirs.sort()
@@ -1119,15 +1123,21 @@ def _walk_images(root_path, qc_dir):
         )
         for img in imgs:
             rel_path = os.path.join(rel_root, img)
-            if 'per_sample' in rel_path or '3_doublets' in rel_path:
-                # Group by sample id: strip known QC/doublet suffixes
+            if 'per_dataset' in rel_path:
+                group_label = 'Dataset'
+            if (
+                'per_sample' in rel_path
+                or 'per_dataset' in rel_path
+                or '3_doublets' in rel_path
+            ):
+                # Group by sample/dataset id: strip known QC/doublet suffixes
                 m = re.match(r'^(.+?)(?:_QC_|_doublet_)', img)
                 sample = m.group(1) if m else img
                 per_sample.setdefault(sample, []).append(rel_path)
             else:
                 combined_imgs.append(rel_path)
 
-    return combined_imgs, per_sample
+    return combined_imgs, per_sample, group_label
 
 
 @app.route('/qc/<dataset_id>')
@@ -1160,6 +1170,7 @@ def qc_report(dataset_id):
     # Map top-level subdirectories to human-readable step names
     step_labels = {
         '1_preprocessing': 'Preprocessing',
+        '1_qc': 'QC',
         '2_normalisation': 'Normalisation',
         '3_dimensionality_reduction': 'Dimensionality Reduction',
         '4_clustering_unintegrated': 'Clustering',
@@ -1170,6 +1181,7 @@ def qc_report(dataset_id):
     sub_labels = {
         '1_raw': 'Raw Data',
         '2_filtered': 'Filtered Data',
+        'filtered': 'Filtered Data',
         '3_doublets': 'Doublets',
         'results': 'Results',
         'training': 'Model Training',
@@ -1198,7 +1210,9 @@ def qc_report(dataset_id):
             sections = []
             for sub in named_subdirs:
                 sub_path = os.path.join(step_path, sub)
-                combined_imgs, per_sample = _walk_images(sub_path, qc_dir)
+                combined_imgs, per_sample, group_label = _walk_images(
+                    sub_path, qc_dir
+                )
                 sub_key = f'{step_dir}/{sub}'
                 rows = _arrange_into_rows(combined_imgs, sub_key)
                 sections.append(
@@ -1206,17 +1220,21 @@ def qc_report(dataset_id):
                         'label': sub_labels[sub],
                         'rows': rows,
                         'per_sample': _annotate_per_sample(per_sample),
+                        'group_label': group_label,
                     }
                 )
         else:
             # Single implicit section — walk whole step directory
-            combined_imgs, per_sample = _walk_images(step_path, qc_dir)
+            combined_imgs, per_sample, group_label = _walk_images(
+                step_path, qc_dir
+            )
             rows = _arrange_into_rows(combined_imgs, step_dir)
             sections = [
                 {
                     'label': None,
                     'rows': rows,
                     'per_sample': _annotate_per_sample(per_sample),
+                    'group_label': group_label,
                 }
             ]
 
