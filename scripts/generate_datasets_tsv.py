@@ -4,15 +4,17 @@ Script to generate datasets.tsv from .h5ad files in a directory.
 Usage:
     python scripts/generate_datasets_tsv.py \
         --data-dir cellxgene_data/ \
-        --output datasets.tsv
+        --output datasets.tsv \
+        --merged-file data/meta_analysis_all_final_label_transfer_swapped.h5ad \
+        --merged-config scripts/meta_analysis_config.yaml
 """
-
 
 # Import utility modules
 import argparse
 import csv
 import os
 import re
+import yaml
 
 
 # Define columns for output TSV file
@@ -258,8 +260,62 @@ def find_h5ad_files(data_dir):
     return sorted(found)
 
 
+# Function to build the merged dataset row, combining uns extraction and YAML overrides
+def load_merged_row(merged_file, config_path):
+    """
+    Build a TSV row dict for a merged/meta-analysis .h5ad file.
+
+    Parameters:
+    -----------
+    merged_file: str
+      Path to the merged .h5ad file.
+    config_path: str or None
+      Optional path to a YAML file with manual field overrides.
+
+    Returns:
+    --------
+    row: dict
+      TSV row dict ready for csv.DictWriter, with file_path set to merged_file.
+    """
+    print(f'Processing merged file: {merged_file}')
+    meta = extract_h5ad_metadata(merged_file)
+
+    # Treat literal 'None' strings (from uns) as empty
+    meta = {k: ('' if v == 'None' else v) for k, v in meta.items()}
+
+    # Apply YAML overrides if config provided
+    if config_path and os.path.exists(config_path):
+        with open(config_path) as f:
+            overrides = yaml.safe_load(f) or {}
+        field_map = {
+            'name': 'name',
+            'description': 'description',
+            'authors': 'authors',
+            'journal': 'journal',
+            'doi': 'doi',
+        }
+        for cfg_key, meta_key in field_map.items():
+            val = overrides.get(cfg_key, '')
+            if val:
+                meta[meta_key] = str(val)
+
+    # Apply same post-processing as individual datasets
+    meta['disease'] = sort_semicolon_field(
+        strip_tokens(meta['disease'], {'healthy'})
+    )
+    meta['tissue'] = sort_semicolon_field(
+        strip_tokens(meta['tissue'], {'na', 'n/a', 'nan', 'none'})
+    )
+    meta['sex'] = sort_semicolon_field(
+        strip_tokens(meta['sex'], {'na', 'n/a', 'nan', 'none'}),
+        fixed_order=['female', 'male'],
+    )
+
+    return {'file_path': merged_file, **meta}
+
+
 # Function to generate datasets.tsv summary of .h5ad files
-def generate_tsv(data_dir, output_path):
+def generate_tsv(data_dir, output_path, merged_file=None, merged_config=None):
     """
     Generate datasets.tsv by scanning data_dir for .h5ad files.
 
@@ -269,6 +325,10 @@ def generate_tsv(data_dir, output_path):
       Directory containing .h5ad files (searched recursively).
     output_path: str
       Path for the output .tsv file.
+    merged_file: str or None
+      Optional path to a merged/meta-analysis .h5ad to append as last row.
+    merged_config: str or None
+      Optional path to a YAML file with manual field overrides for the merged row.
     """
     rows = []
 
@@ -277,7 +337,18 @@ def generate_tsv(data_dir, output_path):
         print(f'No .h5ad files found in {data_dir}')
         return
 
+    # Exclude the merged file from the individual dataset scan
+    merged_relpath = (
+        os.path.relpath(merged_file, data_dir)
+        if merged_file and os.path.exists(merged_file)
+        else None
+    )
+
     for file_path in file_paths:
+        if merged_relpath and os.path.normpath(file_path) == os.path.normpath(
+            merged_relpath
+        ):
+            continue
         h5ad_path = os.path.join(data_dir, file_path)
         print(f'Processing: {file_path}')
         meta = extract_h5ad_metadata(h5ad_path)
@@ -296,6 +367,13 @@ def generate_tsv(data_dir, output_path):
 
         out_row = {'file_path': file_path, **meta}
         rows.append(out_row)
+
+    if merged_file and os.path.exists(merged_file):
+        row = load_merged_row(merged_file, merged_config)
+        row['file_path'] = merged_relpath
+        rows.append(row)
+    elif merged_file:
+        print(f'Warning: merged file not found: {merged_file}')
 
     with open(output_path, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=TSV_COLUMNS, delimiter='\t')
@@ -323,9 +401,21 @@ def main():
         default='datasets.tsv',
         help='Output path for datasets.tsv (default: datasets.tsv)',
     )
+    parser.add_argument(
+        '--merged-file',
+        default=None,
+        help='Path to merged/meta-analysis .h5ad to append as last row (optional)',
+    )
+    parser.add_argument(
+        '--merged-config',
+        default=None,
+        help='Path to YAML file with manual field overrides for the merged row (optional)',
+    )
     args = parser.parse_args()
 
-    generate_tsv(args.data_dir, args.output)
+    generate_tsv(
+        args.data_dir, args.output, args.merged_file, args.merged_config
+    )
 
 
 # Main script entry point
