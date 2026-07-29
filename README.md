@@ -87,50 +87,23 @@ If any of the following optional variables are set, [ProxyFix](https://werkzeug.
 * `PROXY_FIX_PORT` - Number of upstream proxies setting X-Forwarded-Port
 * `PROXY_FIX_PREFIX` - Number of upstream proxies setting X-Forwarded-Prefix
 
-The defaults should be fine if you set up a venv and cellxgene_data folder as above.
+The defaults should be fine if you set up a conda env/venv and cellxgene_data folder as above.
 
-## Running cellxgene-gateway with Docker
+## Running cellxgene gateway
 
-First, build Docker image:
-
-```bash
-docker build -t cellxgene-gateway .
-```
-
-Then, cellxgene-gateway can be launched as such:
+Use the gunicorn start script:
 
 ```bash
-docker run -it --rm \
--v <local_data_dir>:/cellxgene-data \
--p 5005:5005 \
-cellxgene-gateway
+( ./start_gunicorn.sh )
 ```
 
-Additional environment variables can be provided with the `-e` parameter:
+Configuration is inlined at the top of `start_gunicorn.sh`. Paths derive from the conda env (`CONDA_ENV`, default `cellxgateway`) and the repo location, so the script is host-independent. Every setting is written as `${VAR:-default}`, so any of them can still be overridden from the environment:
 
 ```bash
-docker run -it --rm \
--v ../cellxgene_data:/cellxgene-data \
--e GATEWAY_PORT=8080 \
--p 8080:8080 \
-cellxgene-gateway
+CELLXGENE_DATA=/path/to/data ( ./start_gunicorn.sh )
 ```
 
-## Running cellxgene gateway with start scripts
-
-For your convenience, we provide start scripts for flask, gunicorn and uwsgi.
-
-First, set up a .env
-```bash
-cp env_example .env
-# edit .env
-open .env
-```
-
-Then run the scripts in a subshell
-```bash
-( ./start_flask.sh )
-```
+In production the script runs under a systemd service, which can override settings with `Environment=` directives.
 
 # Customization
 
