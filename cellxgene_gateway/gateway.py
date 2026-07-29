@@ -104,6 +104,38 @@ def set_no_cache(resp):
     return resp
 
 
+# Bundle entry point: keeps a stable name across rebuilds, so it must be
+# revalidated. Every other file under static/vitessce/ carries a content hash,
+# and static/vendor/ files carry a version, so both can be cached forever
+BUNDLE_ENTRY_PATH = '/static/vitessce/spatial-viewer.js'
+
+
+@app.after_request
+def set_static_cache_headers(resp):
+    """
+    Mark content-addressed static assets as immutable so browsers stop
+    revalidating them on every page load. Flask otherwise sends `no-cache`,
+    which costs a round trip per file, and Vitessce bundle alone is 29 files.
+
+    Parameters:
+    -----------
+    resp: flask.Response
+      Response about to be returned.
+
+    Returns:
+    --------
+    resp: flask.Response
+      Response with a long-lived Cache-Control header where applicable.
+    """
+    path = request.path
+    is_versioned = path.startswith('/static/vendor/') or (
+        path.startswith('/static/vitessce/') and path != BUNDLE_ENTRY_PATH
+    )
+    if is_versioned and resp.status_code == 200:
+        resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return resp
+
+
 app.wsgi_app = _force_https(app.wsgi_app)
 if (
     env.proxy_fix_for > 0
