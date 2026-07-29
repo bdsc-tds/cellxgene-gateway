@@ -4,37 +4,49 @@
 #
 # PREREQUISITES:
 # - Gunicorn installed (included with cellxgene 1.3.0, or: pip install gunicorn)
-# - Virtual environment activated
-# - .env file with CELLXGENE_LOCATION and CELLXGENE_DATA (or CELLXGENE_BUCKET)
+# - Conda env named by CONDA_ENV (default: cellxgateway)
 #
 # USAGE:
 # ./start_gunicorn.sh
+#
+# Configuration lives in this file rather than a .env: every setting below is
+# written as ${VAR:-default}, so it can still be overridden from environment
+# (e.g. systemd Environment=, or an inline export) without one
 
 # Exit on error
 set -e
 
-# Get the directory where this script is located
+# Get directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 
-# Source environment variables
-echo "Loading environment variables..."
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    source "$SCRIPT_DIR/.env"
-else
-    echo "Error: .env file not found at $SCRIPT_DIR/.env"
-    echo "Please create it with required environment variables"
-    exit 1
-fi
+# Server config
+# Paths derive from conda env and repo location so script stays host-independent
+# Conda variables
+CONDA_ROOT=${CONDA_ROOT:-$HOME/miniforge3}
+CONDA_ENV=${CONDA_ENV:-cellxgateway}
+CONDA_ENV_BIN="$CONDA_ROOT/envs/$CONDA_ENV/bin"
 
-# Verify required environment variables
-if [ -z "$CELLXGENE_LOCATION" ]; then
-    echo "Error: CELLXGENE_LOCATION not set"
-    exit 1
-fi
+# Cellxgene variables
+export PATH="$CONDA_ENV_BIN:$PATH"
+export CELLXGENE_LOCATION=${CELLXGENE_LOCATION:-$CONDA_ENV_BIN/cellxgene}
+export CELLXGENE_DATA=${CELLXGENE_DATA:-$SCRIPT_DIR/data}
+export QC_DATA=${QC_DATA:-$SCRIPT_DIR/analysis_qc}
+export GATEWAY_LOG_LEVEL=${GATEWAY_LOG_LEVEL:-INFO}
+export GATEWAY_IP=${GATEWAY_IP:-127.0.0.1}
 
-if [ -z "$CELLXGENE_DATA" ] && [ -z "$CELLXGENE_BUCKET" ]; then
-    echo "Error: Either CELLXGENE_DATA or CELLXGENE_BUCKET must be set"
+# Trust forwarded headers set by reverse proxy
+export PROXY_FIX_FOR=${PROXY_FIX_FOR:-1}
+export PROXY_FIX_PROTO=${PROXY_FIX_PROTO:-1}
+export PROXY_FIX_HOST=${PROXY_FIX_HOST:-1}
+export PROXY_FIX_PREFIX=${PROXY_FIX_PREFIX:-1}
+
+# Check cellxgene binary exists (defaults above are always set, so a missing
+# binary can happen)
+if [ ! -x "$CELLXGENE_LOCATION" ]; then
+    echo "Error: cellxgene not found at $CELLXGENE_LOCATION"
+    echo "Set CELLXGENE_LOCATION, or CONDA_ROOT/CONDA_ENV (currently:"
+    echo "  CONDA_ROOT=$CONDA_ROOT, CONDA_ENV=$CONDA_ENV)"
     exit 1
 fi
 
@@ -49,7 +61,7 @@ WORKERS=${GUNICORN_WORKERS:-1}
 # Threads share the same in-memory BackendCache, avoiding the cache
 # synchronization issues that arise with multiple workers.
 WORKER_CLASS=${GUNICORN_WORKER_CLASS:-gthread}
-THREADS=${GUNICORN_THREADS:-4}
+THREADS=${GUNICORN_THREADS:-8}
 BIND=${GATEWAY_IP:-0.0.0.0}:${GATEWAY_PORT:-5005}
 TIMEOUT=${GUNICORN_TIMEOUT:-120}
 KEEPALIVE=${GUNICORN_KEEPALIVE:-5}
@@ -69,6 +81,7 @@ echo "Starting Cellxgene Gateway with Gunicorn..."
 echo "Configuration:"
 echo "  Cellxgene executable: ${CELLXGENE_LOCATION}"
 echo "  Data source: ${CELLXGENE_DATA:-$CELLXGENE_BUCKET}"
+echo "  QC data: ${QC_DATA}"
 echo "  Binding to: $BIND"
 echo "  Workers: $WORKERS"
 echo "  Worker class: $WORKER_CLASS"
@@ -76,7 +89,9 @@ echo "  Threads per worker: $THREADS"
 echo "  Timeout: ${TIMEOUT}s"
 echo "  Keepalive: ${KEEPALIVE}s"
 echo "  Log level: $LOG_LEVEL"
+echo "  Gateway log level: ${GATEWAY_LOG_LEVEL}"
 echo "  Backed mode: ${GATEWAY_ENABLE_BACKED_MODE}"
+echo "  Proxy fix (for/proto/host/prefix): ${PROXY_FIX_FOR}/${PROXY_FIX_PROTO}/${PROXY_FIX_HOST}/${PROXY_FIX_PREFIX}"
 echo ""
 
 cd "$SCRIPT_DIR"
