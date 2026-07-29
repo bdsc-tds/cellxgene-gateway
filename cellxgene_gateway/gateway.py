@@ -1348,9 +1348,10 @@ def download_file(filename):
             filename=filename,
         )
 
-    # Serve the file
+    # Serve file. Absolute path: Flask resolves a relative directory against
+    # app.root_path (package dir), not configured data dir
     return send_from_directory(
-        data_dir,
+        os.path.abspath(data_dir),
         filename,
         as_attachment=True,
         mimetype='application/octet-stream',
