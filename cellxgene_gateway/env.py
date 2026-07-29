@@ -19,6 +19,11 @@ cellxgene_data = os.environ.get('CELLXGENE_DATA', '')
 cellxgene_args = os.environ.get('CELLXGENE_ARGS', None)
 env_vars = {'CELLXGENE_LOCATION': cellxgene_location}
 
+# QC variables
+# Resolved absolutely: Flask's `send_from_directory` treats a relative directory
+# as relative to package dir, not working directory
+qc_data = os.path.abspath(os.environ.get('QC_DATA', 'analysis_qc'))
+
 # Gateway variables
 gateway_port = int(os.environ.get('GATEWAY_PORT', '5005'))
 external_host = os.environ.get(
@@ -67,6 +72,7 @@ optional_env_vars = {
     'GATEWAY_LOG_LEVEL': log_level,
     'CELLXGENE_ARGS': cellxgene_args,
     'CELLXGENE_DATA': cellxgene_data,
+    'QC_DATA': qc_data,
     'PROXY_FIX_FOR': proxy_fix_for,
     'PROXY_FIX_PROTO': proxy_fix_proto,
     'PROXY_FIX_HOST': proxy_fix_host,

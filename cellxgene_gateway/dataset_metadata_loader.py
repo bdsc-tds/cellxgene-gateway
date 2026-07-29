@@ -3,6 +3,8 @@ import csv
 import logging
 import os
 
+from cellxgene_gateway import env
+
 
 # Set up logger for logging messages within this module
 logger = logging.getLogger(__name__)
@@ -150,7 +152,7 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                     row['file_size_bytes'] = 0
 
                 # Check whether a QC folder exists for this dataset
-                qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+                qc_base = env.qc_data
                 did = row.get('dataset_id', '')
                 row['has_qc'] = bool(
                     did and os.path.isdir(os.path.join(qc_base, did))

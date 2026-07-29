@@ -1155,7 +1155,7 @@ def qc_report(dataset_id):
     flask.Response
       Rendered QC report page, or 404 if no QC folder exists.
     """
-    qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+    qc_base = env.qc_data
     qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
 
     # Security: reject traversal attempts
@@ -1290,7 +1290,7 @@ def qc_image(dataset_id, image_path):
     flask.Response
       Image file response.
     """
-    qc_base = os.environ.get('QC_DATA', 'analysis_qc')
+    qc_base = env.qc_data
     qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
 
     # Security: reject traversal in either segment
