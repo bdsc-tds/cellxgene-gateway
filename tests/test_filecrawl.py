@@ -4,6 +4,7 @@ from collections import defaultdict
 from unittest.mock import patch
 
 # Import other functions from package
+from cellxgene_gateway import flask_util
 from cellxgene_gateway.filecrawl import (
     render_item,
     render_item_source,
@@ -54,6 +55,33 @@ class TestRenderEntry(unittest.TestCase):
     separating components.
     """
 
+    def setUp(self):
+        """
+        Set up Flask request context needed by rendering helpers.
+
+        render_item and render_annotation build URLs with url_for, which
+        requires an application context.
+
+        Returns:
+        --------
+        None
+        """
+
+        from cellxgene_gateway.gateway import app
+
+        self.app_context = app.test_request_context()
+        self.app_context.push()
+        self.addCleanup(self.app_context.pop)
+        # These expectations include /source/... prefix, which url() only emits
+        # when more than one item source is configured
+        self.addCleanup(
+            setattr,
+            flask_util,
+            'include_source_in_url',
+            flask_util.include_source_in_url,
+        )
+        flask_util.include_source_in_url = True
+
     def test_GIVEN_path_both_slash_THEN_view_has_single_slash(self):
         """
         Test rendering when subpath has both leading and trailing slashes.
@@ -98,6 +126,33 @@ class TestRenderAnnotation(unittest.TestCase):
 
     Test focus on rendering behavior when annotations are enabled.
     """
+
+    def setUp(self):
+        """
+        Set up the Flask request context the rendering helpers need.
+
+        render_item and render_annotation build URLs with url_for, which
+        requires an application context.
+
+        Returns:
+        --------
+        None
+        """
+
+        from cellxgene_gateway.gateway import app
+
+        self.app_context = app.test_request_context()
+        self.app_context.push()
+        self.addCleanup(self.app_context.pop)
+        # These expectations include /source/... prefix, which url() only emits
+        # when more than one item source is configured
+        self.addCleanup(
+            setattr,
+            flask_util,
+            'include_source_in_url',
+            flask_util.include_source_in_url,
+        )
+        flask_util.include_source_in_url = True
 
     @patch('cellxgene_gateway.env.enable_annotations', new=True)
     def test_GIVEN_no_annotation_THEN_new_alone(self):
@@ -205,6 +260,17 @@ class TestRenderItemTree(unittest.TestCase):
         self.app = app
         self.app_context = self.app.test_request_context()
         self.app_context.push()
+        # Popped explicitly: leaked context masks missing ones elsewhere
+        self.addCleanup(self.app_context.pop)
+        # These expectations include /source/... prefix, which url() only emits
+        # when more than one item source is configure
+        self.addCleanup(
+            setattr,
+            flask_util,
+            'include_source_in_url',
+            flask_util.include_source_in_url,
+        )
+        flask_util.include_source_in_url = True
 
     @patch('cellxgene_gateway.items.file.fileitem_source.FileItemSource')
     def test_GIVEN_deep_nested_dirs_THEN_includes_dirs_in_output(

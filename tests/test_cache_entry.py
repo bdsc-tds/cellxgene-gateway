@@ -37,6 +37,17 @@ class TestRenderEntry(unittest.TestCase):
         self.app = app
         self.app_context = self.app.test_request_context()
         self.app_context.push()
+        # Popped explicitly: context left on stack leaks into any test module
+        # run next, hiding missing contexts there
+        self.addCleanup(self.app_context.pop)
+        # Individual tests below flip this module-level flag; restore it so it
+        # does not leak into other test modules
+        self.addCleanup(
+            setattr,
+            flask_util,
+            'include_source_in_url',
+            flask_util.include_source_in_url,
+        )
         self.client = self.app.test_client()
 
     def test_GIVEN_key_and_port_THEN_returns_loading_CacheEntry(self):
