@@ -13,17 +13,11 @@ import logging
 import subprocess
 from http import HTTPStatus
 
-
 # Import other functions from package
 from cellxgene_gateway.cache_entry import CacheEntryStatus
-from cellxgene_gateway.dir_util import make_annotations
-from cellxgene_gateway.env import (
-    cellxgene_args,
-    enable_annotations,
-    enable_backed_mode,
-)
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
-
+from cellxgene_gateway.dir_util import make_annotations
+from cellxgene_gateway import env
 
 # Set up logger for logging messages within this module
 logger = logging.getLogger(__name__)
@@ -73,7 +67,7 @@ class SubprocessBackend:
         cmd: str
           Full shell command to run Cellxgene.
         """
-        if enable_annotations and annotation_file_path is not None:
+        if env.enable_annotations and annotation_file_path is not None:
             if annotation_file_path == '':
                 extra_args = f' --annotations-dir {make_annotations(file_path)}'
             else:
@@ -85,10 +79,10 @@ class SubprocessBackend:
         else:
             extra_args = ' --disable-annotations'
             extra_args += ' --disable-gene-sets-save'
-        if enable_backed_mode:
+        if env.enable_backed_mode:
             extra_args += ' --backed'
-        if cellxgene_args is not None:
-            extra_args += f' {cellxgene_args}'
+        if env.cellxgene_args is not None:
+            extra_args += f' {env.cellxgene_args}'
 
         cmd = (
             f'yes | {cellxgene_loc} launch {file_path}'

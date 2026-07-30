@@ -101,7 +101,7 @@ class TestRenderAnnotation(unittest.TestCase):
     Test focus on rendering behavior when annotations are enabled.
     """
 
-    @patch('cellxgene_gateway.filecrawl.enable_annotations', new=True)
+    @patch('cellxgene_gateway.env.enable_annotations', new=True)
     def test_GIVEN_no_annotation_THEN_new_alone(self):
         """
         Test rendering when no annotations are present.
@@ -114,7 +114,7 @@ class TestRenderAnnotation(unittest.TestCase):
             rendered,
         )
 
-    @patch('cellxgene_gateway.filecrawl.enable_annotations', new=True)
+    @patch('cellxgene_gateway.env.enable_annotations', new=True)
     def test_GIVEN_annotation_THEN_new_before(self):
         """
         Test rendering when at least one annotation exists.
@@ -134,7 +134,7 @@ class TestRenderAnnotation(unittest.TestCase):
             rendered,
         )
 
-    @patch('cellxgene_gateway.filecrawl.enable_annotations', new=True)
+    @patch('cellxgene_gateway.env.enable_annotations', new=True)
     def test_GIVEN_annotation_THEN_escaped(self):
         """
         Test rendering when annotation names include characters requiring HTML

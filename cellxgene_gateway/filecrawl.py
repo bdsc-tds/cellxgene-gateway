@@ -14,9 +14,8 @@ import urllib.parse
 
 
 # Import other functions from package
-from cellxgene_gateway import flask_util
+from cellxgene_gateway import env, flask_util
 from cellxgene_gateway.cache_key import CacheKey
-from cellxgene_gateway.env import enable_annotations
 
 
 def render_annotations(item, item_source):
@@ -37,7 +36,7 @@ def render_annotations(item, item_source):
       HTML string with annotation links, or an empty string if annotations are
       disabled.
     """
-    if not enable_annotations:
+    if not env.enable_annotations:
         return ''
     url = flask_util.view_url(
         item_source.get_annotations_subpath(item), item_source.name

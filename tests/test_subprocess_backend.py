@@ -95,14 +95,11 @@ class TestSubprocessBackend(unittest.TestCase):
         entry = CacheEntry.for_key(key, 8000)
         import cellxgene_gateway.subprocess_backend
 
-        cellxgene_gateway.subprocess_backend.enable_annotations = True
-        try:
+        with patch('cellxgene_gateway.env.enable_annotations', new=True):
             backend = cellxgene_gateway.subprocess_backend.SubprocessBackend()
             cellxgene_loc = '/some/cellxgene'
 
             backend.launch(cellxgene_loc, [], entry)
-        finally:
-            cellxgene_gateway.subprocess_backend.enable_annotations = False
         popen.assert_called_once_with(
             [
                 'yes | /some/cellxgene launch /tmp/czi/pbmc3k.h5ad --port 8000 --host 127.0.0.1 --annotations-file /tmp/czi/pbmc3k_annotations/foo.csv --gene-sets-file /tmp/czi/pbmc3k_annotations/foo_gene_sets.csv'
