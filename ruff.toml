@@ -1,0 +1,25 @@
+# Ruff configuration for this repository
+
+# Allow lines to be as long as 80 characters
+line-length = 80
+
+[format]
+# Enable reformatting of code snippets in docstrings
+docstring-code-format = true
+# Control line length of all docstring code snippets (76 because indent is not
+# taken into account)
+docstring-code-line-length = 76
+# Use 4 space indentation
+indent-style = "space"
+# Prefer single quotes over double quotes
+quote-style = "single"
+# Collapse argument lists that fit on one line within the line length limit
+skip-magic-trailing-comma = true
+# Enable formatting preview mode
+preview = true
+
+[lint]
+# Ignore bare except
+ignore = ["E722"]
+# Enable linting preview mode
+preview = true
