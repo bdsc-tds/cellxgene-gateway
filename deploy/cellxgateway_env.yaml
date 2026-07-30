@@ -1,7 +1,6 @@
 name: cellxgateway
 channels:
   - conda-forge
-  - bioconda
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
@@ -28,6 +27,7 @@ dependencies:
   - azure-storage-common-cpp=12.10.0=h40e822a_1
   - azure-storage-files-datalake-cpp=12.12.0=h141ff2a_2
   - blosc=1.21.6=he440d0b_1
+  - brotli=1.1.0=hb9d3cd8_3
   - brotli-bin=1.1.0=hb9d3cd8_3
   - brunsli=0.1=h9c3ff4c_0
   - bzip2=1.0.8=h4bc722e_7
@@ -137,6 +137,7 @@ dependencies:
   - nlohmann_json=3.12.0=h3f2d84a_0
   - numba=0.61.2=py313h50b8c88_1
   - numcodecs=0.16.1=py313ha87cce1_0
+  - numpy=2.2.6=py313h17eae1a_0
   - openjpeg=2.5.3=h5fbd93e_0
   - openssl=3.5.1=h7b32b05_0
   - orc=2.1.3=h61e0c1e_0
@@ -170,7 +171,7 @@ dependencies:
   - scipy=1.16.1=py313h3a520b0_0
   - seaborn=0.13.2=hd8ed1ab_3
   - seaborn-base=0.13.2=pyhd8ed1ab_3
-  - session-info2=0.2=pyhd8ed1ab_0
+  - session-info2=0.2.1=pyhd8ed1ab_0
   - setuptools=80.9.0=pyhff2d567_0
   - six=1.17.0=pyhe01879c_1
   - snappy=1.2.1=h8bd8927_1
@@ -197,38 +198,36 @@ dependencies:
   - zlib-ng=2.2.5=hde8ca8f_0
   - zstd=1.5.7=hb8e6e7a_2
   - pip:
-      - aniso8601==10.0.1
-      - blinker==1.9.0
-      - boto3==1.39.17
-      - botocore==1.39.17
-      - brotli==1.1.0
-      - cellxgene==1.3.0
-      - cellxgene-gateway==0.4.0
-      - certifi==2025.7.14
-      - charset-normalizer==3.4.2
-      - click==8.2.1
-      - flask==3.1.1
-      - flask-compress==1.18
-      - flask-cors==6.0.1
-      - flask-restful==0.3.10
-      - flask-server-timing==0.1.2
-      - flask-talisman==1.1.0
-      - flatbuffers==2.0.7
-      - flatten-dict==0.4.2
-      - fsspec==2025.7.0
-      - gunicorn==23.0.0
-      - idna==3.10
-      - itsdangerous==2.2.0
-      - jinja2==3.1.6
-      - jmespath==1.0.1
-      - markupsafe==3.0.2
-      - numpy==2.0.1
-      - psutil==7.0.0
-      - pyzstd==0.17.0
-      - requests==2.32.4
-      - s3fs==0.4.2
-      - s3transfer==0.13.1
-      - urllib3==2.5.0
-      - waitress==3.0.2
-      - werkzeug==3.1.3
-prefix: /home/antonin/miniforge3/envs/gateway_test
+    - Brotli==1.1.0
+    - Flask==3.1.1
+    - Flask-Compress==1.18
+    - Flask-RESTful==0.3.10
+    - Jinja2==3.1.6
+    - MarkupSafe==3.0.2
+    - Werkzeug==3.1.3
+    - aniso8601==10.0.1
+    - blinker==1.9.0
+    - boto3==1.39.17
+    - botocore==1.39.17
+    - cellxgene==1.3.0
+    - certifi==2025.7.14
+    - charset-normalizer==3.4.2
+    - click==8.2.1
+    - flask-cors==6.0.1
+    - flask-server-timing==0.1.2
+    - flask-talisman==1.1.0
+    - flatbuffers==2.0.7
+    - flatten-dict==0.4.2
+    - fsspec==2025.7.0
+    - gunicorn==23.0.0
+    - idna==3.10
+    - itsdangerous==2.2.0
+    - jmespath==1.0.1
+    - numpy==2.0.1
+    - psutil==7.0.0
+    - pyzstd==0.17.0
+    - requests==2.32.4
+    - s3fs==0.4.2
+    - s3transfer==0.13.1
+    - urllib3==2.5.0
+    - waitress==3.0.2

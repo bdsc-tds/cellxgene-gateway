@@ -1,0 +1,30 @@
+[Unit]
+Description=CellxGene Gateway
+After=network.target
+
+[Service]
+Type=simple
+# Host-specific: the account that owns the clone.
+User=CHANGEME_USER
+# Host-specific: the repository root.
+WorkingDirectory=/path/to/cellxgene-gateway
+
+# Start command
+ExecStart=/path/to/cellxgene-gateway/start_gunicorn.sh
+
+# Restart conditions
+Restart=on-failure
+RestartSec=10
+
+# Logging
+# deploy/setup.sh creates logs/; append: fails if directory is missing.
+StandardOutput=append:/path/to/cellxgene-gateway/logs/cellxgateway.log
+StandardError=append:/path/to/cellxgene-gateway/logs/cellxgateway.log
+
+# Every setting in start_gunicorn.sh is written as ${VAR:-default}, so it can
+# be overridden here without editing the script, e.g.:
+# Environment=CONDA_ROOT=/opt/miniforge3
+# Environment=CELLXGENE_DATA=/mnt/cellxgene_data
+
+[Install]
+WantedBy=multi-user.target

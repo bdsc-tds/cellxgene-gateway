@@ -89,6 +89,19 @@ If any of the following optional variables are set, [ProxyFix](https://werkzeug.
 
 The defaults should be fine if you set up a conda env/venv and cellxgene_data folder as above.
 
+## Deploying from a fresh clone
+
+```bash
+git clone <repo-url> && cd cellxgene-gateway
+./deploy/setup.sh
+```
+
+`deploy/setup.sh` creates the `cellxgateway` conda env from `deploy/cellxgateway_env.yaml` (using mamba if available, otherwise conda), installs this repo into it as an editable package, re-applies the cellxgene patch the gateway depends on, and creates the git-ignored `data/`, `analysis_qc/` and `logs/` directories. It is safe to re-run, needs no root, and honours `CONDA_ROOT`/`CONDA_ENV` just like `start_gunicorn.sh`.
+
+Datasets are not tracked in git, so copy the files listed in `datasets.tsv` into `data/` afterwards.
+
+nginx and TLS are host-specific and are not covered here. For systemd, adapt `deploy/cellxgateway.service.example` by editing the paths and `User=` for the host.
+
 ## Running cellxgene gateway
 
 Use the gunicorn start script:
