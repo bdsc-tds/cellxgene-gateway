@@ -10,8 +10,9 @@
 
 # Import utility modules
 import typing as t
-from datetime import datetime
-from werkzeug.serving import _ansi_style, _log, WSGIRequestHandler
+from datetime import datetime, timezone
+
+from werkzeug.serving import WSGIRequestHandler, _ansi_style, _log
 from werkzeug.urls import uri_to_iri
 
 
@@ -24,7 +25,7 @@ def current_time_stamp():
     timestamp: float
         Number of seconds since Unix epoch (January 1, 1970).
     """
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     timestamp = datetime.timestamp(now)
     return timestamp
 

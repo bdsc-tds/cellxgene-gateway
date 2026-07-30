@@ -12,7 +12,6 @@
 import html
 import urllib.parse
 
-
 # Import other functions from package
 from cellxgene_gateway import env, flask_util
 from cellxgene_gateway.cache_key import CacheKey
@@ -98,9 +97,9 @@ def render_item_tree(item_tree, item_source):
         else ''
     )
     branches = (
-        '\n'.join(
-            [render_item_tree(b, item_source) for b in item_tree.branches]
-        )
+        '\n'.join([
+            render_item_tree(b, item_source) for b in item_tree.branches
+        ])
         if item_tree.branches
         else ''
     )

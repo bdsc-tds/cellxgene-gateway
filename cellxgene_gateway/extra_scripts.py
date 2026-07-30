@@ -47,6 +47,6 @@ def get_extra_scripts():
     try:
         return [] if env.extra_scripts is None else loads(env.extra_scripts)
     except JSONDecodeError as exc:
-        raise Exception(
+        raise ValueError(
             'Error parsing GATEWAY_EXTRA_SCRIPTS, expected JSON array e.g. ["https://example.com/path/to/script.js"]'
         ) from exc

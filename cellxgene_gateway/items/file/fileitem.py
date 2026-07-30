@@ -11,7 +11,6 @@
 # Import utility modules
 import os
 
-
 # Import other functions from package
 from cellxgene_gateway.items.item import Item
 

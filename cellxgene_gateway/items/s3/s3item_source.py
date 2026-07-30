@@ -9,12 +9,11 @@
 
 
 # Import utility modules
-import flask
 import os
-import s3fs
 from os.path import basename, dirname
-from typing import List
 
+import flask
+import s3fs
 
 # Import other functions from package
 from cellxgene_gateway import dir_util
@@ -93,7 +92,7 @@ class S3ItemSource(ItemSource):
         self.use_listings_cache = truthy(enable_cache)
         self.s3 = s3fs.S3FileSystem(use_listings_cache=self.use_listings_cache)
         if bucket.startswith('s3://'):
-            raise Exception(
+            raise ValueError(
                 f'Bucket name should not include s3:// prefix, got {bucket}'
             )
         self.bucket = bucket
@@ -231,7 +230,7 @@ class S3ItemSource(ItemSource):
 
         return self.convert_h5ad_key_to_annotation(item.descriptor)
 
-    def list_items(self, filter: str = None) -> ItemTree:
+    def list_items(self, filter: str | None = None) -> ItemTree:
         """
         List all items in S3 bucket under given filter path, optionally
         filtered.
@@ -284,12 +283,12 @@ class S3ItemSource(ItemSource):
         url = self.url(directory_key)
 
         if not self.s3.exists(url):
-            raise Exception(f"S3 url '{url}' does not exist.")
+            raise FileNotFoundError(f"S3 url '{url}' does not exist.")
 
-        s3key_map = dict(
-            (self.remove_bucket(filepath), 's3://' + filepath)
+        s3key_map = {
+            self.remove_bucket(filepath): 's3://' + filepath
             for filepath in sorted(self.s3.ls(url, refresh=self.refresh))
-        )
+        }
 
         def is_annotation_dir(dir_s3key):
             """
@@ -369,7 +368,6 @@ class S3ItemSource(ItemSource):
         -----------
         None
         """
-        pass
 
     def is_authorized(self, descriptor):
         """
@@ -475,7 +473,7 @@ class S3ItemSource(ItemSource):
 
         return item
 
-    def make_annotations_for_fileitem(self, item: S3Item) -> List[S3Item]:
+    def make_annotations_for_fileitem(self, item: S3Item) -> list[S3Item]:
         """
         Construct S3Item from key details.
 

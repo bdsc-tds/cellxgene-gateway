@@ -1,11 +1,7 @@
 import codecs
 import os
-import sys
 
 from setuptools import find_packages, setup
-
-if sys.version_info < (3, 6):
-    sys.exit('Sorry, Python < 3.6 is not supported')
 
 
 def read(rel_path):
@@ -19,14 +15,13 @@ def get_version(rel_path):
         if line.startswith('__version__'):
             delim = '"' if '"' in line else "'"
             return line.split(delim)[1]
-    else:
-        raise RuntimeError('Unable to find version string.')
+    raise RuntimeError('Unable to find version string.')
 
 
 def parse_requirements():
     reqs = []
     with open('requirements.txt', 'r') as f:
-        for line in f.readlines():
+        for line in f:
             reqs.append(line.strip('\n'))
     return reqs
 

@@ -12,7 +12,6 @@
 import logging
 import os
 
-
 # Cellxgene variables
 cellxgene_location = os.environ.get('CELLXGENE_LOCATION')
 cellxgene_data = os.environ.get('CELLXGENE_DATA', '')

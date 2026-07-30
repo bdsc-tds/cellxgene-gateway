@@ -11,7 +11,6 @@
 # Import utility modules
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import List
 
 
 class ItemType(Enum):
@@ -37,7 +36,7 @@ class Item(ABC):
     """
 
     def __init__(
-        self, name: str, type: ItemType, annotations: List['Item'] = None
+        self, name: str, type: ItemType, annotations: list['Item'] | None = None
     ):
         """
         Initialise new Item.
@@ -69,7 +68,7 @@ class Item(ABC):
         Placeholder for 'descriptor' method to be implemented by subclasses.
         """
 
-        raise Exception('"descriptor" not implemented')
+        raise NotImplementedError('"descriptor" not implemented')
 
 
 class ItemTree:
@@ -80,8 +79,8 @@ class ItemTree:
     def __init__(
         self,
         descriptor: str,
-        items: List[Item] = None,
-        branches: List['ItemTree'] = None,
+        items: list[Item] | None = None,
+        branches: list['ItemTree'] | None = None,
     ):
         """
         Initialise new ItemTree node.

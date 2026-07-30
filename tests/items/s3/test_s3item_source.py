@@ -2,7 +2,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-
 # Import other functions from package
 from cellxgene_gateway.gateway import app
 from cellxgene_gateway.items.item import ItemType
@@ -69,7 +68,7 @@ class TestScanDirectory(unittest.TestCase):
                     's3://my-bucket/lvl1/lvl2/pbmc3k_l2.h5ad',
                 ]:
                     return True
-                raise Exception('exists called with ' + path)
+                raise ValueError('exists called with ' + path)
 
             def ls(path, refresh):
                 assert refresh == True
@@ -89,7 +88,7 @@ class TestScanDirectory(unittest.TestCase):
                 elif path == 's3://my-bucket/lvl1/lvl2':
                     return ['my-bucket/lvl1/lvl2/pbmc3k_l2.h5ad']
 
-                raise Exception('ls called with ' + path)
+                raise ValueError('ls called with ' + path)
 
             def isdir(path):
                 if path in [
@@ -106,20 +105,18 @@ class TestScanDirectory(unittest.TestCase):
                     's3://my-bucket/lvl1/lvl2/pbmc3k_l2_annotations',
                 ]:
                     return False
-                raise Exception('isdir called with ' + path)
+                raise ValueError('isdir called with ' + path)
 
             def isfile(path):
                 if path in ['s3://my-bucket/pbmc3k_annotations/annot.csv']:
                     return True
                 if path in ['s3://my-bucket/pbmc3k_annotations']:
                     return False
-                raise Exception('isfile called with ' + path)
+                raise ValueError('isfile called with ' + path)
 
         s3func.return_value = S3Mock
         source = S3ItemSource('my-bucket')
-        with app.test_request_context(
-            query_string='refresh=true'
-        ) as test_context:
+        with app.test_request_context(query_string='refresh=true'):
             tree = source.scan_directory()
 
         def s3item_compare(i1, i2, msg=''):
@@ -215,7 +212,7 @@ class TestListItems(unittest.TestCase):
 
         source = S3ItemSource('my-bucket')
         source.scan_directory = MagicMock()
-        tree = source.list_items('some-filter')
+        source.list_items('some-filter')
         source.scan_directory.assert_called_once_with('some-filter')
 
     def test_GIVEN_no_filter_THEN_pass_empty_string_into_scan_directory(self):
@@ -227,5 +224,5 @@ class TestListItems(unittest.TestCase):
 
         source = S3ItemSource('my-bucket')
         source.scan_directory = MagicMock()
-        tree = source.list_items()
+        source.list_items()
         source.scan_directory.assert_called_once_with('')

@@ -5,7 +5,6 @@ import os
 
 from cellxgene_gateway import env
 
-
 # Set up logger for logging messages within this module
 logger = logging.getLogger(__name__)
 
@@ -60,8 +59,10 @@ def find_annotations_for_file(file_path, data_dir):
                 # Only add to loadable_annotations if no 'gene_sets'
                 if 'gene_sets' not in item:
                     loadable_annotations.append(annotation_dict)
-    except Exception:
-        pass
+    except OSError as exc:
+        # Missing or unreadable annotation dir is not fatal: dataset is still
+        # listed, just without annotations
+        logger.warning(f'Could not read annotations for {file_path}: {exc}')
 
     return loadable_annotations, all_annotations
 
@@ -185,7 +186,11 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                 datasets.append(row)
 
         print(f'Loaded {len(datasets)} datasets from {tsv_path}')
-    except Exception as e:
+    except (OSError, csv.Error, ValueError, TypeError) as e:
+        # Unreadable or malformed .tsv degrades to empty list rather than 500 on
+        # /filecrawl. Deliberately does not catch every exception: KeyError or
+        # AttributeError here is a bug, not bad input, and should surface
+        # instead of silently rendering "no datasets"
         print(f'Error loading .tsv {tsv_path}: {e}. Using empty dataset list.')
 
     # Calculate numeric ranges, ignoring zero values

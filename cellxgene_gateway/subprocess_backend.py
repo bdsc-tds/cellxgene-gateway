@@ -13,11 +13,12 @@ import logging
 import subprocess
 from http import HTTPStatus
 
+from cellxgene_gateway import env
+
 # Import other functions from package
 from cellxgene_gateway.cache_entry import CacheEntryStatus
 from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.dir_util import make_annotations
-from cellxgene_gateway import env
 
 # Set up logger for logging messages within this module
 logger = logging.getLogger(__name__)
@@ -36,7 +37,6 @@ class SubprocessBackend:
         --------
         None
         """
-        pass
 
     def create_cmd(
         self, cellxgene_loc, file_path, port, scripts, annotation_file_path

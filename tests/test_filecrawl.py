@@ -3,7 +3,6 @@ import unittest
 from collections import defaultdict
 from unittest.mock import patch
 
-
 # Import other functions from package
 from cellxgene_gateway.filecrawl import (
     render_item,
@@ -13,7 +12,6 @@ from cellxgene_gateway.filecrawl import (
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemTree, ItemType
-
 
 # Initialise FileItemSource pointing to /tmp directory
 source = FileItemSource('/tmp')

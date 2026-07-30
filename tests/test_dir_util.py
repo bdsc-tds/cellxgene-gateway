@@ -2,7 +2,6 @@
 import unittest
 from unittest.mock import patch
 
-
 # Import other functions from package
 from cellxgene_gateway.dir_util import (
     ensure_dir_exists,

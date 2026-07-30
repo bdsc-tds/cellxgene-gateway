@@ -2,8 +2,8 @@ import json
 import unittest
 from types import SimpleNamespace
 
-from cellxgene_gateway.gateway import do_instances_json, app, cache
 from cellxgene_gateway.cache_entry import CacheEntry, CacheEntryStatus
+from cellxgene_gateway.gateway import app, cache, do_instances_json
 
 
 class TestGatewayStatusJson(unittest.TestCase):

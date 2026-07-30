@@ -2,7 +2,6 @@
 import unittest
 from unittest.mock import patch
 
-
 # Import other functions from package
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 

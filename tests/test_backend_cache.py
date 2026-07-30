@@ -3,7 +3,6 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
-
 # Import other functions from package
 from cellxgene_gateway.backend_cache import BackendCache, is_port_in_use
 from cellxgene_gateway.cache_entry import CacheEntryStatus

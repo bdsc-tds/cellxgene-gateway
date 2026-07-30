@@ -2,14 +2,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-
 # Import other functions from package
 from cellxgene_gateway.cache_entry import CacheEntry
 from cellxgene_gateway.cache_key import CacheKey
+from cellxgene_gateway.cellxgene_exception import CellxgeneException
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemType
-from cellxgene_gateway.cellxgene_exception import CellxgeneException
 
 
 class TestSubprocessBackend(unittest.TestCase):

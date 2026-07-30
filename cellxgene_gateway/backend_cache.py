@@ -9,20 +9,17 @@
 
 
 # Import utility modules
-import time
 import socket
+import time
 from http import HTTPStatus
 from threading import Thread
-from typing import List
-
 
 # Import other functions from package
 from cellxgene_gateway import env
 from cellxgene_gateway.cache_entry import CacheEntry, CacheEntryStatus
-from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.cache_exception import CacheException
+from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.subprocess_backend import SubprocessBackend
-
 
 # Instantiate process backend
 process_backend = SubprocessBackend()
@@ -102,7 +99,7 @@ class BackendCache:
             return matches[0]
         else:
             raise CacheException(
-                f'Found {str(len(matches))} matches for {path}',
+                f'Found {len(matches)!s} matches for {path}',
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -135,11 +132,11 @@ class BackendCache:
             return matches[0]
         else:
             raise CacheException(
-                f'Found {str(len(matches))} matches for {key.dataset}',
+                f'Found {len(matches)!s} matches for {key.dataset}',
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
-    def create_entry(self, key: CacheKey, scripts: List[str]):
+    def create_entry(self, key: CacheKey, scripts: list[str]):
         """
         Create a new cache entry for a given key and a list of scripts. Finds an
         available port, launches background thread to start process, and adds

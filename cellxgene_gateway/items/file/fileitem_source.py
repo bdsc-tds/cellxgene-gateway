@@ -10,8 +10,6 @@
 
 # Import utility modules
 import os
-from typing import List
-
 
 # Import other functions from package
 from cellxgene_gateway import dir_util
@@ -190,7 +188,7 @@ class FileItemSource(ItemSource):
 
         return self.convert_h5ad_path_to_annotation(item.descriptor)
 
-    def list_items(self, filter: str = None) -> ItemTree:
+    def list_items(self, filter: str | None = None) -> ItemTree:
         """
         List all file items under path, optionally filtered.
 
@@ -226,14 +224,14 @@ class FileItemSource(ItemSource):
         base_path = os.path.join(self.base_path, subpath)
 
         if not os.path.exists(base_path):
-            raise Exception(
+            raise FileNotFoundError(
                 f"Path for local files '{base_path}' does not exist."
             )
 
-        filepath_map = dict(
-            (filepath, os.path.join(base_path, filepath))
+        filepath_map = {
+            filepath: os.path.join(base_path, filepath)
             for filepath in sorted(os.listdir(base_path))
-        )
+        }
 
         h5ad_paths = [
             filepath
@@ -321,7 +319,6 @@ class FileItemSource(ItemSource):
         -----------
         None
         """
-        pass
 
     def full_path(self, p):
         """
@@ -483,7 +480,7 @@ class FileItemSource(ItemSource):
 
         return item
 
-    def make_annotations_for_fileitem(self, item: FileItem) -> List[FileItem]:
+    def make_annotations_for_fileitem(self, item: FileItem) -> list[FileItem]:
         """
         Create annotation items (including gene sets) for given .h5ad item.
 

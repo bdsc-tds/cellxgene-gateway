@@ -1,7 +1,5 @@
 # Import utility modules
 import unittest
-# from flask import Flask
-
 
 # Import other functions from package
 from cellxgene_gateway import flask_util
@@ -11,7 +9,6 @@ from cellxgene_gateway.gateway import app
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemType
-
 
 # Create CacheKey instance using FileItem representing an .h5ad file and
 # FileItemSource pointing to local directory

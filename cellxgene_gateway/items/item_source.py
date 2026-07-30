@@ -10,8 +10,6 @@
 
 # Import utility modules
 from abc import ABC, abstractmethod
-from typing import List
-
 
 # Import other functions from package
 from cellxgene_gateway.items.item import Item
@@ -49,7 +47,7 @@ class ItemSource(ABC):
     """
 
     @abstractmethod
-    def list_items(self, filter: str = None) -> List[Item]:
+    def list_items(self, filter: str | None = None) -> list[Item]:
         """
         List all items, optionally filtered by a string.
 
@@ -64,10 +62,10 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'list_items' method to be implemented by subclasses.
         """
-        raise Exception('"list_items" unimplemented')
+        raise NotImplementedError('"list_items" unimplemented')
 
     @abstractmethod
     def get_local_path(self, item: Item) -> str:
@@ -85,10 +83,10 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'local_path' method to be implemented by subclasses.
         """
-        raise Exception('"local_path" unimplemented')
+        raise NotImplementedError('"local_path" unimplemented')
 
     @abstractmethod
     def get_annotations_subpath(self, item) -> str:
@@ -106,11 +104,11 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'annotations_path' method to be implemented by
           subclasses.
         """
-        raise Exception('"annotations_path" unimplemented')
+        raise NotImplementedError('"annotations_path" unimplemented')
 
     @abstractmethod
     def create_annotation(self, item: Item, name: str) -> Item:
@@ -131,10 +129,10 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'annotation' method to be implemented by subclasses.
         """
-        raise Exception('"annotation" unimplemented')
+        raise NotImplementedError('"annotation" unimplemented')
 
     @abstractmethod
     def update(self, item: Item) -> None:
@@ -152,10 +150,10 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'update' method to be implemented by subclasses.
         """
-        raise Exception('"update" unimplemented')
+        raise NotImplementedError('"update" unimplemented')
 
     @abstractmethod
     def is_authorized(self, descriptor: str) -> bool:
@@ -173,11 +171,11 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'is_authorized' method to be implemented by
           subclasses.
         """
-        raise Exception('"is_authorized" unimplemented')
+        raise NotImplementedError('"is_authorized" unimplemented')
 
     @abstractmethod
     def lookup(self, descriptor: str) -> LookupResult:
@@ -195,11 +193,11 @@ class ItemSource(ABC):
 
         Raises:
         -------
-        Exception
+        NotImplementedError
           Placeholder for 'lookup' method to be implemented by
           subclasses.
         """
-        raise Exception('"lookup" unimplemented')
+        raise NotImplementedError('"lookup" unimplemented')
 
     @property
     @abstractmethod
@@ -212,4 +210,3 @@ class ItemSource(ABC):
         None
           Need to be implemented by a subclass.
         """
-        pass

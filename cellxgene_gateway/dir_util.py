@@ -11,7 +11,6 @@
 # Import utility modules
 import os
 
-
 # General variables
 annotations_suffix = '_annotations'
 h5ad_suffix = '.h5ad'

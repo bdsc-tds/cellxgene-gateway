@@ -2,14 +2,12 @@
 import unittest
 from unittest.mock import patch, seal
 
-
 # Import other functions from package
 from cellxgene_gateway.backend_cache import BackendCache
 from cellxgene_gateway.cache_key import CacheKey
 from cellxgene_gateway.items.file.fileitem import FileItem
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 from cellxgene_gateway.items.item import ItemType
-
 
 # Create CacheKey instance using FileItem representing an .h5ad file and
 # FileItemSource pointing to local directory

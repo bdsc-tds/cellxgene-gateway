@@ -14,8 +14,8 @@ import argparse
 import csv
 import os
 import re
-import yaml
 
+import yaml
 
 # Define columns for output TSV file
 TSV_COLUMNS = [
@@ -230,7 +230,10 @@ def extract_h5ad_metadata(h5ad_path):
         adata.file.close()
         return meta
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
+        # Broad by design: anndata/h5py can raise many undocumented exceptions
+        # on corrupt or unexpected .h5ad files. Warn and skip bad files instead
+        # of aborting entire batch
         print(f'  Warning: could not read {h5ad_path}: {e}')
         return empty
 

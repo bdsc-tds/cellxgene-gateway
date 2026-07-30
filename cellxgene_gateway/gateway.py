@@ -16,6 +16,8 @@ import logging
 import os
 import re
 import urllib.parse
+from threading import Lock, Thread
+
 from flask import (
     Flask,
     make_response,
@@ -25,9 +27,7 @@ from flask import (
     send_from_directory,
     url_for,
 )
-from threading import Lock, Thread
 from werkzeug.middleware.proxy_fix import ProxyFix
-
 
 # Import other functions from package
 from cellxgene_gateway import env, flask_util
@@ -40,7 +40,7 @@ from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata_tsv
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
 from cellxgene_gateway.prune_process_cache import PruneProcessCache
-from cellxgene_gateway.util import current_time_stamp, CustomRequestHandler
+from cellxgene_gateway.util import CustomRequestHandler, current_time_stamp
 
 app = Flask(__name__)
 
@@ -181,7 +181,7 @@ def _init_on_first_wsgi_request(wsgi_app):
 
                     env.validate()
                     if not item_sources or not len(item_sources):
-                        raise Exception(
+                        raise ValueError(
                             'No data sources specified for Cellxgene Gateway'
                         )
 
@@ -246,7 +246,7 @@ def initialise_data_sources():
         logger.info('Initialized local file data source')
         logger.debug(f'Data directory: {cellxgene_data}')
     if len(item_sources) == 0:
-        raise Exception('Please specify CELLXGENE_DATA or CELLXGENE_BUCKET')
+        raise ValueError('Please specify CELLXGENE_DATA or CELLXGENE_BUCKET')
     flask_util.include_source_in_url = len(item_sources) > 1
 
 
@@ -355,15 +355,7 @@ def robots():
       robots.txt body as plain text.
     """
 
-    body = '\n'.join(
-        [
-            'User-agent: *',
-            'Disallow: /view/',
-            'Disallow: /spatial-data/',
-            'Disallow: /download/',
-            '',
-        ]
-    )
+    body = 'User-agent: *\nDisallow: /view/\nDisallow: /spatial-data/\nDisallow: /download/\n'
     response = make_response(body)
     response.mimetype = 'text/plain'
     return response
@@ -526,9 +518,7 @@ def filecrawl(path=None):
                 return True
             if lo_active and v < lo:
                 return False
-            if hi_active and v > hi:
-                return False
-            return True
+            return not (hi_active and v > hi)
 
         filtered = []
         for ds in datasets:
@@ -678,7 +668,7 @@ def matching_source(source_name):
         source_name = default_item_source.name
     matching = [i for i in item_sources if i.name == source_name]
     if len(matching) != 1:
-        raise Exception(f'Could not find matching item source {source_name}')
+        raise ValueError(f'Could not find matching item source {source_name}')
     source = matching[0]
     return source
 
@@ -790,14 +780,12 @@ def do_instances_json():
             'status': entry.status.name,
         }
 
-    return json.dumps(
-        {
-            'launchtime': app.extensions.get('cellxgene_gateway', {}).get(
-                'launchtime'
-            ),
-            'entry_list': [map_entry(entry) for entry in cache.entry_list],
-        }
-    )
+    return json.dumps({
+        'launchtime': app.extensions.get('cellxgene_gateway', {}).get(
+            'launchtime'
+        ),
+        'entry_list': [map_entry(entry) for entry in cache.entry_list],
+    })
 
 
 def get_cache_key(path):
@@ -1095,9 +1083,10 @@ def _arrange_into_rows(imgs, step_key):
         row_imgs = []
         for stem in stems:
             if stem in stem_to_path:
-                row_imgs.append(
-                    {'path': stem_to_path[stem], 'title': _figure_title(stem)}
-                )
+                row_imgs.append({
+                    'path': stem_to_path[stem],
+                    'title': _figure_title(stem),
+                })
                 placed.add(stem)
             else:
                 # Try prefix match for annotation_qc with varying resolutions
@@ -1277,14 +1266,12 @@ def qc_report(dataset_id):
                 )
                 sub_key = f'{step_dir}/{sub}'
                 rows = _arrange_into_rows(combined_imgs, sub_key)
-                sections.append(
-                    {
-                        'label': sub_labels[sub],
-                        'rows': rows,
-                        'per_sample': _annotate_per_sample(per_sample),
-                        'group_label': group_label,
-                    }
-                )
+                sections.append({
+                    'label': sub_labels[sub],
+                    'rows': rows,
+                    'per_sample': _annotate_per_sample(per_sample),
+                    'group_label': group_label,
+                })
         else:
             # Single implicit section — walk whole step directory
             combined_imgs, per_sample, group_label = _walk_images(
@@ -1307,14 +1294,12 @@ def qc_report(dataset_id):
             '4_clustering_unintegrated',
             '5_integration_annotation',
         )
-        steps.append(
-            {
-                'id': step_dir,
-                'label': label,
-                'sections': sections,
-                'cap_combined': cap_combined,
-            }
-        )
+        steps.append({
+            'id': step_dir,
+            'label': label,
+            'sections': sections,
+            'cap_combined': cap_combined,
+        })
 
     # Find dataset name from TSV for page title
     tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')

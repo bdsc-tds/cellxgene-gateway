@@ -11,18 +11,17 @@
 # Import utility modules
 import datetime
 import logging
-import psutil
 import re
 from enum import Enum
+
+import psutil
 from flask import make_response, render_template, request
 from requests import get, post, put
-
 
 # Import other functions from package
 from cellxgene_gateway.cache_exception import CacheException
 from cellxgene_gateway.flask_util import querystring
 from cellxgene_gateway.util import current_time_stamp
-
 
 # Set up logger for logging messages within this module
 logger = logging.getLogger(__name__)
@@ -259,8 +258,9 @@ class CacheEntry:
         Note: for v0.16.0 compatibility, see issue #24
         """
         gateway_content = (
-            re.sub(
-                '(="|\()/static/',
+            re
+            .sub(
+                r'(="|\()/static/',
                 f'\\1{self.key.gateway_basepath()}static/',
                 cellxgene_content,
             )
@@ -313,7 +313,11 @@ class CacheEntry:
             r.headers['location'] = gateway_basepath + querystring()
             return r
         elif self.status == CacheEntryStatus.loading:
-            launch_time = datetime.datetime.fromtimestamp(self.launchtime)
+            # Converted back to local time so loading page still shows server's
+            # wall clock; tz-aware so offset is explicit
+            launch_time = datetime.datetime.fromtimestamp(
+                self.launchtime, tz=datetime.timezone.utc
+            ).astimezone()
             return render_template(
                 'loading.html',
                 launchtime=launch_time,

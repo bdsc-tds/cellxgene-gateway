@@ -11,7 +11,6 @@
 # Import utility modules
 from flask import request, url_for
 
-
 # Flag to determine whether to include source name in generated URLs
 include_source_in_url = False
 

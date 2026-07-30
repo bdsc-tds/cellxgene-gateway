@@ -3,7 +3,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-
 # Import other functions from package
 from cellxgene_gateway.items.file.fileitem_source import FileItemSource
 
