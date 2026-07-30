@@ -141,5 +141,10 @@ dmypy.json
 *.patch
 .vscode
 
-# Avoid importing data
+# Avoid importing data and QC
 data/
+analysis_qc/
+summary/
+
+# Runtime directories created by deploy/setup.sh
+logs/

@@ -67,7 +67,7 @@ TIMEOUT=${GUNICORN_TIMEOUT:-120}
 KEEPALIVE=${GUNICORN_KEEPALIVE:-5}
 LOG_LEVEL=${GUNICORN_LOG_LEVEL:-info}
 
-# Production optimization: enable backed mode to reduce memory usage
+# Production optimisation: enable backed mode to reduce memory usage
 export GATEWAY_ENABLE_BACKED_MODE=${GATEWAY_ENABLE_BACKED_MODE:-true}
 
 # Check if gunicorn is installed
@@ -96,7 +96,7 @@ echo ""
 
 cd "$SCRIPT_DIR"
 
-# Start Gunicorn with optimized settings
+# Start Gunicorn with optimised settings
 # Additional options you can add via environment variables:
 # - GUNICORN_MAX_REQUESTS: Restart worker after N requests (avoids memory leaks)
 # - GUNICORN_MAX_REQUESTS_JITTER: Add randomness to max-requests
