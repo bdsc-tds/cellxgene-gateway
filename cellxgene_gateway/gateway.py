@@ -339,6 +339,36 @@ def favicon():
     )
 
 
+@app.route('/robots.txt')
+def robots():
+    """
+    Serve robots.txt that keeps crawlers away from expensive routes.
+
+    /view/ launches one cellxgene subprocess per dataset on plain GET, so bots
+    walking links on /filecrawl would start one process per dataset. Data routes
+    are disallowed because they stream whole files and Zarr chunks. Note: this
+    only deters well-behaved crawlers; it is not access control.
+
+    Returns:
+    --------
+    flask.Response
+      robots.txt body as plain text.
+    """
+
+    body = '\n'.join(
+        [
+            'User-agent: *',
+            'Disallow: /view/',
+            'Disallow: /spatial-data/',
+            'Disallow: /download/',
+            '',
+        ]
+    )
+    response = make_response(body)
+    response.mimetype = 'text/plain'
+    return response
+
+
 @app.route('/view/static/<path:path>')
 def view_static(path):
     """
