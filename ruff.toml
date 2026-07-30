@@ -23,3 +23,7 @@ preview = true
 ignore = ["E722"]
 # Enable linting preview mode
 preview = true
+
+[lint.isort]
+# Ignore trailing comma in imports, fold them into one line when possible
+split-on-trailing-comma = false
