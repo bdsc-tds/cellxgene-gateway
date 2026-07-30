@@ -2,11 +2,11 @@
 Script to generate datasets.tsv from .h5ad files in a directory.
 
 Usage:
-    python scripts/generate_datasets_tsv.py \
+    python data_prep/generate_datasets_tsv.py \
         --data-dir cellxgene_data/ \
         --output datasets.tsv \
         --merged-file data/meta_analysis_all_final_label_transfer_swapped.h5ad \
-        --merged-config scripts/meta_analysis_config.yaml
+        --merged-config data_prep/meta_analysis_config.yaml
 """
 
 # Import utility modules
