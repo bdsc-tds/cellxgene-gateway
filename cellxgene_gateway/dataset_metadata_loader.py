@@ -125,8 +125,11 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
 
     try:
         if not os.path.exists(tsv_path):
+            # Absolute path in message: default is relative, so this renders
+            # wrong working directory diagnosable from log
             logger.warning(
-                f'.tsv file {tsv_path} not found. Using empty dataset list.'
+                f'.tsv file {os.path.abspath(tsv_path)} not found. '
+                'Using empty dataset list.'
             )
             return (datasets, [], [], [], [], (0, 0), (0, 0), (0, 0))
 
