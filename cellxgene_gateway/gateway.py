@@ -411,12 +411,7 @@ def homepage():
       Rendered HTML page for homepage.
     """
 
-    return render_template(
-        'homepage.html',
-        ip=env.ip,
-        cellxgene_data=env.cellxgene_data,
-        extra_scripts=get_extra_scripts(),
-    )
+    return render_template('homepage.html', extra_scripts=get_extra_scripts())
 
 
 @app.route('/filecrawl')

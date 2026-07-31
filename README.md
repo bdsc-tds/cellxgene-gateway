@@ -70,7 +70,7 @@ Cellxgene Gateway is designed to make it easy to add additional data sources, pl
 Optional environment variables:
 * `CELLXGENE_ARGS` - catch-all variable that can be used to pass additional command line args to cellxgene server
 * `EXTERNAL_HOST` - the hostname and port from the perspective of the web browser, typically `localhost:5005` if running locally. Defaults to "localhost:{GATEWAY_PORT}"
-* `EXTERNAL_PROTOCOL` - typically http when running locally, can be https when deployed if the gateway is behind a load balancer or reverse proxy that performs https termination. Default value "http"
+* `EXTERNAL_PROTOCOL` - typically http when running locally, can be https when deployed if the gateway is behind a load balancer or reverse proxy that performs https termination. No default; when unset, the gateway does not override the scheme and Flask infers it from the incoming request
 * `GATEWAY_IP` - ip addess of instance gateway is running on, mostly used to display SSH instructions. No default; when unset, `/metadata/ip_address` returns an empty response
 * `GATEWAY_PORT` - local port that the gateway should bind to, defaults to 5005
 * `GATEWAY_EXPIRE_SECONDS` - time in seconds that a cellxgene process will remain idle before being terminated. Defaults to 3600 (one hour)
