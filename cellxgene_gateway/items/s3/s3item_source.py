@@ -88,7 +88,11 @@ class S3ItemSource(ItemSource):
         enable_cache = os.environ.get(
             'S3_ENABLE_LISTINGS_CACHE', 'false'
         ).lower()
-        assert enable_cache in ['0', '1', 'false', 'true']
+        if enable_cache not in ['0', '1', 'false', 'true']:
+            raise ValueError(
+                'S3_ENABLE_LISTINGS_CACHE should be one of 0, 1, false or '
+                f'true, got {enable_cache}'
+            )
         self.use_listings_cache = truthy(enable_cache)
         self.s3 = s3fs.S3FileSystem(use_listings_cache=self.use_listings_cache)
         if bucket.startswith('s3://'):
