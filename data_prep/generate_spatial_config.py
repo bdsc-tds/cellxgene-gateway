@@ -18,6 +18,7 @@ Usage:
 # Import utility modules
 import argparse
 import json
+import math
 import os
 
 from vitessce import SpatialDataWrapper, VitessceConfig
@@ -112,6 +113,70 @@ def read_coordinate_system(element_dir):
     return transforms[0].get('output', {}).get('name')
 
 
+# Function to read pixel dimensions of multiscale image element
+def read_image_shape(image_dir):
+    """
+    Read (width, height) of image element's full-resolution level.
+
+    Parameters:
+    -----------
+    image_dir: str
+      Path to image element directory within store.
+
+    Returns:
+    --------
+    shape: tuple of int or None
+      (width, height) in pixels, or None if it could not be determined.
+    """
+    meta_path = os.path.join(image_dir, 'zarr.json')
+    if not os.path.isfile(meta_path):
+        return None
+    with open(meta_path) as handle:
+        attrs = json.load(handle).get('attributes', {})
+    multiscales = attrs.get('ome', {}).get('multiscales', [])
+    if not multiscales:
+        return None
+
+    level = multiscales[0]['datasets'][0]['path']
+    level_meta = os.path.join(image_dir, level, 'zarr.json')
+    if not os.path.isfile(level_meta):
+        return None
+    with open(level_meta) as handle:
+        # Axes are cyx, so last two entries are height then width
+        shape = json.load(handle).get('shape')
+
+    return (shape[-1], shape[-2]) if shape and len(shape) >= 2 else None
+
+
+# Function to compute zoom level that fits extent in viewport
+def fit_zoom(image_shape, viewport=(800, 450)):
+    """
+    Compute Vitessce zoom level that fits image in spatial view.
+
+    Vitessce renders one world unit per 2**zoom screen pixels and opens on
+    default zoom which leaves images too small, so fitting it here frames
+    dataset automatically.
+
+    Parameters:
+    -----------
+    image_shape: tuple of int or None
+      (width, height) of image in pixels.
+    viewport: tuple of int
+      Approximate (width, height) of spatial view in screen pixels.
+
+    Returns:
+    --------
+    zoom: float or None
+      Zoom level, or None when image size is unknown.
+    """
+    if not image_shape:
+        return None
+
+    return math.log2(
+        min(viewport[0] / image_shape[0], viewport[1] / image_shape[1])
+    )
+
+
 # Function to auto-detect element paths of a spatial store
 def detect_elements(zarr_path, image=None, segmentations=None):
     """
@@ -168,6 +233,9 @@ def detect_elements(zarr_path, image=None, segmentations=None):
     table_dir = os.path.join(zarr_path, 'tables', table_name)
 
     return {
+        'image_shape': read_image_shape(
+            os.path.join(zarr_path, 'images', image)
+        ),
         'image_path': f'images/{image}',
         'obs_segmentations_path': seg_path,
         'table_path': f'tables/{table_name}',
@@ -269,6 +337,16 @@ def generate_config(
         ['obsType'],
         [obs_type],
     )
+    # Vitessce otherwise opens zoomed far out, leaving the tissue a speck
+    zoom = fit_zoom(paths['image_shape'])
+    if zoom is not None:
+        width, height = paths['image_shape']
+        vc.link_views(
+            [spatial, controller],
+            ['spatialZoom', 'spatialTargetX', 'spatialTargetY'],
+            [zoom, width / 2, height / 2],
+        )
+
     vc.layout(
         (spatial | controller)
         / (scatterplot | obs_sets)
