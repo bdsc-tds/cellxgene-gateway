@@ -146,8 +146,17 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                 row['all_annotations'] = all_annotations
                 row['has_annotations'] = len(loadable_annotations) > 0
 
-                # Compute file size in bytes
+                # Flag spatial (.zarr) datasets (viewed with Vitessce spatial
+                # viewer instead of cellxgene) and link to config JSON
                 fp = row.get('file_path', '')
+                row['is_spatial'] = fp.endswith('.zarr')
+                if row['is_spatial']:
+                    stem = fp[: -len('.zarr')]
+                    row['spatial_config'] = (
+                        f'/spatial-data/{stem}.vitessce.json'
+                    )
+
+                # Compute file size in bytes
                 full_path = os.path.join(data_dir, fp) if fp else ''
                 try:
                     row['file_size_bytes'] = (

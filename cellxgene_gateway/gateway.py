@@ -1411,6 +1411,61 @@ def download_file(filename):
     )
 
 
+@app.route('/spatial-data/<path:subpath>')
+def spatial_data(subpath):
+    """
+    Serve file from spatial data directory (SpatialData .zarr stores and
+    generated Vitessce config JSON). send_from_directory safe-joins path and
+    inherits HTTP range-request support, which Vitessce viewer relies on when
+    streaming Zarr chunks.
+
+    Parameters:
+    -----------
+    subpath: str
+      Path of file within spatial data directory (e.g.
+      xenium_D1903482.zarr/images/... or xenium_D1903482.vitessce.json).
+
+    Returns:
+    --------
+    flask.Response
+      Requested file response, or 404 if it does not exist.
+    """
+    if '..' in subpath:
+        raise CacheException('Invalid spatial path.', 400)
+
+    # Unset with only bucket configured is valid setup, no spatial data on disk
+    data_dir = env.cellxgene_data
+    if data_dir is None:
+        raise CacheException(
+            f"Spatial file '{subpath}' was not found on server.",
+            404,
+            context='spatial',
+            filename=subpath,
+        )
+
+    # env.cellxgene_data is already absolute: Flask resolves relative directory
+    # against app.root_path (package dir), not configured data dir
+    return send_from_directory(data_dir, subpath)
+
+
+@app.route('/spatial-viewer')
+def spatial_viewer():
+    """
+    Render standalone Vitessce viewer page for spatial dataset. Page loads
+    self-hosted Vitessce bundle from static directory, which reads config JSON
+    named by `config` query parameter (URL served by /spatial-data route) from
+    browser's location.
+
+    Returns:
+    --------
+    flask.Response
+      Rendered viewer HTML page.
+    """
+    return render_template(
+        'spatial_viewer.html', extra_scripts=get_extra_scripts()
+    )
+
+
 def start_pruner_thread():
     """
     Start background thread that prunes expired cellxgene processes.

@@ -344,14 +344,23 @@
               <td>
                 {% if dataset.file_path %}
                 <div class="action-btn-stack">
+                  {% if dataset.is_spatial %}
+                  {# urlencode: URLSearchParams decodes '+' to a space, which
+                  would silently corrupt a stem containing one #}
+                  <a href="/spatial-viewer?config={{ dataset.spatial_config|urlencode }}"
+                    target="_blank" rel="noopener noreferrer"
+                    class="btn btn-primary btn-sm">Explore (Spatial)</a>
+                  {% else %}
                   <a href="/view/{{ dataset.file_path }}/" target="_blank"
                     rel="noopener noreferrer"
                     class="btn btn-primary btn-sm">Explore</a>
+                  {% endif %}
                   {% if dataset.has_qc %}
                   <a href="/qc/{{ dataset.dataset_id }}" target="_blank"
                     rel="noopener noreferrer"
                     class="btn btn-outline-secondary btn-sm">QC Report</a>
                   {% endif %}
+                  {% if not dataset.is_spatial %}
                   <button type="button"
                     class="btn btn-outline-primary btn-sm download-btn"
                     data-dataset-name="{{ dataset.name }}"
@@ -386,6 +395,7 @@
                     href="#" data-dataset-file="{{ dataset.file_path }}">+
                     Create New</a>
                   {% endif %}{% endif %}
+                  {% endif %}
                 </div>
                 {% else %}
                 <span class="text-muted small">—</span>
