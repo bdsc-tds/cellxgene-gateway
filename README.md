@@ -71,13 +71,15 @@ Optional environment variables:
 * `CELLXGENE_ARGS` - catch-all variable that can be used to pass additional command line args to cellxgene server
 * `EXTERNAL_HOST` - the hostname and port from the perspective of the web browser, typically `localhost:5005` if running locally. Defaults to "localhost:{GATEWAY_PORT}"
 * `EXTERNAL_PROTOCOL` - typically http when running locally, can be https when deployed if the gateway is behind a load balancer or reverse proxy that performs https termination. Default value "http"
-* `GATEWAY_IP` - ip addess of instance gateway is running on, mostly used to display SSH instructions. Defaults to `socket.gethostbyname(socket.gethostname())`
+* `GATEWAY_IP` - ip addess of instance gateway is running on, mostly used to display SSH instructions. No default; when unset, `/metadata/ip_address` returns an empty response
 * `GATEWAY_PORT` - local port that the gateway should bind to, defaults to 5005
 * `GATEWAY_EXPIRE_SECONDS` - time in seconds that a cellxgene process will remain idle before being terminated. Defaults to 3600 (one hour)
 * `GATEWAY_EXTRA_SCRIPTS` - JSON array of script paths, will be embedded into each page and forwarded with `--scripts` to cellxgene server
 * `GATEWAY_ENABLE_ANNOTATIONS` - Set to `true` or to `1` to enable cellxgene annotations and gene sets.
 * `GATEWAY_ENABLE_BACKED_MODE` - Set to `true` or to `1` to load AnnData in file-backed mode. This saves memory and speeds up launch time but may reduce overall performance.
 * `GATEWAY_LOG_LEVEL` - default is `INFO`. set to `DEBUG` to increase logging and to `WARNING` to decrease logging.
+* `DATASET_METADATA_TSV` - tab-separated file describing datasets, used to render the filterable dataset browser at `/filecrawl`. Defaults to `datasets.tsv`. When the file is absent, the browser falls back to listing files from the configured item sources
+* `QC_DATA` - a directory containing per-dataset QC report folders, served at `/qc/<dataset_id>`. Defaults to `analysis_qc`. A relative path is resolved against the working directory
 * `S3_ENABLE_LISTINGS_CACHE` - Set to `true` or to `1` to cache listings of S3 folders for performance. If the cache becomes stale, set `filecrawl?refresh=true` query parameter to refresh the cache.
 
 If any of the following optional variables are set, [ProxyFix](https://werkzeug.palletsprojects.com/en/1.0.x/middleware/proxy_fix/) will be used.

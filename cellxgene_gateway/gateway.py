@@ -897,7 +897,9 @@ def ip_address():
       Plain-text response containing IP address with no-cache headers.
     """
 
-    resp = make_response(env.ip)
+    # env.ip is None when GATEWAY_IP is unset, and make_response(None) raises,
+    # so fall back to empty body instead of returning 500
+    resp = make_response(env.ip or '')
     return set_no_cache(resp)
 
 
