@@ -101,9 +101,8 @@ class TestQcDataResolution(EnvReloadCase):
 
 class TestCellxgeneDataResolution(EnvReloadCase):
     """
-    Characterise how CELLXGENE_DATA is resolved. It is read in four places with
-    four different defaults; these tests record each one so config-tidying pass
-    can tell a deliberate change from a regression.
+    Check CELLXGENE_DATA is resolved in one place (env.py) and that every
+    consumer agrees with it whether or not variable is set.
     """
 
     def _effective_loader_data_dir(self):
@@ -160,21 +159,32 @@ class TestCellxgeneDataResolution(EnvReloadCase):
 
         return source.call_args[0][0]
 
-    def test_GIVEN_unset_THEN_env_module_uses_empty_string(self):
+    def test_GIVEN_unset_THEN_env_module_uses_none(self):
         """
-        Test env module's default, which is an empty string rather than a
-        directory name.
+        Test that env module leaves value as None when variable is unset, which
+        is what keeps 'unset' distinguishable from configured directory.
         """
         self.reload_env(unset=['CELLXGENE_DATA'])
-        self.assertEqual('', env.cellxgene_data)
+        self.assertIsNone(env.cellxgene_data)
 
-    def test_GIVEN_unset_THEN_loader_uses_cellxgene_data(self):
+    def test_GIVEN_unset_THEN_loader_takes_fallback_from_env(self):
         """
-        Test metadata loader's default, which is literal relative directory
-        'cellxgene_data'.
+        Test that metadata loader has no default of its own and reads resolved
+        value from env module instead.
         """
         self.reload_env(unset=['CELLXGENE_DATA'])
-        self.assertEqual('cellxgene_data', self._effective_loader_data_dir())
+        with mock.patch.object(env, 'cellxgene_data', '/sentinel/data'):
+            self.assertEqual(
+                '/sentinel/data', self._effective_loader_data_dir()
+            )
+
+    def test_GIVEN_relative_path_THEN_env_module_absolutises_it(self):
+        """
+        Test that relative directory is made absolute, since Flask resolves
+        relative directories against package directory rather than working one.
+        """
+        self.reload_env(CELLXGENE_DATA='relative_data')
+        self.assertEqual(os.path.abspath('relative_data'), env.cellxgene_data)
 
     def test_GIVEN_unset_and_no_bucket_THEN_gateway_raises(self):
         """
@@ -190,8 +200,7 @@ class TestCellxgeneDataResolution(EnvReloadCase):
     def test_GIVEN_set_THEN_all_three_consumers_agree(self):
         """
         Test that env, metadata loader and gateway resolve same directory when
-        CELLXGENE_DATA is set. They agree on an explicit value; it is only
-        defaults that diverge.
+        CELLXGENE_DATA is set.
         """
         with tempfile.TemporaryDirectory() as tmp:
             self.reload_env(CELLXGENE_DATA=tmp)
@@ -199,18 +208,15 @@ class TestCellxgeneDataResolution(EnvReloadCase):
             self.assertEqual(tmp, self._effective_loader_data_dir())
             self.assertEqual(tmp, self._effective_gateway_base_path())
 
-    @unittest.expectedFailure
     def test_GIVEN_unset_THEN_all_three_consumers_agree(self):
         """
-        Test behaviour produced by config-tidying pass: one resolved value
-        shared by every consumer.
-
-        Marked as an expected failure because today they disagree ('' vs
-        'cellxgene_data' vs None). When the pass lands this will report an
-        unexpected success; remove the decorator at that point.
+        Test that no consumer invents data directory when variable is unset.
+        Loader coerces None to '' because its path joins would otherwise raise
+        TypeError into an exception handler that hides it.
         """
         self.reload_env(unset=['CELLXGENE_DATA'])
-        self.assertEqual(env.cellxgene_data, self._effective_loader_data_dir())
+        self.assertIsNone(env.cellxgene_data)
+        self.assertEqual('', self._effective_loader_data_dir())
 
 
 class TestDataPathRoutes(EnvReloadCase):
@@ -252,6 +258,19 @@ class TestDataPathRoutes(EnvReloadCase):
             response = gateway.download_file('sample.h5ad')
         self.addCleanup(response.close)
         self.assertEqual(200, response.status_code)
+
+    def test_GIVEN_no_data_directory_THEN_download_returns_404(self):
+        """
+        Test that `/download` refuses cleanly when only bucket is configured,
+        rather than failing on None directory.
+        """
+        self.reload_env(unset=['CELLXGENE_DATA'])
+        with (
+            gateway.app.test_request_context('/download/sample.h5ad'),
+            self.assertRaises(Exception) as raised,
+        ):
+            gateway.download_file('sample.h5ad')
+        self.assertIn('404', str(getattr(raised.exception, 'http_status', '')))
 
     def test_GIVEN_existing_image_THEN_qc_image_serves_it(self):
         """

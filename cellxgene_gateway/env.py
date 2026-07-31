@@ -14,9 +14,19 @@ import os
 
 # Cellxgene variables
 cellxgene_location = os.environ.get('CELLXGENE_LOCATION')
-cellxgene_data = os.environ.get('CELLXGENE_DATA', '')
+# Left as None when unset so that 'no data directory configured' is different
+# from 'configured as working directory'. Absolutised only when set, for
+# `send_from_directory` reason given under QC variables
+cellxgene_data = os.environ.get('CELLXGENE_DATA')
+if cellxgene_data:
+    cellxgene_data = os.path.abspath(cellxgene_data)
+cellxgene_bucket = os.environ.get('CELLXGENE_BUCKET')
 cellxgene_args = os.environ.get('CELLXGENE_ARGS', None)
 env_vars = {'CELLXGENE_LOCATION': cellxgene_location}
+
+# Dataset metadata variables
+# Not absolutised: opened with `open`, which resolves against working directory
+dataset_metadata_tsv = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
 
 # QC variables
 # Resolved absolutely: Flask's `send_from_directory` treats a relative directory
@@ -71,6 +81,8 @@ optional_env_vars = {
     'GATEWAY_LOG_LEVEL': log_level,
     'CELLXGENE_ARGS': cellxgene_args,
     'CELLXGENE_DATA': cellxgene_data,
+    'CELLXGENE_BUCKET': cellxgene_bucket,
+    'DATASET_METADATA_TSV': dataset_metadata_tsv,
     'QC_DATA': qc_data,
     'PROXY_FIX_FOR': proxy_fix_for,
     'PROXY_FIX_PROTO': proxy_fix_proto,

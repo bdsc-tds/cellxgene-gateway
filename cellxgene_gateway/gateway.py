@@ -226,8 +226,8 @@ def initialise_data_sources():
 
     global default_item_source
 
-    cellxgene_data = os.environ.get('CELLXGENE_DATA', None)
-    cellxgene_bucket = os.environ.get('CELLXGENE_BUCKET', None)
+    cellxgene_data = env.cellxgene_data
+    cellxgene_bucket = env.cellxgene_bucket
 
     if cellxgene_bucket is not None:
         from cellxgene_gateway.items.s3.s3item_source import S3ItemSource
@@ -438,8 +438,8 @@ def filecrawl(path=None):
       Rendered HTML page showing datasets or file structure.
     """
     # Try to load dataset metadata from TSV file if present
-    data_dir = os.environ.get('CELLXGENE_DATA', 'cellxgene_data')
-    tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
+    data_dir = env.cellxgene_data
+    tsv_path = env.dataset_metadata_tsv
 
     if os.path.exists(tsv_path):
         (
@@ -1302,7 +1302,7 @@ def qc_report(dataset_id):
         })
 
     # Find dataset name from TSV for page title
-    tsv_path = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
+    tsv_path = env.dataset_metadata_tsv
     dataset_name = dataset_id
     if os.path.exists(tsv_path):
         with open(tsv_path, newline='') as f:
@@ -1382,8 +1382,16 @@ def download_file(filename):
             'Invalid filename.', 400, context='download', filename=filename
         )
 
-    # Get data directory path
+    # Get data directory path. Unset with only a bucket configured is a valid
+    # setup (nothing to download from disk in that case)
     data_dir = env.cellxgene_data
+    if data_dir is None:
+        raise CacheException(
+            f"Dataset file '{filename}' was not found on the server.",
+            404,
+            context='download',
+            filename=filename,
+        )
 
     # Check if file exists
     file_path = os.path.join(data_dir, filename)
@@ -1395,10 +1403,10 @@ def download_file(filename):
             filename=filename,
         )
 
-    # Serve file. Absolute path: Flask resolves a relative directory against
-    # app.root_path (package dir), not configured data dir
+    # env.cellxgene_data is already absolute: Flask resolves a relative
+    # directory against app.root_path (package dir), not configured data dir
     return send_from_directory(
-        os.path.abspath(data_dir),
+        data_dir,
         filename,
         as_attachment=True,
         mimetype='application/octet-stream',
