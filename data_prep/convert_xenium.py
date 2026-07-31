@@ -111,6 +111,44 @@ def add_umap(table, csv_path):
     return n_missing
 
 
+# Function to make string columns readable by the viewer
+def normalise_string_dtypes(table):
+    """
+    Rewrite pandas string-dtype columns as plain object columns.
+
+    AnnData writes pandas `str` dtype as 'nullable-string-array', which is zarr
+    group of mask and values arrays. Vitessce only reads plain 'string-array',
+    so gene names and any string annotation stored like this load as empty and
+    heatmap/gene list render nothing.
+
+    Parameters:
+    -----------
+    table: anndata.AnnData
+      Table element whose var index and obs columns are rewritten in place.
+
+    Returns:
+    --------
+    converted: list of str
+      Names of columns that were rewritten ('var index' for index).
+    """
+    converted = []
+    if table.var.index.dtype != object:
+        table.var.index = pd.Index(table.var.index.astype(object))
+        converted.append('var index')
+    for frame_name, frame in (('obs', table.obs), ('var', table.var)):
+        for column in frame.columns:
+            dtype = frame[column].dtype
+            # Categoricals already write their categories as plain string-array,
+            # and SpatialData requires region column to stay categorical
+            if isinstance(dtype, pd.CategoricalDtype) or dtype == object:
+                continue
+            if pd.api.types.is_string_dtype(frame[column]):
+                frame[column] = frame[column].astype(object)
+                converted.append(f'{frame_name}/{column}')
+
+    return converted
+
+
 # Function to point table at segmentation element that was written
 def retarget_table_region(sdata, region):
     """
@@ -298,6 +336,11 @@ if __name__ == '__main__':
     if os.path.isfile(umap_csv):
         n = add_umap(table, umap_csv)
         print(f'UMAP attached ({n} cells without coordinates)', flush=True)
+
+    # Must run last, after every column the steps above may have added
+    converted = normalise_string_dtypes(table)
+    if converted:
+        print(f'string dtypes normalised: {", ".join(converted)}', flush=True)
 
     # Peak memory is reported so cap can be sized from real run
     write_incrementally(sdata, args.out)
