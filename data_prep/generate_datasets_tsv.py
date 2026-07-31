@@ -335,6 +335,15 @@ def generate_tsv(data_dir, output_path, merged_file=None, merged_config=None):
     """
     rows = []
 
+    # Distinguish missing directory from empty one: os.walk yields nothing for
+    # both, so typo or unset CELLXGENE_DATA would look like directory without
+    # .h5ad files
+    if not os.path.isdir(data_dir):
+        raise FileNotFoundError(
+            f'Data directory {os.path.abspath(data_dir)} does not exist. '
+            'Pass --data-dir or set CELLXGENE_DATA.'
+        )
+
     file_paths = find_h5ad_files(data_dir)
     if not file_paths:
         print(f'No .h5ad files found in {data_dir}')
