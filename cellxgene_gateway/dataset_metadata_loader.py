@@ -125,8 +125,8 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
 
     try:
         if not os.path.exists(tsv_path):
-            print(
-                f'Warning: .tsv file {tsv_path} not found. Using empty dataset list.'
+            logger.warning(
+                f'.tsv file {tsv_path} not found. Using empty dataset list.'
             )
             return (datasets, [], [], [], [], (0, 0), (0, 0), (0, 0))
 
@@ -188,13 +188,15 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
 
                 datasets.append(row)
 
-        print(f'Loaded {len(datasets)} datasets from {tsv_path}')
+        logger.info(f'Loaded {len(datasets)} datasets from {tsv_path}')
     except (OSError, csv.Error, ValueError, TypeError) as e:
         # Unreadable or malformed .tsv degrades to empty list rather than 500 on
         # /filecrawl. Deliberately does not catch every exception: KeyError or
         # AttributeError here is a bug, not bad input, and should surface
         # instead of silently rendering "no datasets"
-        print(f'Error loading .tsv {tsv_path}: {e}. Using empty dataset list.')
+        logger.error(
+            f'Error loading .tsv {tsv_path}: {e}. Using empty dataset list.'
+        )
 
     # Calculate numeric ranges, ignoring zero values
     cell_counts_nz = [c for c in cell_counts if c > 0]

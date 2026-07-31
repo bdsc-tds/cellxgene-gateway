@@ -1,7 +1,5 @@
 # Import utility modules
-import contextlib
 import importlib
-import io
 import os
 import tempfile
 import unittest
@@ -119,13 +117,9 @@ class TestCellxgeneDataResolution(EnvReloadCase):
             tsv_path = os.path.join(tmp, 'datasets.tsv')
             with open(tsv_path, 'w', newline='') as tsv:
                 tsv.write('dataset_id\tfile_path\nx\tx.h5ad\n')
-            # Loader still prints progress; keep it out of test output
-            with (
-                mock.patch.object(
-                    dml, 'find_annotations_for_file', return_value=([], [])
-                ) as find,
-                contextlib.redirect_stdout(io.StringIO()),
-            ):
+            with mock.patch.object(
+                dml, 'find_annotations_for_file', return_value=([], [])
+            ) as find:
                 dml.load_dataset_metadata_tsv(tsv_path, data_dir=None)
 
             return find.call_args[0][1]
