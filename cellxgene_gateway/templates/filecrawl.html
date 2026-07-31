@@ -40,6 +40,7 @@
   <!-- Navbar -->
   {% include 'navbar.html' %}
 
+  {% if use_metadata %}
   <!-- Sidebar for filters (fixed) -->
   <div id="sidebarCol">
     <div class="sidebar" id="sidebar">
@@ -431,6 +432,23 @@
       </div>
     </div>
   </div>
+  {% else %}
+
+  <!-- File listing shown when no dataset metadata .tsv is configured -->
+  <div class="container my-4">
+    <h4>Please click on a dataset to view it in Cellxgene Server.</h4>
+
+    {{ rendered_html|safe }}
+
+    <p>Navigation:</p>
+    <ul>
+      {% if path %}
+      <li><a href="{{ url_for('filecrawl') }}">top level</a></li>
+      {% endif %}
+      <li><a href="{{ url_for('homepage') }}">homepage</a></li>
+    </ul>
+  </div>
+  {% endif %}
 
   <!-- Download Modal -->
   <div class="modal fade" id="downloadModal" tabindex="-1"

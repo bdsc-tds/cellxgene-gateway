@@ -13,7 +13,7 @@ docstring-code-line-length = 76
 indent-style = "space"
 # Prefer single quotes over double quotes
 quote-style = "single"
-# Collapse argument lists that fit on one line within the line length limit
+# Collapse argument lists that fit on one line within line length limit
 skip-magic-trailing-comma = true
 # Enable formatting preview mode
 preview = true

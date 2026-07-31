@@ -608,6 +608,7 @@ def filecrawl(path=None):
                 gene_count_range=gene_count_range,
                 year_range=year_range,
                 enable_annotations=env.enable_annotations,
+                use_metadata=True,
             )
         )
     else:

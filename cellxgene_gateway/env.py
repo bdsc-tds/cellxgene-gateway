@@ -15,8 +15,8 @@ import os
 # Cellxgene variables
 cellxgene_location = os.environ.get('CELLXGENE_LOCATION')
 # Left as None when unset so that 'no data directory configured' is different
-# from 'configured as working directory'. Absolutised only when set, for
-# `send_from_directory` reason given under QC variables
+# from 'configured as working directory'. Absolutised only when set, see
+# `send_from_directory` reason given in QC block below
 cellxgene_data = os.environ.get('CELLXGENE_DATA')
 if cellxgene_data:
     cellxgene_data = os.path.abspath(cellxgene_data)
