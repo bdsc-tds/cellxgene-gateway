@@ -374,10 +374,24 @@ def generate_config(
     obs_sets = vc.add_view('obsSets', dataset=dataset)
     heatmap = vc.add_view('heatmap', dataset=dataset)
     feature_list = vc.add_view('featureList', dataset=dataset)
+    distribution = vc.add_view(
+        'obsSetFeatureValueDistribution', dataset=dataset
+    )
+    description = vc.add_view('description', dataset=dataset)
+    description.set_props(description=name)
+    status = vc.add_view('status', dataset=dataset)
 
     # Every view shares one obsType, or they will not select each other's cells
     vc.link_views(
-        [spatial, controller, scatterplot, obs_sets, heatmap, feature_list],
+        [
+            spatial,
+            controller,
+            scatterplot,
+            obs_sets,
+            heatmap,
+            feature_list,
+            distribution,
+        ],
         ['obsType'],
         [obs_type],
     )
@@ -410,6 +424,7 @@ def generate_config(
         obs_sets,
         heatmap,
         feature_list,
+        distribution,
     ):
         view.use_coordination(
             color_encoding,
@@ -488,11 +503,23 @@ def generate_config(
             [zoom, width / 2, height / 2],
         )
 
-    vc.layout(
-        (spatial | controller)
-        / (scatterplot | obs_sets)
-        / (heatmap | feature_list)
-    )
+    # Explicit grid rather than vc.layout()'s row splitting, which only makes
+    # equal-sized panels. Mirrors codeluppi-2018 reference layout: narrow left
+    # sidebar, large spatial view, embedding and selectors right, plots below.
+    # Scatterplot takes both embedding slots of reference, which shows t-SNE and
+    # UMAP, because Xenium Ranger gives one embedding
+    for view, (x, y, w, h) in (
+        (description, (0, 0, 2, 1)),
+        (controller, (0, 1, 2, 4)),
+        (status, (0, 5, 2, 1)),
+        (spatial, (2, 0, 4, 4)),
+        (scatterplot, (6, 0, 3, 4)),
+        (feature_list, (9, 0, 3, 2)),
+        (obs_sets, (9, 2, 3, 2)),
+        (heatmap, (2, 4, 5, 2)),
+        (distribution, (7, 4, 5, 2)),
+    ):
+        view.set_xywh(x, y, w, h)
 
     with open(out_path, 'w') as handle:
         json.dump(vc.to_dict(), handle, indent=2)
