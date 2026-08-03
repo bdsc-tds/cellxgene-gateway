@@ -21,11 +21,20 @@ import json
 import math
 import os
 
-from vitessce import SpatialDataWrapper, VitessceConfig
+from vitessce import CoordinationLevel as CL
+from vitessce import (
+    SpatialDataWrapper,
+    VitessceConfig,
+    get_initial_coordination_scope_prefix,
+)
 
 # Bitmask label images and polygon shapes are both valid segmentations, but
 # polygons avoid rasterising full-resolution mask during conversion
 SEGMENTATION_GROUPS = ['labels', 'shapes']
+
+# Each config holds one dataset, so fixed uid is enough and keeps derived
+# coordination scope names stable
+DATASET_UID = 'A'
 
 # Display names for obsm keys conventionally used for embeddings
 EMBEDDING_NAMES = {'X_umap': 'UMAP', 'X_pca': 'PCA', 'X_tsne': 't-SNE'}
@@ -194,8 +203,9 @@ def detect_elements(zarr_path, image=None, segmentations=None):
     Returns:
     --------
     paths: dict
-      Keys 'image_path', 'obs_segmentations_path', 'table_path',
-      'obs_points_path' and 'coordinate_system'.
+      Keys 'image_shape', 'image_path',
+      'obs_segmentations_path', 'table_path', 'obs_points_path',
+      'coordinate_system', 'obs_set_cols' and 'obs_embeddings'.
     """
     images = list_group_members(os.path.join(zarr_path, 'images'))
     tables = list_group_members(os.path.join(zarr_path, 'tables'))
@@ -322,7 +332,9 @@ def generate_config(
         region=region,
         coordination_values={'obsType': obs_type},
     )
-    dataset = vc.add_dataset(name=name).add_object(wrapper)
+    # uid is fixed because layer scope names are derived from it, and viewer
+    # skips its own auto-initialisation only when it finds those exact names
+    dataset = vc.add_dataset(name=name, uid=DATASET_UID).add_object(wrapper)
 
     spatial = vc.add_view('spatialBeta', dataset=dataset)
     controller = vc.add_view('layerControllerBeta', dataset=dataset)
@@ -337,6 +349,80 @@ def generate_config(
         ['obsType'],
         [obs_type],
     )
+
+    # Colour encoding and selections are shared scope objects rather than plain
+    # values, so picking a gene or cell set elsewhere recolours spatial view too
+    (
+        color_encoding,
+        feature_selection,
+        obs_set_selection,
+        obs_set_color,
+        colormap_range,
+    ) = vc.add_coordination(
+        'obsColorEncoding',
+        'featureSelection',
+        'obsSetSelection',
+        'obsSetColor',
+        'featureValueColormapRange',
+    )
+    color_encoding.set_value('cellSetSelection')
+    feature_selection.set_value(None)
+    obs_set_selection.set_value(None)
+    obs_set_color.set_value(None)
+    colormap_range.set_value([0.0, 1.0])
+
+    for view in (
+        spatial,
+        controller,
+        scatterplot,
+        obs_sets,
+        heatmap,
+        feature_list,
+    ):
+        view.use_coordination(
+            color_encoding,
+            feature_selection,
+            obs_set_selection,
+            obs_set_color,
+            colormap_range,
+        )
+
+    # Only segmentation layer is defined here. Image layer is left to viewer's
+    # own initialisation, which derives contrast windows from pixel statistics
+    # that this script cannot compute without reading the pyramid
+    vc.link_views_by_dict(
+        [spatial, controller],
+        {
+            'segmentationLayer': CL([
+                {
+                    'obsType': obs_type,
+                    'spatialLayerVisible': True,
+                    'spatialLayerOpacity': 1,
+                    'segmentationChannel': CL([
+                        {
+                            'obsType': obs_type,
+                            'spatialTargetC': 0,
+                            'spatialChannelColor': [255, 255, 255],
+                            'spatialChannelOpacity': 1,
+                            'spatialChannelVisible': True,
+                            # Outlines, so morphology image stays readable
+                            'spatialSegmentationFilled': False,
+                            'spatialSegmentationStrokeWidth': 1,
+                            'obsColorEncoding': color_encoding,
+                            'featureSelection': feature_selection,
+                            'obsSetSelection': obs_set_selection,
+                            'obsSetColor': obs_set_color,
+                            'featureValueColormapRange': colormap_range,
+                        }
+                    ]),
+                }
+            ])
+        },
+        scope_prefix=get_initial_coordination_scope_prefix(
+            DATASET_UID, 'obsSegmentations'
+        ),
+    )
+
     # Vitessce otherwise opens zoomed far out, leaving the tissue a speck
     zoom = fit_zoom(paths['image_shape'])
     if zoom is not None:
