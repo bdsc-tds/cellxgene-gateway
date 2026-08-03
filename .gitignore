@@ -148,3 +148,6 @@ summary/
 
 # Runtime directories created by deploy/setup.sh
 logs/
+
+# Restored by `npm ci` from tracked package-lock.json
+spatial_viewer_src/node_modules/
