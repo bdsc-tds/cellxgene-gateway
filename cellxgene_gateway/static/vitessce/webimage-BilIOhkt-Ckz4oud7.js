@@ -1,0 +1,16 @@
+import { v as e } from "./index-CDVgyDq2-Pif-GON1.js";
+//#region node_modules/vitessce/dist/webimage-BilIOhkt.js
+var t = class extends e {
+	constructor() {
+		if (super(), typeof createImageBitmap > "u") throw Error("Cannot decode WebImage as `createImageBitmap` is not available");
+		if (typeof document > "u" && typeof OffscreenCanvas > "u") throw Error("Cannot decode WebImage as neither `document` nor `OffscreenCanvas` is not available");
+	}
+	async decode(e, t) {
+		let n = new Blob([t]), r = await createImageBitmap(n), i;
+		typeof document < "u" ? (i = document.createElement("canvas"), i.width = r.width, i.height = r.height) : i = new OffscreenCanvas(r.width, r.height);
+		let a = i.getContext("2d");
+		return a.drawImage(r, 0, 0), a.getImageData(0, 0, r.width, r.height).data.buffer;
+	}
+};
+//#endregion
+export { t as default };
