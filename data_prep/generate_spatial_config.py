@@ -338,8 +338,8 @@ def generate_config(
         ],
         region=region,
         # Defaults resolve through spatialdata_attrs.feature_key, which is
-        # fragile across a re-parse; naming them keeps fast path from silently
-        # degrading to a whole-file fetch
+        # fragile across re-parse; naming them keeps fast path from silently
+        # degrading to whole-file fetch
         obs_points_feature_index_column=(
             'feature_name_codes' if paths['obs_points_path'] else None
         ),
@@ -448,7 +448,7 @@ def generate_config(
     segmentation_layers += [
         {
             'obsType': extra_obs_type,
-            # Off by default: nuclei sit inside cells, and both at once is mush
+            # Off by default: nuclei sit inside cells
             'spatialLayerVisible': False,
             'spatialLayerOpacity': 1,
             'segmentationChannel': CL([
@@ -469,7 +469,7 @@ def generate_config(
 
     # Only segmentation layers are defined here. Image layer is left to viewer's
     # own initialisation, which derives contrast windows from pixel statistics
-    # that this script cannot compute without reading the pyramid
+    # that this script cannot compute without reading pyramid
     vc.link_views_by_dict(
         [spatial, controller],
         {'segmentationLayer': CL(segmentation_layers)},
@@ -478,7 +478,7 @@ def generate_config(
         ),
     )
 
-    # Vitessce otherwise opens zoomed far out, leaving the tissue a speck
+    # Vitessce otherwise opens zoomed too far out
     zoom = fit_zoom(paths['image_shape'])
     if zoom is not None:
         width, height = paths['image_shape']

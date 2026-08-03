@@ -28,7 +28,12 @@ import dask
 import pandas as pd
 import spatialdata_io
 from spatialdata import SpatialData
-from spatialdata.models import TableModel
+from spatialdata.models import PointsModel, TableModel
+from spatialdata.transformations import get_transformation, set_transformation
+from vitessce.data_utils import (
+    sdata_morton_sort_points,
+    sdata_points_modify_row_group_size,
+)
 
 # Single-threaded: dask's default scheduler runs one task per core, and each
 # task materialises an image chunk, so peak memory scales with core count
@@ -39,11 +44,20 @@ dask.config.set(scheduler='synchronous')
 # region name
 ELEMENT_ORDER = [
     'cell_boundaries',
+    'nucleus_boundaries',
     'table',
     'cell_labels',
     'morphology_focus',
     'transcripts',
 ]
+
+# Only columns viewer reads. Xenium carries nine more per transcript, and at
+# 13.5M rows dropping them is what keeps sort and store affordable
+TRANSCRIPT_COLUMNS = ['x', 'y', 'z', 'feature_name']
+
+# Row group small enough that browser can fetch spatial tile as byte range
+# instead of pulling whole file
+TRANSCRIPT_ROW_GROUP_SIZE = 50_000
 
 
 # Function to report peak resident memory of process
@@ -181,14 +195,113 @@ def retarget_table_region(sdata, region):
     )
 
 
+# Function to re-parse points element without losing its coordinate transform
+def parse_points_keeping_transform(points, transformations):
+    """
+    Parse points element and restore coordinate transform afterwards.
+
+    PointsModel.parse refuses transformations passed alongside an element that
+    already carries one, and applies identity when none is given. Setting it
+    after parsing sidesteps both, and identity here would place transcripts in
+    microns while image and shapes are in pixels.
+
+    Parameters:
+    -----------
+    points: dask.dataframe.DataFrame
+      Points to parse.
+    transformations: dict
+      Coordinate-system name to transformation, as captured before parsing.
+
+    Returns:
+    --------
+    parsed: dask.dataframe.DataFrame
+      Parsed points element carrying original transform.
+    """
+    parsed = PointsModel.parse(points, feature_key='feature_name')
+    set_transformation(parsed, transformations, set_all=True)
+
+    return parsed
+
+
+# Function to make transcripts spatially queryable by viewer
+def prepare_transcripts(sdata, var_names):
+    """
+    Rewrite transcripts point cloud in form Vitessce can query by region.
+
+    Viewer fetches points for visible rectangle only when store carries a
+    Morton (Z-order) code per point and rows are sorted by it. It also needs
+    integer index into table's var names per point, since it colours points by
+    gene without reading gene strings. Dictionary-encoded columns must be
+    rightmost, which is why columns are reordered last.
+
+    Parameters:
+    -----------
+    sdata: spatialdata.SpatialData
+      Object whose 'transcripts' element is rewritten in place.
+    var_names: pandas.Index
+      Gene names of annotating table, defining feature index per point.
+
+    Returns:
+    --------
+    n_dropped: int
+      Number of control-probe detections removed.
+    """
+    points = sdata.points['transcripts']
+
+    # Captured because morton sort re-parses element without them, which would
+    # silently reset micron-to-pixel scale to identity
+    transformations = get_transformation(points, get_all=True)
+
+    # Control probes are absent from var names, so they cannot carry feature
+    # index; dropping beats writing them with sentinel code
+    counts = points['is_gene'].value_counts().compute()
+    n_dropped = int(counts.get(False, 0))
+    points = points[points['is_gene']][TRANSCRIPT_COLUMNS]
+
+    # Map through categories rather than per-row lookup: 13.5M string lookups
+    # against list is minutes, this is one pass over ~500 categories
+    points['feature_name'] = points['feature_name'].cat.as_known()
+    lookup = pd.Series(
+        [
+            var_names.get_loc(name) if name in var_names else -1
+            for name in points['feature_name'].cat.categories
+        ],
+        dtype='int32',
+    )
+    points['feature_name_codes'] = (
+        points['feature_name']
+        .cat.codes.map(lookup, meta=('feature_name_codes', 'int32'))
+        .astype('int32')
+    )
+
+    sdata.points['transcripts'] = parse_points_keeping_transform(
+        points, transformations
+    )
+    sdata_morton_sort_points(sdata, 'transcripts')
+
+    # Reordered after sort because sort appends its own numeric columns
+    sorted_points = sdata.points['transcripts']
+    ordered = [
+        name
+        for name in sorted_points.columns
+        if not isinstance(sorted_points[name].dtype, pd.CategoricalDtype)
+    ]
+    ordered += [name for name in sorted_points.columns if name not in ordered]
+    sdata.points['transcripts'] = parse_points_keeping_transform(
+        sorted_points[ordered], transformations
+    )
+
+    return n_dropped
+
+
 # Function to read Xenium bundle into SpatialData object
-def read_xenium(xenium_dir, transcripts, cells_labels):
+def read_xenium(xenium_dir, transcripts, cells_labels, nucleus_boundaries):
     """
     Read Xenium Ranger bundle, skipping elements not used by viewer.
 
     4 GB morphology MIP is always skipped in favour of multi-channel
-    morphology_focus images, and nucleus elements are skipped because viewer
-    segments on cells.
+    morphology_focus images, and nucleus labels are skipped because nuclei are
+    drawn from polygon boundaries.
 
     Parameters:
     -----------
@@ -199,6 +312,8 @@ def read_xenium(xenium_dir, transcripts, cells_labels):
     cells_labels: bool
       Whether to rasterise cell segmentation masks. Polygon boundaries are
       preferred; this is fallback when viewer cannot render them.
+    nucleus_boundaries: bool
+      Whether to include nucleus polygon boundaries as second segmentation.
 
     Returns:
     --------
@@ -208,7 +323,7 @@ def read_xenium(xenium_dir, transcripts, cells_labels):
     return spatialdata_io.xenium(
         xenium_dir,
         cells_boundaries=True,
-        nucleus_boundaries=False,
+        nucleus_boundaries=nucleus_boundaries,
         cells_labels=cells_labels,
         nucleus_labels=False,
         transcripts=transcripts,
@@ -223,7 +338,7 @@ def read_xenium(xenium_dir, transcripts, cells_labels):
 
 
 # Function to write SpatialData object one element at a time
-def write_incrementally(source, out_path):
+def write_incrementally(source, out_path, skip=()):
     """
     Write SpatialData store element by element, reporting peak memory.
 
@@ -237,15 +352,20 @@ def write_incrementally(source, out_path):
       Lazily loaded object whose elements are copied into store.
     out_path: str
       Destination .zarr store path.
+    skip: tuple of str
+      Element names to leave unwritten, for elements needing preparation that
+      must happen after heavier elements have been written and released.
 
     Returns:
     --------
-    None
+    backed: spatialdata.SpatialData
+      Store-backed object, ready for further write_element calls.
     """
     # gen_elements yields (element_type, name, element)
     names = [name for _, name, _ in source.gen_elements()]
     ordered = [n for n in ELEMENT_ORDER if n in names]
     ordered += [n for n in names if n not in ordered]
+    ordered = [n for n in ordered if n not in skip]
 
     # write_element only works on backed object, so establish store first
     backed = SpatialData()
@@ -260,7 +380,8 @@ def write_incrementally(source, out_path):
             f'(peak RSS {peak_rss_gb():.2f} GB)',
             flush=True,
         )
-    backed.write_consolidated_metadata()
+
+    return backed
 
 
 # Function to parse command-line arguments
@@ -288,9 +409,16 @@ def parse_args():
         help="Optional .csv with 'cell_id' and 'group' columns.",
     )
     parser.add_argument(
-        '--transcripts',
-        action='store_true',
-        help='Include the transcripts point cloud (large).',
+        '--no-transcripts',
+        dest='transcripts',
+        action='store_false',
+        help='Skip the transcripts point cloud (much the slowest element).',
+    )
+    parser.add_argument(
+        '--no-nucleus-boundaries',
+        dest='nucleus_boundaries',
+        action='store_false',
+        help='Skip nucleus polygon boundaries.',
     )
     parser.add_argument(
         '--cells-labels',
@@ -312,7 +440,12 @@ if __name__ == '__main__':
 
     # Elements are dask-backed, so cheap operation
     start = time.time()
-    sdata = read_xenium(args.xenium_dir, args.transcripts, args.cells_labels)
+    sdata = read_xenium(
+        args.xenium_dir,
+        args.transcripts,
+        args.cells_labels,
+        args.nucleus_boundaries,
+    )
     print(f'read in {time.time() - start:.1f}s', flush=True)
     print(sdata, flush=True)
 
@@ -342,8 +475,31 @@ if __name__ == '__main__':
     if converted:
         print(f'string dtypes normalised: {", ".join(converted)}', flush=True)
 
-    # Peak memory is reported so cap can be sized from real run
-    write_incrementally(sdata, args.out)
+    # Peak memory is reported so cap can be sized from real run. Transcripts are
+    # held back so their sort does not run alongside image pyramids
+    backed = write_incrementally(sdata, args.out, skip=('transcripts',))
+
+    if args.transcripts:
+        step = time.time()
+        n = prepare_transcripts(sdata, table.var.index)
+        print(
+            f'transcripts prepared in {time.time() - step:.1f}s '
+            f'({n} control-probe detections dropped)',
+            flush=True,
+        )
+        step = time.time()
+        backed['transcripts'] = sdata['transcripts']
+        backed.write_element('transcripts', overwrite=True)
+        print(
+            f'  wrote transcripts in {time.time() - step:.1f}s '
+            f'(peak RSS {peak_rss_gb():.2f} GB)',
+            flush=True,
+        )
+        sdata_points_modify_row_group_size(
+            backed, 'transcripts', TRANSCRIPT_ROW_GROUP_SIZE
+        )
+
+    backed.write_consolidated_metadata()
     print(
         f'done in {time.time() - start:.1f}s, peak RSS '
         f'{peak_rss_gb():.2f} GB -> {args.out}',
