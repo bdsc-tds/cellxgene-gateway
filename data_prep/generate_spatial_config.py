@@ -203,8 +203,8 @@ def detect_elements(zarr_path, image=None, segmentations=None):
     Returns:
     --------
     paths: dict
-      Keys 'image_shape', 'image_path',
-      'obs_segmentations_path', 'table_path', 'obs_points_path',
+      Keys 'image_shape', 'image_path', 'obs_segmentations_path',
+      'other_segmentation_paths', 'table_path', 'obs_points_path',
       'coordinate_system', 'obs_set_cols' and 'obs_embeddings'.
     """
     images = list_group_members(os.path.join(zarr_path, 'images'))
@@ -220,6 +220,7 @@ def detect_elements(zarr_path, image=None, segmentations=None):
 
     # Prefer segmentation representation currently held by store
     seg_path = None
+    other_seg_paths = []
     for group in SEGMENTATION_GROUPS:
         members = list_group_members(os.path.join(zarr_path, group))
         if not members:
@@ -227,6 +228,11 @@ def detect_elements(zarr_path, image=None, segmentations=None):
         name = segmentations or members[0]
         if name in members:
             seg_path = f'{group}/{name}'
+            # Nuclei and any further segmentation become their own layers, each
+            # needing separate file def since one file def carries one path
+            other_seg_paths = [
+                f'{group}/{other}' for other in members if other != name
+            ]
             break
     if seg_path is None:
         raise ValueError(f'No labels or shapes elements found in {zarr_path}')
@@ -248,6 +254,7 @@ def detect_elements(zarr_path, image=None, segmentations=None):
         ),
         'image_path': f'images/{image}',
         'obs_segmentations_path': seg_path,
+        'other_segmentation_paths': other_seg_paths,
         'table_path': f'tables/{table_name}',
         'obs_points_path': f'points/{points[0]}' if points else None,
         'coordinate_system': coordinate_system,
@@ -330,11 +337,36 @@ def generate_config(
             EMBEDDING_NAMES.get(e, e) for e in paths['obs_embeddings']
         ],
         region=region,
+        # Defaults resolve through spatialdata_attrs.feature_key, which is
+        # fragile across a re-parse; naming them keeps fast path from silently
+        # degrading to a whole-file fetch
+        obs_points_feature_index_column=(
+            'feature_name_codes' if paths['obs_points_path'] else None
+        ),
+        obs_points_morton_code_column=(
+            'morton_code_2d' if paths['obs_points_path'] else None
+        ),
         coordination_values={'obsType': obs_type},
     )
     # uid is fixed because layer scope names are derived from it, and viewer
     # skips its own auto-initialisation only when it finds those exact names
     dataset = vc.add_dataset(name=name, uid=DATASET_UID).add_object(wrapper)
+
+    # Extra segmentations carry no table, so they get their own file def and
+    # obsType rather than sharing cells' annotations
+    extra_obs_types = []
+    for seg_path in paths['other_segmentation_paths']:
+        extra_obs_type = seg_path.split('/')[-1].replace('_boundaries', '')
+        extra_obs_types.append(extra_obs_type)
+        dataset.add_object(
+            SpatialDataWrapper(
+                sdata_url=sdata_url,
+                obs_segmentations_path=seg_path,
+                table_path=None,
+                coordinate_system=paths['coordinate_system'],
+                coordination_values={'obsType': extra_obs_type},
+            )
+        )
 
     spatial = vc.add_view('spatialBeta', dataset=dataset)
     controller = vc.add_view('layerControllerBeta', dataset=dataset)
@@ -387,37 +419,60 @@ def generate_config(
             colormap_range,
         )
 
-    # Only segmentation layer is defined here. Image layer is left to viewer's
+    # Cells are annotated, so their channel reuses shared selection scopes.
+    # Extra segmentations have no table and only ever carry a fixed colour
+    segmentation_layers = [
+        {
+            'obsType': obs_type,
+            'spatialLayerVisible': True,
+            'spatialLayerOpacity': 1,
+            'segmentationChannel': CL([
+                {
+                    'obsType': obs_type,
+                    'spatialTargetC': 0,
+                    'spatialChannelColor': [255, 255, 255],
+                    'spatialChannelOpacity': 1,
+                    'spatialChannelVisible': True,
+                    # Outlines, so morphology image stays readable
+                    'spatialSegmentationFilled': False,
+                    'spatialSegmentationStrokeWidth': 1,
+                    'obsColorEncoding': color_encoding,
+                    'featureSelection': feature_selection,
+                    'obsSetSelection': obs_set_selection,
+                    'obsSetColor': obs_set_color,
+                    'featureValueColormapRange': colormap_range,
+                }
+            ]),
+        }
+    ]
+    segmentation_layers += [
+        {
+            'obsType': extra_obs_type,
+            # Off by default: nuclei sit inside cells, and both at once is mush
+            'spatialLayerVisible': False,
+            'spatialLayerOpacity': 1,
+            'segmentationChannel': CL([
+                {
+                    'obsType': extra_obs_type,
+                    'spatialTargetC': 0,
+                    'spatialChannelColor': [0, 128, 255],
+                    'spatialChannelOpacity': 1,
+                    'spatialChannelVisible': True,
+                    'spatialSegmentationFilled': False,
+                    'spatialSegmentationStrokeWidth': 1,
+                    'obsColorEncoding': 'spatialChannelColor',
+                }
+            ]),
+        }
+        for extra_obs_type in extra_obs_types
+    ]
+
+    # Only segmentation layers are defined here. Image layer is left to viewer's
     # own initialisation, which derives contrast windows from pixel statistics
     # that this script cannot compute without reading the pyramid
     vc.link_views_by_dict(
         [spatial, controller],
-        {
-            'segmentationLayer': CL([
-                {
-                    'obsType': obs_type,
-                    'spatialLayerVisible': True,
-                    'spatialLayerOpacity': 1,
-                    'segmentationChannel': CL([
-                        {
-                            'obsType': obs_type,
-                            'spatialTargetC': 0,
-                            'spatialChannelColor': [255, 255, 255],
-                            'spatialChannelOpacity': 1,
-                            'spatialChannelVisible': True,
-                            # Outlines, so morphology image stays readable
-                            'spatialSegmentationFilled': False,
-                            'spatialSegmentationStrokeWidth': 1,
-                            'obsColorEncoding': color_encoding,
-                            'featureSelection': feature_selection,
-                            'obsSetSelection': obs_set_selection,
-                            'obsSetColor': obs_set_color,
-                            'featureValueColormapRange': colormap_range,
-                        }
-                    ]),
-                }
-            ])
-        },
+        {'segmentationLayer': CL(segmentation_layers)},
         scope_prefix=get_initial_coordination_scope_prefix(
             DATASET_UID, 'obsSegmentations'
         ),
