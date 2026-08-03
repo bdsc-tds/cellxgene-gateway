@@ -36,6 +36,9 @@ SEGMENTATION_GROUPS = ['labels', 'shapes']
 # coordination scope names stable
 DATASET_UID = 'A'
 
+# Layer name in viewer comes from obsType, so transcripts need one of their own
+POINT_OBS_TYPE = 'transcript'
+
 # Display names for obsm keys conventionally used for embeddings
 EMBEDDING_NAMES = {'X_umap': 'UMAP', 'X_pca': 'PCA', 'X_tsne': 't-SNE'}
 
@@ -320,7 +323,6 @@ def generate_config(
         sdata_url=sdata_url,
         image_path=paths['image_path'],
         obs_segmentations_path=paths['obs_segmentations_path'],
-        obs_points_path=paths['obs_points_path'],
         table_path=table_path,
         coordinate_system=paths['coordinate_system'],
         # Table-derived views are inherited from AnnDataWrapper, so their paths
@@ -337,20 +339,30 @@ def generate_config(
             EMBEDDING_NAMES.get(e, e) for e in paths['obs_embeddings']
         ],
         region=region,
-        # Defaults resolve through spatialdata_attrs.feature_key, which is
-        # fragile across re-parse; naming them keeps fast path from silently
-        # degrading to whole-file fetch
-        obs_points_feature_index_column=(
-            'feature_name_codes' if paths['obs_points_path'] else None
-        ),
-        obs_points_morton_code_column=(
-            'morton_code_2d' if paths['obs_points_path'] else None
-        ),
         coordination_values={'obsType': obs_type},
     )
     # uid is fixed because layer scope names are derived from it, and viewer
     # skips its own auto-initialisation only when it finds those exact names
     dataset = vc.add_dataset(name=name, uid=DATASET_UID).add_object(wrapper)
+
+    # Transcripts get their own file def and obsType. Sharing cells' file def
+    # made viewer label point layer 'Cell', since layer name comes from obsType
+    if paths['obs_points_path']:
+        dataset.add_object(
+            SpatialDataWrapper(
+                sdata_url=sdata_url,
+                obs_points_path=paths['obs_points_path'],
+                # Kept so feature index resolves against gene names
+                table_path=table_path,
+                coordinate_system=paths['coordinate_system'],
+                # Defaults resolve through spatialdata_attrs.feature_key, which
+                # is fragile across re-parse; naming them keeps fast path from
+                # silently degrading to whole-file fetch
+                obs_points_feature_index_column='feature_name_codes',
+                obs_points_morton_code_column='morton_code_2d',
+                coordination_values={'obsType': POINT_OBS_TYPE},
+            )
+        )
 
     # Extra segmentations carry no table, so they get their own file def and
     # obsType rather than sharing cells' annotations
@@ -362,7 +374,9 @@ def generate_config(
             SpatialDataWrapper(
                 sdata_url=sdata_url,
                 obs_segmentations_path=seg_path,
-                table_path=None,
+                # Nuclei have no table of their own, but loader appears to need
+                # one to build obs index: without it layer renders nothing
+                table_path=table_path,
                 coordinate_system=paths['coordinate_system'],
                 coordination_values={'obsType': extra_obs_type},
             )
@@ -378,7 +392,7 @@ def generate_config(
         'obsSetFeatureValueDistribution', dataset=dataset
     )
     description = vc.add_view('description', dataset=dataset)
-    description.set_props(description=name)
+    description.set_props(description=os.path.splitext(name)[0])
     status = vc.add_view('status', dataset=dataset)
 
     # Every view shares one obsType, or they will not select each other's cells
@@ -448,8 +462,7 @@ def generate_config(
                     'spatialChannelColor': [255, 255, 255],
                     'spatialChannelOpacity': 1,
                     'spatialChannelVisible': True,
-                    # Outlines, so morphology image stays readable
-                    'spatialSegmentationFilled': False,
+                    'spatialSegmentationFilled': True,
                     'spatialSegmentationStrokeWidth': 1,
                     'obsColorEncoding': color_encoding,
                     'featureSelection': feature_selection,
@@ -482,14 +495,56 @@ def generate_config(
         for extra_obs_type in extra_obs_types
     ]
 
-    # Only segmentation layers are defined here. Image layer is left to viewer's
-    # own initialisation, which derives contrast windows from pixel statistics
-    # that this script cannot compute without reading pyramid
+    # Controller renders each layer list reversed, so cells must come last to be
+    # shown above nuclei
+    segmentation_layers.reverse()
+
+    # Image layer is left to viewer's own initialisation, which derives contrast
+    # windows from pixel statistics that this script cannot compute without
+    # reading pyramid
     vc.link_views_by_dict(
         [spatial, controller],
         {'segmentationLayer': CL(segmentation_layers)},
         scope_prefix=get_initial_coordination_scope_prefix(
             DATASET_UID, 'obsSegmentations'
+        ),
+    )
+
+    # Transcripts are off by default: 13.5M points obscure everything beneath
+    # and are only meaningful once genes are selected
+    if paths['obs_points_path']:
+        vc.link_views_by_dict(
+            [spatial, controller],
+            {
+                'pointLayer': CL([
+                    {
+                        'obsType': POINT_OBS_TYPE,
+                        'spatialLayerVisible': False,
+                        # Half brightness: points are dense enough at full
+                        # opacity to hide morphology image under them
+                        'spatialLayerOpacity': 0.5,
+                        # Distinct colour per gene rather than one flat colour
+                        'obsColorEncoding': 'randomByFeature',
+                        # Draw only genes picked in gene list, not all 13.5M
+                        # detections. Checkbox in viewer sets this same string
+                        'featureFilterMode': 'featureSelection',
+                        'featureSelection': feature_selection,
+                    }
+                ])
+            },
+            scope_prefix=get_initial_coordination_scope_prefix(
+                DATASET_UID, 'obsPoints'
+            ),
+        )
+
+    # Channel names read horizontally, matching rest of controller. Only this
+    # one property is set, so viewer still initialises channels and their
+    # contrast windows itself
+    vc.link_views_by_dict(
+        [spatial, controller],
+        {'imageLayer': CL([{'spatialChannelLabelsOrientation': 'horizontal'}])},
+        scope_prefix=get_initial_coordination_scope_prefix(
+            DATASET_UID, 'image'
         ),
     )
 
@@ -509,15 +564,15 @@ def generate_config(
     # Scatterplot takes both embedding slots of reference, which shows t-SNE and
     # UMAP, because Xenium Ranger gives one embedding
     for view, (x, y, w, h) in (
-        (description, (0, 0, 2, 1)),
-        (controller, (0, 1, 2, 4)),
-        (status, (0, 5, 2, 1)),
-        (spatial, (2, 0, 4, 4)),
-        (scatterplot, (6, 0, 3, 4)),
-        (feature_list, (9, 0, 3, 2)),
-        (obs_sets, (9, 2, 3, 2)),
-        (heatmap, (2, 4, 5, 2)),
-        (distribution, (7, 4, 5, 2)),
+        (description, (0, 0, 3, 1)),
+        (controller, (0, 1, 3, 4)),
+        (status, (0, 5, 3, 1)),
+        (spatial, (3, 0, 4, 4)),
+        (scatterplot, (7, 0, 3, 4)),
+        (feature_list, (10, 0, 2, 2)),
+        (obs_sets, (10, 2, 2, 2)),
+        (heatmap, (3, 4, 5, 2)),
+        (distribution, (8, 4, 4, 2)),
     ):
         view.set_xywh(x, y, w, h)
 
