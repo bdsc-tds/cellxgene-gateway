@@ -1,0 +1,24 @@
+# Environment for offline spatial data preparation: Xenium conversion and
+# Vitessce view-config generation. Not the gateway runtime, which is pinned
+# separately in deploy/cellxgateway_env.yaml and must stay free of these deps.
+#
+#   conda env create -f data_prep/spatial_env.yaml
+#
+# Written by hand on purpose. `conda env export` bakes in platform-locked build
+# strings, drops hand-added pins on regeneration, and has previously emitted
+# `cellxgene_gateway==0.4.2` -- a real PyPI package, so a rebuilt environment
+# would silently run upstream's code instead of this fork.
+name: spatial
+channels:
+  - conda-forge
+dependencies:
+  - python=3.14
+  - pip
+  - pip:
+      - spatialdata==0.8.0
+      - spatialdata-io==0.7.1
+      # >=3.9 required: 3.5.10 pinned zarr<3, which spatialdata cannot use
+      - vitessce==3.9.3
+      # Pulled in by vitessce.data_utils, whose __init__ imports the multivec
+      # helpers; without it the Morton-sort import fails
+      - negspy==0.3.2
