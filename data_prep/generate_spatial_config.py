@@ -275,6 +275,45 @@ def detect_elements(zarr_path, image=None, segmentations=None):
     }
 
 
+# Function to unbind extra segmentations from cells' annotation table
+def drop_extra_segmentation_table_paths(config, extra_file_uids):
+    """
+    Strip tablePath from file defs of segmentations that no table annotates.
+
+    Loader prefers tablePath over element's own index when both exist, so extra
+    segmentation inherits cells' obs index, mismatched in both ids and length.
+    Dropping it makes loader read element's own parquet index instead.
+    SpatialDataWrapper emits tablePath whether or not table_path is passed, so
+    it can only be removed after config is built.
+
+    Matching is on fileUid rather than obsType because extra segmentations
+    share primary's obsType, so obsType cannot tell their file defs apart.
+
+    Parameters:
+    -----------
+    config: dict
+      Vitessce config, modified in place.
+    extra_file_uids: list of str
+      fileUid of each extra segmentation, identifying its file def.
+
+    Returns:
+    --------
+    n_stripped: int
+      Number of file defs whose tablePath was removed.
+    """
+    n_stripped = 0
+    for dataset in config.get('datasets', []):
+        for file_def in dataset.get('files', []):
+            file_uid = file_def.get('coordinationValues', {}).get('fileUid')
+            if file_uid not in extra_file_uids:
+                continue
+            options = file_def.get('options', {}).get('obsSegmentations', {})
+            if options.pop('tablePath', None) is not None:
+                n_stripped += 1
+
+    return n_stripped
+
+
 # Function to build and write Vitessce config for SpatialData store
 def generate_config(
     zarr_path,
@@ -319,10 +358,11 @@ def generate_config(
     region = paths['obs_segmentations_path'].split('/')[-1]
 
     vc = VitessceConfig(schema_version='1.0.17', name=name)
+    # Segmentations get own file defs below: each needs own fileUid, and one
+    # set here would apply to image and table views too, blanking image
     wrapper = SpatialDataWrapper(
         sdata_url=sdata_url,
         image_path=paths['image_path'],
-        obs_segmentations_path=paths['obs_segmentations_path'],
         table_path=table_path,
         coordinate_system=paths['coordinate_system'],
         # Table-derived views are inherited from AnnDataWrapper, so their paths
@@ -338,12 +378,27 @@ def generate_config(
         obs_embedding_names=[
             EMBEDDING_NAMES.get(e, e) for e in paths['obs_embeddings']
         ],
-        region=region,
         coordination_values={'obsType': obs_type},
     )
     # uid is fixed because layer scope names are derived from it, and viewer
     # skips its own auto-initialisation only when it finds those exact names
     dataset = vc.add_dataset(name=name, uid=DATASET_UID).add_object(wrapper)
+
+    # Cells keep table so spatial view can colour them by set or gene
+    primary_file_uid = region.replace('_boundaries', '')
+    dataset.add_object(
+        SpatialDataWrapper(
+            sdata_url=sdata_url,
+            obs_segmentations_path=paths['obs_segmentations_path'],
+            table_path=table_path,
+            coordinate_system=paths['coordinate_system'],
+            region=region,
+            coordination_values={
+                'obsType': obs_type,
+                'fileUid': primary_file_uid,
+            },
+        )
+    )
 
     # Transcripts get their own file def and obsType. Sharing cells' file def
     # made viewer label point layer 'Cell', since layer name comes from obsType
@@ -364,21 +419,24 @@ def generate_config(
             )
         )
 
-    # Extra segmentations carry no table, so they get their own file def and
-    # obsType rather than sharing cells' annotations
-    extra_obs_types = []
+    # Extra segmentations carry no table, so they get their own file def, but
+    # they must keep views' obsType to render at all
+    extra_file_uids = []
     for seg_path in paths['other_segmentation_paths']:
-        extra_obs_type = seg_path.split('/')[-1].replace('_boundaries', '')
-        extra_obs_types.append(extra_obs_type)
+        extra_file_uid = seg_path.split('/')[-1].replace('_boundaries', '')
+        extra_file_uids.append(extra_file_uid)
         dataset.add_object(
             SpatialDataWrapper(
                 sdata_url=sdata_url,
                 obs_segmentations_path=seg_path,
-                # Nuclei have no table of their own, but loader appears to need
-                # one to build obs index: without it layer renders nothing
-                table_path=table_path,
                 coordinate_system=paths['coordinate_system'],
-                coordination_values={'obsType': extra_obs_type},
+                # obsType must match views', or spatial view drops layer and
+                # element loads but never renders; fileUid then tells
+                # same-type file defs apart
+                coordination_values={
+                    'obsType': obs_type,
+                    'fileUid': extra_file_uid,
+                },
             )
         )
 
@@ -455,6 +513,9 @@ def generate_config(
     segmentation_layers = [
         {
             'obsType': obs_type,
+            # Both segmentation layers share obsType, so every layer needs its
+            # own fileUid; layer without one resolves to wrong file def
+            'fileUid': primary_file_uid,
             'spatialLayerVisible': True,
             'spatialLayerOpacity': 1,
             'segmentationChannel': CL([
@@ -475,31 +536,39 @@ def generate_config(
             ]),
         }
     ]
+    # Extras appended last so they draw on top of filled cells; controller
+    # lists layers reversed, so this also shows Nucleus above Cell
     segmentation_layers += [
         {
-            'obsType': extra_obs_type,
-            # Off by default: nuclei sit inside cells
-            'spatialLayerVisible': False,
+            'obsType': obs_type,
+            'fileUid': extra_file_uid,
+            # Controller's eye toggles channel, not layer, so disabled layer
+            # could never be switched on from UI; off by default lives in
+            # spatialChannelVisible below
+            'spatialLayerVisible': True,
             'spatialLayerOpacity': 1,
             'segmentationChannel': CL([
                 {
-                    'obsType': extra_obs_type,
+                    # Channel obsType only drives row label, capitalised by
+                    # viewer; layer and file def must keep views' obsType. Cost
+                    # is that spatial footer stops counting these segmentations
+                    'obsType': extra_file_uid,
                     'spatialTargetC': 0,
-                    'spatialChannelColor': [0, 128, 255],
+                    # Deep blue (#00008B): mid blue is lost against bright DAPI
+                    'spatialChannelColor': [0, 0, 139],
                     'spatialChannelOpacity': 1,
-                    'spatialChannelVisible': True,
-                    'spatialSegmentationFilled': False,
+                    # Off by default: nuclei sit inside cells
+                    'spatialChannelVisible': False,
+                    # Filled, not outlined: stroke width is in world units, so
+                    # 1-unit outline is ~0.01 screen px at default zoom
+                    'spatialSegmentationFilled': True,
                     'spatialSegmentationStrokeWidth': 1,
                     'obsColorEncoding': 'spatialChannelColor',
                 }
             ]),
         }
-        for extra_obs_type in extra_obs_types
+        for extra_file_uid in extra_file_uids
     ]
-
-    # Controller renders each layer list reversed, so cells must come last to be
-    # shown above nuclei
-    segmentation_layers.reverse()
 
     # Image layer is left to viewer's own initialisation, which derives contrast
     # windows from pixel statistics that this script cannot compute without
@@ -578,8 +647,11 @@ def generate_config(
     ):
         view.set_xywh(x, y, w, h)
 
+    config = vc.to_dict()
+    drop_extra_segmentation_table_paths(config, extra_file_uids)
+
     with open(out_path, 'w') as handle:
-        json.dump(vc.to_dict(), handle, indent=2)
+        json.dump(config, handle, indent=2)
 
     print(
         f'Wrote {out_path} (image={paths["image_path"]}, '
