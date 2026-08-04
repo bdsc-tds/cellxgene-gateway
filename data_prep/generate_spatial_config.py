@@ -387,6 +387,8 @@ def generate_config(
     scatterplot = vc.add_view('scatterplot', dataset=dataset, mapping='UMAP')
     obs_sets = vc.add_view('obsSets', dataset=dataset)
     heatmap = vc.add_view('heatmap', dataset=dataset)
+    # Genes on rows, cells on columns; prop undocumented but present in bundle
+    heatmap.set_props(transpose=True)
     feature_list = vc.add_view('featureList', dataset=dataset)
     distribution = vc.add_view(
         'obsSetFeatureValueDistribution', dataset=dataset
