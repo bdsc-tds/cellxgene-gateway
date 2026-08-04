@@ -195,6 +195,39 @@ def retarget_table_region(sdata, region):
     )
 
 
+# Function to index nucleus polygons by cell they belong to
+def reindex_nucleus_boundaries(sdata):
+    """
+    Replace nucleus boundaries' positional index with their cell id.
+
+    Xenium reader leaves nuclei on meaningless integer range with cell id in
+    ordinary column, so parquet records '__index_level_0__' as index column.
+    Vitessce reads that metadata for its obs index whenever file def carries no
+    tablePath, which is how extra segmentations are served, so ids there must
+    mean something. Cells are already indexed by cell id, so this mirrors them.
+
+    Index is deliberately left non-unique: cells carrying several nucleus
+    polygons repeat their id, and dropping those polygons would lose real data.
+
+    Parameters:
+    -----------
+    sdata: spatialdata.SpatialData
+      Object whose 'nucleus_boundaries' element is reindexed in place.
+
+    Returns:
+    --------
+    n_duplicated: int
+      Number of nuclei whose cell id is shared with another nucleus.
+    """
+    nuclei = sdata.shapes['nucleus_boundaries']
+
+    # Assigned in place: set_index returns new frame, losing transform in .attrs
+    nuclei.index = pd.Index(nuclei['cell_id'])
+    del nuclei['cell_id']
+
+    return int(nuclei.index.duplicated().sum())
+
+
 # Function to re-parse points element without losing its coordinate transform
 def parse_points_keeping_transform(points, transformations):
     """
@@ -448,6 +481,10 @@ if __name__ == '__main__':
     )
     print(f'read in {time.time() - start:.1f}s', flush=True)
     print(sdata, flush=True)
+
+    if 'nucleus_boundaries' in sdata.shapes:
+        n = reindex_nucleus_boundaries(sdata)
+        print(f'nuclei reindexed by cell id ({n} duplicate ids)', flush=True)
 
     # Enrich table before writing it: store is written once, per element
     table = sdata.tables['table']
