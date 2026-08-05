@@ -37,10 +37,10 @@
 
   <!-- Main content with error message -->
   <div class="container-fluid p-3">
+    {% if context == 'download' %}
+    <!-- Download-specific error: friendly empty-state card -->
     <div class="row justify-content-center">
       <div class="col-12 col-md-7 col-lg-5">
-        {% if context == 'download' %}
-        <!-- Download-specific error: friendly empty-state card -->
         <div class="error-card">
           <div class="error-icon">
             {% if http_status == 404 %}⬇{% else %}⚠{% endif %}
@@ -68,9 +68,16 @@
               class="btn-secondary">Homepage</a>
           </div>
         </div>
-        {% else %}
-        <!-- Generic cache error: technical table view -->
+      </div>
+    </div>
+    {% else %}
+    <!-- Generic cache error: technical table view, full width to match
+      cellxgene_error.html -->
+    <div class="row">
+      <div class="col-12">
         <h2>Error Details</h2>
+
+        <!-- Error table -->
         <div class="table-responsive">
           <table
             class="table table-hover table-striped table-sm error-table-col1">
@@ -82,20 +89,33 @@
               <th>Status</th>
               <td>{{ http_status }}</td>
             </tr>
+            <!-- Cache errors have no subprocess, so these stay blank rather
+              than rendering "None" -->
+            <tr>
+              <th>Stdout</th>
+              <td>{{ stdout | default('', true) }}</td>
+            </tr>
+            <tr>
+              <th>Stderr</th>
+              <td>{{ stderr | default('', true) }}</td>
+            </tr>
           </table>
         </div>
 
         <!-- Possible actions -->
         <div class="cta-buttons">
+          <!-- Spatial viewer runs client-side: no process to relaunch -->
+          {% if context != 'spatial' %}
           <a href="{{ relaunch_url }}" class="btn-secondary">Relaunch
             Cellxgene</a>
+          {% endif %}
           <a href="{{ url_for('filecrawl') }}"
             class="btn-secondary">Datasets</a>
           <a href="{{ url_for('homepage') }}" class="btn-secondary">Homepage</a>
         </div>
-        {% endif %}
       </div>
     </div>
+    {% endif %}
   </div>
 </body>
 
