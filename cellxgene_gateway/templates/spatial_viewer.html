@@ -19,6 +19,14 @@
       padding: 1rem;
       color: #444;
     }
+
+    /* Controller hardcodes group order (points, spots, segmentations, images),
+       each reversed; flip whole list to read Image/Cell/Nucleus/Transcript.
+       Rows' container has no class, so match hashed row-class suffix. */
+    div:has(> [class*="layerControllerGrid"]) {
+      display: flex;
+      flex-direction: column-reverse;
+    }
   </style>
 </head>
 
