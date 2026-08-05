@@ -28,6 +28,7 @@ from flask import (
     url_for,
 )
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import safe_join
 
 # Import other functions from package
 from cellxgene_gateway import env, flask_util
@@ -1456,11 +1457,55 @@ def spatial_viewer():
     named by `config` query parameter (URL served by /spatial-data route) from
     browser's location.
 
+    Config is checked here so broken link fails with 404 before browser fetches
+    21 MB bundle. Check is not exhaustive: config can exist yet name missing
+    zarr store, which only viewer sees, so page keeps own error state too.
+
     Returns:
     --------
     flask.Response
       Rendered viewer HTML page.
+
+    Raises:
+    -------
+    CacheException
+      If `config` is missing, is not served by /spatial-data, or names dataset
+      absent from spatial data directory.
     """
+    # Prefix matches dataset_metadata_loader, which writes these URLs
+    prefix = '/spatial-data/'
+    config_url = request.args.get('config', '')
+    if not config_url:
+        raise CacheException(
+            'No spatial dataset was requested. Open one from the dataset '
+            'catalogue.',
+            400,
+            context='spatial',
+        )
+    if not config_url.startswith(prefix):
+        raise CacheException(
+            'This viewer can only open spatial datasets hosted by this '
+            'gateway.',
+            400,
+            context='spatial',
+        )
+    subpath = config_url[len(prefix) :]
+
+    # Unset with only bucket configured is valid setup, no spatial data on disk
+    data_dir = env.cellxgene_data
+    # safe_join returns None on traversal, same guard send_from_directory uses
+    full_path = None if data_dir is None else safe_join(data_dir, subpath)
+    if full_path is None or not os.path.isfile(full_path):
+        # Report dataset name rather than config file serving it
+        dataset_name = subpath.removesuffix('.vitessce.json')
+        raise CacheException(
+            f"Spatial dataset '{dataset_name}' is not available on this "
+            'server. It may have been moved or renamed.',
+            404,
+            context='spatial',
+            filename=subpath,
+        )
+
     return render_template(
         'spatial_viewer.html', extra_scripts=get_extra_scripts()
     )
