@@ -33,6 +33,12 @@
   white-space: pre-wrap;
 }
 
+/* Empty cell has no line box, so its row renders shorter than filled ones.
+   Zero-width space gives it one, leaving multiline rows free to grow */
+.error-table-col1 td:empty::after {
+  content: '\200b';
+}
+
 /* Table header style class */
 .table thead th {
   border-bottom: 2px solid #dee2e6;
