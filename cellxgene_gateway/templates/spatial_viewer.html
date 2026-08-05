@@ -2,9 +2,24 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Spatial viewer</title>
+  <!-- Default header -->
+  {% include 'header.html' %}
+
+  <!-- Page title -->
+  <title>Spatial Viewer - SSF BioHub</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/buttons.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/common.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/loading.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/navbar.css') }}" />
+  <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/table.css') }}" />
+
   <style>
     html,
     body,
@@ -14,10 +29,15 @@
       width: 100%;
     }
 
-    #message {
-      font-family: sans-serif;
-      padding: 1rem;
-      color: #444;
+    /* Covers viewer rather than hiding it: Vitessce grid measures its container,
+       so #root must keep full size while bundle mounts. Background inherited
+       from body, so it tracks common.css rather than repeating its value */
+    #chrome {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      overflow: auto;
+      background: inherit;
     }
 
     /* Controller hardcodes group order (points, spots, segmentations, images),
@@ -31,9 +51,102 @@
 </head>
 
 <body>
-  <div id="root">
-    <div id="message">Loading spatial viewer…</div>
+  <!-- Gateway chrome, shown until viewer mounts: bundle renders no page
+    furniture of its own -->
+  <div id="chrome">
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+
+    <div class="container-fluid p-3">
+      <div class="row">
+        <div class="col-12">
+          <!-- Loading state -->
+          <div id="spatial-loading">
+            <h2>Loading Dataset</h2>
+
+            <!-- Status div with spinner -->
+            <div id="status">
+              <div class="loader"></div>
+              <p>The viewer will appear shortly</p>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div id="spatial-error" hidden>
+            <h2>Error Details</h2>
+
+            <!-- Error table, same rows as cache_error.html. Status stays blank:
+              failure happens after page was served, so it has no HTTP status -->
+            <div class="table-responsive">
+              <table
+                class="table table-hover table-striped table-sm error-table-col1">
+                <tr>
+                  <th>Message</th>
+                  <td id="spatial-error-message"></td>
+                </tr>
+                <tr>
+                  <th>Status</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Stdout</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Stderr</th>
+                  <td id="spatial-error-stderr"></td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Possible actions -->
+            <div class="cta-buttons">
+              <a href="{{ url_for('filecrawl') }}"
+                class="btn-secondary">Datasets</a>
+              <a href="{{ url_for('homepage') }}"
+                class="btn-secondary">Homepage</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <div id="root"></div>
+
+  <script>
+    // Bundle offers no callback and renders either viewer or bare #message div
+    // on failure, so watch #root to tell which arrived
+    (function () {
+      var root = document.getElementById('root');
+      // Bootstrap's line-height and font resets inflate Vitessce's own rows
+      // until list footers overlap, so chrome's CSS goes when chrome does.
+      // Collected before bundle runs, so only chrome's own links are taken
+      var chromeStyles = Array.prototype.slice.call(
+        document.querySelectorAll('head link[rel="stylesheet"]'));
+
+      new MutationObserver(function (records, observer) {
+        var message = root.querySelector('#message');
+        if (message) {
+          document.getElementById('spatial-loading').hidden = true;
+          // Bundle's own wording is diagnostic, so it goes to Stderr and
+          // Message says plainly what failed
+          document.getElementById('spatial-error-message').textContent =
+            'This spatial dataset could not be loaded in your browser.';
+          document.getElementById('spatial-error-stderr').textContent =
+            message.textContent;
+          document.getElementById('spatial-error').hidden = false;
+          observer.disconnect();
+        } else if (root.children.length) {
+          // Viewer mounted; hand whole page over to it
+          document.getElementById('chrome').remove();
+          chromeStyles.forEach(function (link) { link.remove(); });
+          observer.disconnect();
+        }
+      }).observe(root, { childList: true, subtree: true });
+    })();
+  </script>
+
   <!-- Self-hosted bundle built from spatial_viewer_src/ (no CDN at runtime).
     reads ?config= query parameter itself. -->
   <script type="module"
