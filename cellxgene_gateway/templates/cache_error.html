@@ -104,8 +104,9 @@
 
         <!-- Possible actions -->
         <div class="cta-buttons">
-          <!-- Spatial viewer runs client-side: no process to relaunch -->
-          {% if context != 'spatial' %}
+          <!-- Handler passes no relaunch_url, so link would point at page
+            itself; spatial has no process to relaunch either -->
+          {% if relaunch_url %}
           <a href="{{ relaunch_url }}" class="btn-secondary">Relaunch
             Cellxgene</a>
           {% endif %}
