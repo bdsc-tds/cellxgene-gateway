@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import urllib.parse
+from datetime import datetime, timezone
 from threading import Lock, Thread
 
 from flask import (
@@ -1506,8 +1507,12 @@ def spatial_viewer():
             filename=subpath,
         )
 
+    # Nothing is launched server-side, so start time is when page was handed
+    # over. tz-aware so offset matches single-cell loading page
     return render_template(
-        'spatial_viewer.html', extra_scripts=get_extra_scripts()
+        'spatial_viewer.html',
+        extra_scripts=get_extra_scripts(),
+        launchtime=datetime.now(timezone.utc).astimezone(),
     )
 
 

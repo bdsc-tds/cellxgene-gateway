@@ -64,6 +64,13 @@
           <div id="spatial-loading">
             <h2>Loading Dataset</h2>
 
+            <!-- Launch time -->
+            <p>Started:
+              <span>{{ launchtime.isoformat(" ", "seconds") }}</span></p>
+
+            <!-- Viewer log, filled by script below -->
+            <pre id="spatial-log"></pre>
+
             <!-- Status div with spinner -->
             <div id="status">
               <div class="loader"></div>
@@ -125,9 +132,17 @@
       var chromeStyles = Array.prototype.slice.call(
         document.querySelectorAll('head link[rel="stylesheet"]'));
 
+      var logEl = document.getElementById('spatial-log');
+      function log(text) {
+        logEl.textContent +=
+          new Date().toTimeString().slice(0, 8) + '  ' + text + '\n';
+      }
+      log('Loading viewer bundle');
+
       new MutationObserver(function (records, observer) {
         var message = root.querySelector('#message');
         if (message) {
+          log('Failed to load dataset');
           document.getElementById('spatial-loading').hidden = true;
           // Bundle's own wording is diagnostic, so it goes to Stderr and
           // Message says plainly what failed
@@ -139,6 +154,7 @@
           observer.disconnect();
         } else if (root.children.length) {
           // Viewer mounted; hand whole page over to it
+          log('Starting viewer');
           document.getElementById('chrome').remove();
           chromeStyles.forEach(function (link) { link.remove(); });
           observer.disconnect();
