@@ -481,18 +481,23 @@ def generate_config(
         obs_set_selection,
         obs_set_color,
         colormap_range,
+        aggregation_strategy,
     ) = vc.add_coordination(
         'obsColorEncoding',
         'featureSelection',
         'obsSetSelection',
         'obsSetColor',
         'featureValueColormapRange',
+        'featureAggregationStrategy',
     )
     color_encoding.set_value('cellSetSelection')
     feature_selection.set_value(None)
     obs_set_selection.set_value(None)
     obs_set_color.set_value(None)
     colormap_range.set_value([0.0, 1.0])
+    # Multi-gene selection requires combining continuous views; default 'first'
+    # otherwise silently ignores additional genes
+    aggregation_strategy.set_value('mean')
 
     for view in (
         spatial,
@@ -509,6 +514,7 @@ def generate_config(
             obs_set_selection,
             obs_set_color,
             colormap_range,
+            aggregation_strategy,
         )
 
     # Cells are annotated, so their channel reuses shared selection scopes.
