@@ -448,6 +448,9 @@ def generate_config(
     # Genes on rows, cells on columns; prop undocumented but present in bundle
     heatmap.set_props(transpose=True)
     feature_list = vc.add_view('featureList', dataset=dataset)
+    # Shift-click enables multi-gene selection with distinct transcript colours
+    # Defaults false for single-select behavior and no deselection
+    feature_list.set_props(enableMultiSelect=True)
     distribution = vc.add_view(
         'obsSetFeatureValueDistribution', dataset=dataset
     )
