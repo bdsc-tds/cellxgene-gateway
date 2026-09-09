@@ -47,6 +47,12 @@
       display: flex;
       flex-direction: column-reverse;
     }
+
+    /* Cell Sets tree's 17px gutter overflows card under content-box. border-box
+      keeps it within declared width, avoiding horizontal scroll. */
+    [class*="setsManagerTree"] {
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
