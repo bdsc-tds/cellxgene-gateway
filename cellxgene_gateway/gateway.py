@@ -1425,7 +1425,8 @@ def spatial_data(subpath):
     -----------
     subpath: str
       Path of file within spatial data directory (e.g.
-      xenium_D1903482.zarr/images/... or xenium_D1903482.vitessce.json).
+      xenium_D1903482.zarr/images/... or
+      vitessce_configs/xenium_D1903482.vitessce.json).
 
     Returns:
     --------
@@ -1498,7 +1499,7 @@ def spatial_viewer():
     full_path = None if data_dir is None else safe_join(data_dir, subpath)
     if full_path is None or not os.path.isfile(full_path):
         # Report dataset name rather than config file serving it
-        dataset_name = subpath.removesuffix('.vitessce.json')
+        dataset_name = os.path.basename(subpath).removesuffix('.vitessce.json')
         raise CacheException(
             f"Spatial dataset '{dataset_name}' is not available on this "
             'server. It may have been moved or renamed.',

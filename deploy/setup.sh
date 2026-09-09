@@ -88,7 +88,8 @@ fi
 # 4. Runtime directories (all git-ignored)
 # logs/ matters: systemd's StandardOutput=append: fails if it does not exist.
 echo "[4/5] Creating runtime directories..."
-mkdir -p "$REPO_DIR/data" "$REPO_DIR/analysis_qc" "$REPO_DIR/logs"
+mkdir -p "$REPO_DIR/data" "$REPO_DIR/data/vitessce_configs" \
+         "$REPO_DIR/analysis_qc" "$REPO_DIR/logs"
 
 # 5. Sanity checks
 echo "[5/5] Verifying install..."

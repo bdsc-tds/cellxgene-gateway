@@ -152,8 +152,10 @@ def load_dataset_metadata_tsv(tsv_path, data_dir=None):
                 row['is_spatial'] = fp.endswith('.zarr')
                 if row['is_spatial']:
                     stem = fp[: -len('.zarr')]
+                    # Place configs in data dir subfolder to keep them reachable
+                    # via /spatial-data/
                     row['spatial_config'] = (
-                        f'/spatial-data/{stem}.vitessce.json'
+                        f'/spatial-data/vitessce_configs/{stem}.vitessce.json'
                     )
 
                 # Compute file size in bytes

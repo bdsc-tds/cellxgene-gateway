@@ -12,7 +12,7 @@ Usage:
     python data_prep/generate_spatial_config.py \
         --zarr data/xenium_D1903482.zarr \
         --serve-base /spatial-data \
-        --out data/xenium_D1903482.vitessce.json
+        --out data/vitessce_configs/xenium_D1903482.vitessce.json
 """
 
 # Import utility modules
@@ -650,6 +650,7 @@ def generate_config(
     config = vc.to_dict()
     drop_extra_segmentation_table_paths(config, extra_file_uids)
 
+    os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     with open(out_path, 'w') as handle:
         json.dump(config, handle, indent=2)
 
@@ -687,7 +688,8 @@ def parse_args():
     parser.add_argument(
         '--out',
         default=None,
-        help='Output config path (default: <store>.vitessce.json).',
+        help='Output config path (default: '
+        '<store dir>/vitessce_configs/<store>.vitessce.json).',
     )
     parser.add_argument(
         '--image', default=None, help='Image element name override.'
@@ -709,7 +711,16 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     zarr_path = os.path.normpath(args.zarr)
-    out = args.out or (os.path.splitext(zarr_path)[0] + '.vitessce.json')
+    if args.out:
+        out = args.out
+    else:
+        # Keep configs in own subfolder, separated from data stores
+        stem = os.path.basename(os.path.splitext(zarr_path)[0])
+        out = os.path.join(
+            os.path.dirname(zarr_path),
+            'vitessce_configs',
+            stem + '.vitessce.json',
+        )
     generate_config(
         zarr_path,
         args.serve_base,
