@@ -646,8 +646,8 @@ def generate_config(
     # Scatterplot takes both embedding slots of reference, which shows t-SNE and
     # UMAP, because Xenium Ranger gives one embedding
     for view, (x, y, w, h) in (
-        (description, (0, 0, 3, 1)),
-        (controller, (0, 1, 3, 4)),
+        (controller, (0, 0, 3, 4)),
+        (description, (0, 4, 3, 1)),
         (status, (0, 5, 3, 1)),
         (spatial, (3, 0, 4, 4)),
         (scatterplot, (7, 0, 3, 4)),
