@@ -66,6 +66,12 @@
       transform: translateY(-18px);
     }
 
+    /* Legends stack in reverse of spatial layer order; flip to match panel */
+    [class*="multiLegend"] {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
     /* Fixed-colour legends lack colorbar; grow box so feature title fits
       without extending beyond it */
     [class*="legend"]:has(svg[height="20"]) {
