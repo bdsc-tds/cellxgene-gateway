@@ -162,6 +162,38 @@
       var chromeStyles = Array.prototype.slice.call(
         document.querySelectorAll('head link[rel="stylesheet"]'));
 
+      // Bundle fetches same config, so this comes from browser cache
+      var extraTypes = fetch(
+        new URLSearchParams(window.location.search).get('config') || ''
+      ).then(function(response) {
+        return response.json();
+      }).then(extraChannelTypes).catch(function() {
+        return [];
+      });
+
+      // Extra segmentations have different obsType from their layer, so viewer
+      // cannot find their data
+      function extraChannelTypes(config) {
+        var space = config.coordinationSpace || {};
+        var values = space.obsType || {};
+        var meta = space.metaCoordinationScopesBy || {};
+        var layerTypes = [];
+        var channelTypes = [];
+        function collect(level, out) {
+          var scopes = (level || {}).obsType || {};
+          Object.keys(scopes).forEach(function(scope) {
+            out.push(values[scopes[scope]]);
+          });
+        }
+        Object.keys(meta).forEach(function(key) {
+          collect(meta[key].segmentationLayer, layerTypes);
+          collect(meta[key].segmentationChannel, channelTypes);
+        });
+        return channelTypes.filter(function(type) {
+          return type && layerTypes.indexOf(type) === -1;
+        });
+      }
+
       var logEl = document.getElementById('spatial-log');
       function log(text) {
         logEl.textContent +=
@@ -189,8 +221,50 @@
           chromeStyles.forEach(function(link) { link.remove(); });
           observer.disconnect();
           patchSpatialLegends(root);
+          extraTypes.then(function(types) {
+            constrainExtraEncodings(root, types);
+          });
         }
       }).observe(root, { childList: true, subtree: true });
+
+      // Extra segmentations only draw their fixed colour: gene values reach
+      // neither polygons nor sets, so their menu keeps Static Color and drops
+      // other controls
+      function constrainExtraEncodings(root, extraTypes) {
+        if (!extraTypes.length) return;
+        var openedFor = null;
+        // Portalled menu is outside its row, so get its channel from opener
+        root.addEventListener('click', function(event) {
+          var button = event.target.closest(
+            'button[aria-label="Open segmentation channel options menu"]');
+          if (!button) return;
+          var name = button.closest('[class*="layerControllerGrid"]')
+            .querySelector('[class*="imageLayerName"]');
+          openedFor = name ? name.textContent.trim().toLowerCase() : null;
+        }, true);
+
+        new MutationObserver(function() {
+          if (extraTypes.indexOf(openedFor) === -1) return;
+          var options = document.querySelectorAll(
+            'select[aria-label="Color encoding selector"] '
+            + 'option:not([value="spatialChannelColor"])');
+          for (var i = 0; i < options.length; i++) {
+            // Disable as well as hide: hidden alone may leave it selectable
+            options[i].hidden = true;
+            options[i].disabled = true;
+          }
+          // Colormap and range only apply to feature values, so hide them with
+          // those encodings. Inline style because menu row's class overrides
+          // [hidden] attribute
+          var labels = document.querySelectorAll(
+            '[class*="imageLayerMenuLabel"]');
+          for (var j = 0; j < labels.length; j++) {
+            if (labels[j].textContent.trim().indexOf('Colormap') !== 0) continue;
+            var item = labels[j].closest('li') || labels[j].parentElement;
+            item.style.display = 'none';
+          }
+        }).observe(document.body, { childList: true, subtree: true });
+      }
 
       // Bundle uses "Points", leaves fixed-colour swatches grey, and redraws on
       // selection. Observer must outlive handover
