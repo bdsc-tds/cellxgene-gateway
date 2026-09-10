@@ -534,8 +534,10 @@ def generate_config(
                     'spatialChannelColor': [255, 255, 255],
                     'spatialChannelOpacity': 1,
                     'spatialChannelVisible': True,
-                    'spatialSegmentationFilled': True,
-                    'spatialSegmentationStrokeWidth': 1,
+                    # Use outlines so morphology image stays visible; 3.75 is
+                    # 75% of controller slider's 0.01–5.0 world-unit range
+                    'spatialSegmentationFilled': False,
+                    'spatialSegmentationStrokeWidth': 3.75,
                     'obsColorEncoding': color_encoding,
                     'featureSelection': feature_selection,
                     'obsSetSelection': obs_set_selection,
