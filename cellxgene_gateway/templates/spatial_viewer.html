@@ -72,10 +72,9 @@
       flex-direction: column-reverse;
     }
 
-    /* Fixed-colour legends lack colorbar; grow box so feature title fits
-      without extending beyond it */
-    [class*="legend"]:has(svg[height="20"]) {
-      min-height: 34px;
+    /* Hide redundant gene title when colour does not encode it */
+    [class*="legend"] svg[height="20"] text[y="18"] {
+      display: none;
     }
   </style>
 </head>
