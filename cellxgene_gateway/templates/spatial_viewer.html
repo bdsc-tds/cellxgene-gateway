@@ -188,13 +188,13 @@
           document.getElementById('chrome').remove();
           chromeStyles.forEach(function(link) { link.remove(); });
           observer.disconnect();
-          renameSpatialPointsLegend(root);
+          patchSpatialLegends(root);
         }
       }).observe(root, { childList: true, subtree: true });
 
-      // Bundle uses literal "Points" and redraws on selection; observer must
-      // outlive handover
-      function renameSpatialPointsLegend(root) {
+      // Bundle uses "Points", leaves fixed-colour swatches grey, and redraws on
+      // selection. Observer must outlive handover
+      function patchSpatialLegends(root) {
         function rename() {
           var titles = root.querySelectorAll('[class*="legend"] text');
           for (var i = 0; i < titles.length; i++) {
@@ -203,8 +203,44 @@
             }
           }
         }
-        rename();
-        new MutationObserver(rename).observe(
+
+        // Bundle omits channel colour, so fixed-colour swatches default to grey
+        // Span legend width minus padding (96), then shrink to squares when
+        // recoloured
+        function recolourSwatches() {
+          var bars = root.querySelectorAll('[class*="legend"] rect[width="96"]');
+          for (var i = 0; i < bars.length; i++) {
+            var title = bars[i].ownerSVGElement.querySelector('text');
+            var colour = layerColour(title && title.textContent);
+            if (!colour) continue;
+            bars[i].setAttribute('width', '8');
+            bars[i].setAttribute('fill', colour);
+          }
+        }
+
+        // Layer row picker carries channel colour inline, tracking controller
+        // changes. Its button shares class prefix, so find coloured swatch
+        function layerColour(label) {
+          var names = root.querySelectorAll('[class*="imageLayerName"]');
+          for (var i = 0; i < names.length; i++) {
+            if (names[i].textContent.trim() !== label) continue;
+            var row = names[i].closest('[class*="layerControllerGrid"]');
+            var icons = row ? row.querySelectorAll('[class*="colorIcon"]') : [];
+            for (var j = 0; j < icons.length; j++) {
+              if (icons[j].style.backgroundColor) {
+                return icons[j].style.backgroundColor;
+              }
+            }
+          }
+          return null;
+        }
+
+        function patch() {
+          rename();
+          recolourSwatches();
+        }
+        patch();
+        new MutationObserver(patch).observe(
           root, { childList: true, subtree: true });
       }
     })();
