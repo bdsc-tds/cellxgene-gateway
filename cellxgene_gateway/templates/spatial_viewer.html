@@ -59,6 +59,18 @@
     [class*="legend"] svg {
       overflow: visible;
     }
+
+    /* When gene is selected, move spatial legend title to free top-right area
+      to avoid title overlapping colorbar */
+    [class*="legend"] svg[height="36"] text[y="18"] {
+      transform: translateY(-18px);
+    }
+
+    /* Fixed-colour legends lack colorbar; grow box so feature title fits
+      without extending beyond it */
+    [class*="legend"]:has(svg[height="20"]) {
+      min-height: 34px;
+    }
   </style>
 </head>
 
