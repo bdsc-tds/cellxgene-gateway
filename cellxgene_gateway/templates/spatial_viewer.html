@@ -189,8 +189,25 @@
           document.getElementById('chrome').remove();
           chromeStyles.forEach(function(link) { link.remove(); });
           observer.disconnect();
+          renameSpatialPointsLegend(root);
         }
       }).observe(root, { childList: true, subtree: true });
+
+      // Bundle uses literal "Points" and redraws on selection; observer must
+      // outlive handover
+      function renameSpatialPointsLegend(root) {
+        function rename() {
+          var titles = root.querySelectorAll('[class*="legend"] text');
+          for (var i = 0; i < titles.length; i++) {
+            if (titles[i].textContent === 'Points') {
+              titles[i].textContent = 'Transcript';
+            }
+          }
+        }
+        rename();
+        new MutationObserver(rename).observe(
+          root, { childList: true, subtree: true });
+      }
     })();
   </script>
 
