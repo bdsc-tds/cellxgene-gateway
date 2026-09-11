@@ -32,6 +32,10 @@ dataset_metadata_tsv = os.environ.get('DATASET_METADATA_TSV', 'datasets.tsv')
 # Resolved absolutely: Flask's `send_from_directory` treats a relative directory
 # as relative to package dir, not working directory
 qc_data = os.path.abspath(os.environ.get('QC_DATA', 'analysis_qc'))
+# Kept outside QC tree, which is pipeline-synced and may be read-only
+qc_thumb_cache = os.path.abspath(
+    os.environ.get('QC_THUMB_CACHE', f'{qc_data}_thumbs')
+)
 
 # Gateway variables
 gateway_port = int(os.environ.get('GATEWAY_PORT', '5005'))
@@ -84,6 +88,7 @@ optional_env_vars = {
     'CELLXGENE_BUCKET': cellxgene_bucket,
     'DATASET_METADATA_TSV': dataset_metadata_tsv,
     'QC_DATA': qc_data,
+    'QC_THUMB_CACHE': qc_thumb_cache,
     'PROXY_FIX_FOR': proxy_fix_for,
     'PROXY_FIX_PROTO': proxy_fix_proto,
     'PROXY_FIX_HOST': proxy_fix_host,

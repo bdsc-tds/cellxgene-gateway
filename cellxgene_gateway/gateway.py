@@ -42,6 +42,7 @@ from cellxgene_gateway.dataset_metadata_loader import load_dataset_metadata_tsv
 from cellxgene_gateway.extra_scripts import get_extra_scripts
 from cellxgene_gateway.filecrawl import render_item_source
 from cellxgene_gateway.prune_process_cache import PruneProcessCache
+from cellxgene_gateway.qc_thumbnail import get_thumbnail, is_thumbnailable
 from cellxgene_gateway.util import CustomRequestHandler, current_time_stamp
 
 app = Flask(__name__)
@@ -1320,10 +1321,43 @@ def qc_report(dataset_id):
     )
 
 
+def _validated_qc_dir(dataset_id, image_path):
+    """
+    Function to resolve dataset QC folder, rejecting path traversal attempts.
+
+    Parameters:
+    -----------
+    dataset_id: str
+      Dataset identifier.
+    image_path: str
+      Relative path to image within dataset QC folder.
+
+    Returns:
+    --------
+    qc_dir: str
+      Absolute path of dataset QC folder.
+
+    Raises:
+    -------
+    CacheException
+      If either segment escapes QC base directory.
+    """
+    qc_base = env.qc_data
+    qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
+
+    # Security: reject traversal in either segment
+    if not qc_dir.startswith(os.path.normpath(qc_base)):
+        raise CacheException('Invalid dataset id.', 400)
+    if '..' in image_path:
+        raise CacheException('Invalid image path.', 400)
+
+    return qc_dir
+
+
 @app.route('/qc-image/<dataset_id>/<path:image_path>')
 def qc_image(dataset_id, image_path):
     """
-    Serve a QC image file for a dataset.
+    Serve QC image file for dataset.
 
     Parameters:
     -----------
@@ -1337,18 +1371,41 @@ def qc_image(dataset_id, image_path):
     flask.Response
       Image file response.
     """
-    qc_base = env.qc_data
-    qc_dir = os.path.normpath(os.path.join(qc_base, dataset_id))
-
-    # Security: reject traversal in either segment
-    if not qc_dir.startswith(os.path.normpath(qc_base)):
-        raise CacheException('Invalid dataset id.', 400)
-    if '..' in image_path:
-        raise CacheException('Invalid image path.', 400)
+    qc_dir = _validated_qc_dir(dataset_id, image_path)
 
     img_dir = os.path.dirname(image_path)
     img_file = os.path.basename(image_path)
     return send_from_directory(os.path.join(qc_dir, img_dir), img_file)
+
+
+@app.route('/qc-thumb/<dataset_id>/<path:image_path>')
+def qc_thumbnail(dataset_id, image_path):
+    """
+    Serve downscaled copy of QC figure for report grid.
+
+    Parameters:
+    -----------
+    dataset_id: str
+      Dataset identifier.
+    image_path: str
+      Relative path to image within dataset QC folder.
+
+    Returns:
+    --------
+    flask.Response
+      Thumbnail file response, or original file for formats that cannot be
+      downscaled.
+    """
+    _validated_qc_dir(dataset_id, image_path)
+
+    if not is_thumbnailable(image_path):
+        return qc_image(dataset_id, image_path)
+
+    thumb_path = get_thumbnail(dataset_id, image_path)
+    # Figures only change when pipeline reruns, so brief caching is safe
+    return send_from_directory(
+        os.path.dirname(thumb_path), os.path.basename(thumb_path), max_age=3600
+    )
 
 
 @app.route('/download/<filename>')
