@@ -573,6 +573,8 @@ def generate_config(
                     'obsHighlight': obs_highlight,
                     'tooltipsVisible': True,
                     'tooltipCrosshairsVisible': True,
+                    # Per channel, so Legend Visible acts on this layer alone
+                    'legendVisible': True,
                 }
             ]),
         }
@@ -605,6 +607,8 @@ def generate_config(
                     'spatialSegmentationFilled': True,
                     'spatialSegmentationStrokeWidth': 1,
                     'obsColorEncoding': 'spatialChannelColor',
+                    # Own scope, so this layer's legend toggles alone
+                    'legendVisible': True,
                 }
             ]),
         }
