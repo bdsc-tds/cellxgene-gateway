@@ -293,7 +293,9 @@ per-sample section) */
   overflow: auto;
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* 'safe': centring overflowing image puts its left half beyond
+  container's start edge, which scrollable overflow cannot reach */
+  justify-content: safe center;
   padding: 3rem 4rem;
 }
 
