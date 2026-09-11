@@ -21,12 +21,13 @@ import json
 import math
 import os
 
-from vitessce import CoordinationLevel as CL
 from vitessce import (
+    AnnDataWrapper,
     SpatialDataWrapper,
     VitessceConfig,
     get_initial_coordination_scope_prefix,
 )
+from vitessce import CoordinationLevel as CL
 
 # Bitmask label images and polygon shapes are both valid segmentations, but
 # polygons avoid rasterising full-resolution mask during conversion
@@ -38,6 +39,9 @@ DATASET_UID = 'A'
 
 # Layer name in viewer comes from obsType, so transcripts need one of their own
 POINT_OBS_TYPE = 'transcript'
+
+# Centroids pre-scaled to rendered coordinates, written by convert_xenium.py
+CENTROIDS_KEY = 'spatial_global'
 
 # Display names for obsm keys conventionally used for embeddings
 EMBEDDING_NAMES = {'X_umap': 'UMAP', 'X_pca': 'PCA', 'X_tsne': 't-SNE'}
@@ -266,12 +270,18 @@ def detect_elements(zarr_path, image=None, segmentations=None):
             for name in list_group_members(os.path.join(table_dir, 'obs'))
             if name not in NON_SET_OBS_COLS and not name.startswith('_')
         ],
-        # 'spatial' holds centroids, not an embedding; spatial view covers it
+        # Centroid arrays hold positions, not embeddings
         'obs_embeddings': [
             name
             for name in list_group_members(os.path.join(table_dir, 'obsm'))
-            if name != 'spatial'
+            if name not in ('spatial', CENTROIDS_KEY)
         ],
+        # Absent from stores written before centroids step was added
+        'centroids_path': (
+            f'obsm/{CENTROIDS_KEY}'
+            if os.path.isdir(os.path.join(table_dir, 'obsm', CENTROIDS_KEY))
+            else None
+        ),
     }
 
 
@@ -416,6 +426,17 @@ def generate_config(
                 obs_points_feature_index_column='feature_name_codes',
                 obs_points_morton_code_column='morton_code_2d',
                 coordination_values={'obsType': POINT_OBS_TYPE},
+            )
+        )
+
+    # No obsLocations SpatialData file type exists, so table is wrapped again
+    # as plain AnnData; its loader applies no transform, hence pre-scaled key
+    if paths['centroids_path']:
+        dataset.add_object(
+            AnnDataWrapper(
+                adata_url=f'{sdata_url}/{table_path}',
+                obs_locations_path=paths['centroids_path'],
+                coordination_values={'obsType': obs_type},
             )
         )
 
