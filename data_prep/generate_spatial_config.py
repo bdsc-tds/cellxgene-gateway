@@ -503,6 +503,7 @@ def generate_config(
         obs_set_color,
         colormap_range,
         aggregation_strategy,
+        obs_highlight,
     ) = vc.add_coordination(
         'obsColorEncoding',
         'featureSelection',
@@ -510,11 +511,13 @@ def generate_config(
         'obsSetColor',
         'featureValueColormapRange',
         'featureAggregationStrategy',
+        'obsHighlight',
     )
     color_encoding.set_value('cellSetSelection')
     feature_selection.set_value(None)
     obs_set_selection.set_value(None)
     obs_set_color.set_value(None)
+    obs_highlight.set_value(None)
     colormap_range.set_value([0.0, 1.0])
     # Multi-gene selection requires combining continuous views; default 'first'
     # otherwise silently ignores additional genes
@@ -536,6 +539,7 @@ def generate_config(
             obs_set_color,
             colormap_range,
             aggregation_strategy,
+            obs_highlight,
         )
 
     # Cells are annotated, so their channel reuses shared selection scopes.
@@ -564,6 +568,11 @@ def generate_config(
                     'obsSetSelection': obs_set_selection,
                     'obsSetColor': obs_set_color,
                     'featureValueColormapRange': colormap_range,
+                    # Read per channel, not per view; draws tooltip and
+                    # crosshair at centroid, never recolours polygon
+                    'obsHighlight': obs_highlight,
+                    'tooltipsVisible': True,
+                    'tooltipCrosshairsVisible': True,
                 }
             ]),
         }
