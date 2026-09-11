@@ -25,6 +25,7 @@ import resource
 import time
 
 import dask
+import numpy as np
 import pandas as pd
 import spatialdata_io
 from spatialdata import SpatialData
@@ -123,6 +124,45 @@ def add_umap(table, csv_path):
     table.obsm['X_umap'] = aligned.fillna(0.0).to_numpy()
 
     return n_missing
+
+
+# Function to add cell centroids in viewer's rendered coordinates
+def add_global_centroids(sdata, region, key='spatial_global'):
+    """
+    Copy table's cell centroids into obsm, scaled to region's coordinate system.
+
+    Vitessce does lasso selection and cross-view hover by point-in-polygon on
+    obsLocations. Its AnnData loader applies no coordinate transform, while
+    shapes loader bakes element's transform into polygon coordinates, so
+    centroids must be stored already transformed. Xenium writes them in
+    microns, so region's own scale is read from store rather than hardcoded.
+
+    Parameters:
+    -----------
+    sdata: spatialdata.SpatialData
+      Object holding table and shapes element table annotates.
+    region: str
+      Name of that shapes element (e.g. 'cell_boundaries').
+    key: str
+      obsm key to write transformed centroids under.
+
+    Returns:
+    --------
+    scale: list of float
+      x and y scale factors applied, for logging.
+    """
+    table = sdata.tables['table']
+    affine = get_transformation(sdata.shapes[region]).to_affine_matrix(
+        input_axes=('x', 'y'), output_axes=('x', 'y')
+    )
+    centroids = np.asarray(table.obsm['spatial'], dtype='float64')
+    homogeneous = np.column_stack([
+        centroids,
+        np.ones(len(centroids), dtype='float64'),
+    ])
+    table.obsm[key] = (homogeneous @ affine.T)[:, :2]
+
+    return [float(affine[0, 0]), float(affine[1, 1])]
 
 
 # Function to make string columns readable by the viewer
@@ -506,6 +546,12 @@ if __name__ == '__main__':
     if os.path.isfile(umap_csv):
         n = add_umap(table, umap_csv)
         print(f'UMAP attached ({n} cells without coordinates)', flush=True)
+
+    # Lasso and cross-view hover test centroids, not polygons; label
+    # segmentations have no shapes element to read scale from
+    if not args.cells_labels:
+        scale = add_global_centroids(sdata, 'cell_boundaries')
+        print(f'global centroids written (scale {scale})', flush=True)
 
     # Must run last, after every column the steps above may have added
     converted = normalise_string_dtypes(table)
