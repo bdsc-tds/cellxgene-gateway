@@ -327,7 +327,9 @@ $(document).ready(function () {
       `urllib.request.urlretrieve("${url}", "${datasetFile}")\n` +
       `adata = anndata.read_h5ad("${datasetFile}")`
     )
+    // download.file aborts whole transfer after 60 s by default
     $('#code-r').text(
+      `options(timeout = max(3600, getOption("timeout")))\n` +
       `download.file("${url}", destfile = "${datasetFile}", mode = "wb")\n\n` +
       `library(zellkonverter)\nsce <- readH5AD("${datasetFile}")`
     )
