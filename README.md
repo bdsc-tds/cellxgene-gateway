@@ -21,18 +21,7 @@ source .cellxgene-gateway/bin/activate  # Type `deactivate` to deactivate venv
 
 ## Install cellxgene-gateway
 
-### Option 1: Pip Install from Github
-
-```bash
-pip install git+https://github.com/Novartis/cellxgene-gateway
-```
-Note: you may need to downgrade h5py with `pip install h5py==2.9.0` due to an [issue](https://github.com/theislab/scanpy/issues/832) in a dependency.
-
-### Option 2: Install from PyPI
-
-```bash
-pip install cellxgene-gateway
-```
+Clone this repository and run `./deploy/setup.sh`, as described in [Deploying from a fresh clone](#deploying-from-a-fresh-clone).
 
 ## Running cellxgene gateway
 
@@ -140,7 +129,7 @@ If you want to develop the code, you will need to clone the repo. Make sure you 
 1. Clone the repo
 
 ```bash
-git clone https://github.com/Novartis/cellxgene-gateway.git
+git clone https://github.com/bdsc-tds/cellxgene-gateway.git
 cd cellxgene-gateway
 ```
 
@@ -206,18 +195,6 @@ If you need help for any reason, please make a github ticket. One of the contrib
     - Click Publish release at the bottom of the page
     - Now under Releases you can view all of your releases.
     - Copy the download link (tar.gz) and save it somewhere
-
-## How to publish to PyPI
-
-Make sure your `.pypirc` is set up for testpypi and pypi index servers.
- 
-
-```bash
-rm -rf dist
-python setup.py sdist bdist_wheel
-python -m twine upload --repository testpypi dist/*
-python -m twine upload dist/*
-```
 
 # Contributors
 
