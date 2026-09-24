@@ -22,3 +22,4 @@ dependencies:
       # Pulled in by vitessce.data_utils, whose __init__ imports the multivec
       # helpers; without it the Morton-sort import fails
       - negspy==0.3.2
+      - zarr==3.2.1
