@@ -607,6 +607,9 @@ def generate_config(
                     'spatialSegmentationFilled': True,
                     'spatialSegmentationStrokeWidth': 1,
                     'obsColorEncoding': 'spatialChannelColor',
+                    # Own scope: hover clears undeclared highlights, which then
+                    # resolve to cells' shared scope and wipe their tooltip
+                    'obsHighlight': None,
                     # Own scope, so this layer's legend toggles alone
                     'legendVisible': True,
                 }
@@ -645,6 +648,8 @@ def generate_config(
                         # detections. Checkbox in viewer sets this same string
                         'featureFilterMode': 'featureSelection',
                         'featureSelection': feature_selection,
+                        # Own scope, as for extra segmentations above
+                        'obsHighlight': None,
                     }
                 ])
             },
