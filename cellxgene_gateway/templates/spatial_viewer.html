@@ -66,6 +66,12 @@
       transform: translateY(-18px);
     }
 
+    /* Titles set ellipsis but never shrink, pushing buttons out of panel */
+    [class*="titleLeft"] {
+      overflow: hidden;
+      min-width: 0;
+    }
+
     /* Dot plot needs fixed width per cell set, so 39 sets overflow panel;
       scroll instead of clipping */
     [class*="vegaContainer"] {
