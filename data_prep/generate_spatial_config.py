@@ -436,7 +436,7 @@ def generate_config(
     Build Vitessce view-config for SpatialData store and write it to disk.
 
     Layout mirrors reference Vitessce demos: spatial view with its layer
-    controller on left, and scatterplot, cell sets, expression heatmap and gene
+    controller on left, and scatterplot, cell sets, expression dot plot and gene
     list alongside: https://vitessce.io/#?dataset=codeluppi-2018
 
     Parameters:
@@ -585,9 +585,9 @@ def generate_config(
     controller = vc.add_view('layerControllerBeta', dataset=dataset)
     scatterplot = vc.add_view('scatterplot', dataset=dataset, mapping='UMAP')
     obs_sets = vc.add_view('obsSets', dataset=dataset)
-    heatmap = vc.add_view('heatmap', dataset=dataset)
-    # Genes on rows, cells on columns; prop undocumented but present in bundle
-    heatmap.set_props(transpose=True)
+    # Mean expression and fraction expressing per cell set, for selected genes
+    # only; heatmap always drew all genes and loaded whole matrix
+    dot_plot = vc.add_view('dotPlot', dataset=dataset)
     feature_list = vc.add_view('featureList', dataset=dataset)
     # Shift-click enables multi-gene selection with distinct transcript colours
     # Defaults false for single-select behavior and no deselection
@@ -613,7 +613,7 @@ def generate_config(
             controller,
             scatterplot,
             obs_sets,
-            heatmap,
+            dot_plot,
             feature_list,
             distribution,
         ],
@@ -655,7 +655,6 @@ def generate_config(
         controller,
         scatterplot,
         obs_sets,
-        heatmap,
         feature_list,
         distribution,
     ):
@@ -668,6 +667,11 @@ def generate_config(
             aggregation_strategy,
             obs_highlight,
         )
+    # Clicking dot writes gene's index into aggregation strategy, which would
+    # switch every other view to that one gene, so that scope stays unshared
+    dot_plot.use_coordination(
+        feature_selection, obs_set_selection, obs_set_color
+    )
 
     # Cells are annotated, so their channel reuses shared selection scopes.
     # Extra segmentations have no table and only ever carry a fixed colour
@@ -872,7 +876,7 @@ def generate_config(
         (scatterplot, (7, 0, 3, 4)),
         (feature_list, (10, 0, 2, 2)),
         (obs_sets, (10, 2, 2, 2)),
-        (heatmap, (3, 4, 5, 2)),
+        (dot_plot, (3, 4, 5, 2)),
         (distribution, (8, 4, 4, 2)),
     ):
         view.set_xywh(x, y, w, h)

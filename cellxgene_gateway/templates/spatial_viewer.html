@@ -66,6 +66,12 @@
       transform: translateY(-18px);
     }
 
+    /* Dot plot needs fixed width per cell set, so 39 sets overflow panel;
+      scroll instead of clipping */
+    [class*="vegaContainer"] {
+      overflow: auto !important;
+    }
+
     /* Legends stack in reverse of spatial layer order; flip to match panel */
     [class*="multiLegend"] {
       display: flex;
