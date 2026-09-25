@@ -312,9 +312,33 @@
           return null;
         }
 
+        // Lifted title shares row with obsType label, which long metric names
+        // reach: shrink to fit, then truncate
+        function fitLiftedTitles() {
+          var titles = root.querySelectorAll(
+            '[class*="legend"] svg[height="36"] text[y="18"]');
+          for (var i = 0; i < titles.length; i++) {
+            var title = titles[i];
+            var label = title.parentNode.querySelector('text[y="0"]');
+            if (!label) continue;
+            var box = label.getBBox();
+            var room = Number(title.getAttribute('x')) - box.x - box.width - 6;
+            var length = title.getComputedTextLength();
+            if (room <= 0 || length <= room) continue;
+            var size = Math.max(7, 9 * room / length);
+            title.style.fontSize = size + 'px';
+            var text = title.textContent;
+            while (text.length > 1 && title.getComputedTextLength() > room) {
+              text = text.slice(0, -1);
+              title.textContent = text + '\u2026';
+            }
+          }
+        }
+
         function patch() {
           rename();
           recolourSwatches();
+          fitLiftedTitles();
         }
         patch();
         new MutationObserver(patch).observe(
