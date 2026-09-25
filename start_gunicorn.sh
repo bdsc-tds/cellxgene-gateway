@@ -70,6 +70,9 @@ LOG_LEVEL=${GUNICORN_LOG_LEVEL:-info}
 # Production optimisation: enable backed mode to reduce memory usage
 export GATEWAY_ENABLE_BACKED_MODE=${GATEWAY_ENABLE_BACKED_MODE:-true}
 
+# Spatial viewer: false links configs without Metric layer (generator writes both)
+export SPATIAL_METRICS=${SPATIAL_METRICS:-true}
+
 # Check if gunicorn is installed
 if ! command -v gunicorn &> /dev/null; then
     echo "Error: gunicorn not found. Install with: pip install gunicorn"
@@ -91,6 +94,7 @@ echo "  Keepalive: ${KEEPALIVE}s"
 echo "  Log level: $LOG_LEVEL"
 echo "  Gateway log level: ${GATEWAY_LOG_LEVEL}"
 echo "  Backed mode: ${GATEWAY_ENABLE_BACKED_MODE}"
+echo "  Spatial metrics: ${SPATIAL_METRICS}"
 echo "  Proxy fix (for/proto/host/prefix): ${PROXY_FIX_FOR}/${PROXY_FIX_PROTO}/${PROXY_FIX_HOST}/${PROXY_FIX_PREFIX}"
 echo ""
 

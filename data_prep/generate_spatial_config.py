@@ -59,6 +59,7 @@ METRIC_TYPE = 'metric'
 
 # Config file suffixes; page derives sidecar path from config path the same way
 CONFIG_SUFFIX = '.vitessce.json'
+NO_METRICS_SUFFIX = '.nometrics.vitessce.json'
 METRIC_VALUES_SUFFIX = '.metrics.json'
 
 # Viewer decodes these as BigInt, which its column loader cannot store, so one
@@ -429,6 +430,7 @@ def generate_config(
     image=None,
     segmentations=None,
     obs_type='cell',
+    metrics=True,
 ):
     """
     Build Vitessce view-config for SpatialData store and write it to disk.
@@ -451,6 +453,8 @@ def generate_config(
       Segmentation element override passed to detection.
     obs_type: str
       Label used for observations throughout views.
+    metrics: bool
+      Whether to add Metric layer and its list, which replaces Status panel.
 
     Returns:
     --------
@@ -460,6 +464,8 @@ def generate_config(
     name = os.path.basename(os.path.normpath(zarr_path))
     sdata_url = f'{serve_base.rstrip("/")}/{name}'
     paths = detect_elements(zarr_path, image=image, segmentations=segmentations)
+    if not metrics:
+        paths['metric_cols'] = []
 
     table_path = paths['table_path']
     region = paths['obs_segmentations_path'].split('/')[-1]
@@ -920,7 +926,8 @@ def parse_args():
         '--out',
         default=None,
         help='Output config path (default: '
-        '<store dir>/vitessce_configs/<store>.vitessce.json).',
+        '<store dir>/vitessce_configs/<store>.vitessce.json). Config without '
+        'metrics is written alongside, as <name>.nometrics.vitessce.json.',
     )
     parser.add_argument(
         '--image', default=None, help='Image element name override.'
@@ -948,15 +955,19 @@ if __name__ == '__main__':
         # Keep configs in own subfolder, separated from data stores
         stem = os.path.basename(os.path.splitext(zarr_path)[0])
         out = os.path.join(
-            os.path.dirname(zarr_path),
-            'vitessce_configs',
-            stem + '.vitessce.json',
+            os.path.dirname(zarr_path), 'vitessce_configs', stem + CONFIG_SUFFIX
         )
-    generate_config(
-        zarr_path,
-        args.serve_base,
-        out,
-        image=args.image,
-        segmentations=args.segmentations,
-        obs_type=args.obs_type,
-    )
+    # Both written, so gateway can switch Metric layer at start-up
+    for config_out, metrics in (
+        (out, True),
+        (out.removesuffix(CONFIG_SUFFIX) + NO_METRICS_SUFFIX, False),
+    ):
+        generate_config(
+            zarr_path,
+            args.serve_base,
+            config_out,
+            image=args.image,
+            segmentations=args.segmentations,
+            obs_type=args.obs_type,
+            metrics=metrics,
+        )

@@ -67,6 +67,7 @@ Optional environment variables:
 * `GATEWAY_LOG_LEVEL` - default is `INFO`. set to `DEBUG` to increase logging and to `WARNING` to decrease logging.
 * `DATASET_METADATA_TSV` - tab-separated file describing datasets, used to render the filterable dataset browser at `/filecrawl`. Defaults to `datasets.tsv`. When the file is absent, the browser falls back to listing files from the configured item sources
 * `QC_DATA` - a directory containing per-dataset QC report folders, served at `/qc/<dataset_id>`. Defaults to `analysis_qc`. A relative path is resolved against the working directory
+* `SPATIAL_METRICS` - Set to `false` or to `0` to open spatial (`.zarr`) datasets without the Metric layer, which colours cells by per-cell measurements such as cell area. Defaults to `true`. `data_prep/generate_spatial_config.py` writes both configs for each store (`<name>.vitessce.json` and `<name>.nometrics.vitessce.json`), and this variable picks which one the dataset browser links to
 * `S3_ENABLE_LISTINGS_CACHE` - Set to `true` or to `1` to cache listings of S3 folders for performance. If the cache becomes stale, set `filecrawl?refresh=true` query parameter to refresh the cache.
 
 If any of the following optional variables are set, [ProxyFix](https://werkzeug.palletsprojects.com/en/1.0.x/middleware/proxy_fix/) will be used.

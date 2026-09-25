@@ -58,6 +58,11 @@ enable_annotations = os.environ.get(
 enable_backed_mode = os.environ.get(
     'GATEWAY_ENABLE_BACKED_MODE', ''
 ).lower() in ['true', '1']
+# On unless disabled: picks which of two generated configs spatial rows link to
+spatial_metrics = os.environ.get('SPATIAL_METRICS', 'true').lower() in [
+    'true',
+    '1',
+]
 
 
 # Set similar logging level for gateway and werkzeug

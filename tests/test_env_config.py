@@ -213,6 +213,49 @@ class TestCellxgeneDataResolution(EnvReloadCase):
         self.assertEqual('', self._effective_loader_data_dir())
 
 
+class TestSpatialMetricsFlag(EnvReloadCase):
+    """
+    Check SPATIAL_METRICS picks which generated config spatial rows link to.
+    """
+
+    def _spatial_config(self):
+        """
+        Load one-row catalogue holding spatial dataset and return its config.
+
+        Returns:
+        --------
+        spatial_config: str
+          Config URL metadata loader attached to row.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            tsv_path = os.path.join(tmp, 'datasets.tsv')
+            with open(tsv_path, 'w', newline='') as tsv:
+                tsv.write('dataset_id\tfile_path\nx\tsample.zarr\n')
+            datasets = dml.load_dataset_metadata_tsv(tsv_path, data_dir=tmp)[0]
+
+        return datasets[0]['spatial_config']
+
+    def test_GIVEN_unset_THEN_config_with_metrics_linked(self):
+        """
+        Test that Metric layer is on unless disabled.
+        """
+        self.reload_env(unset=['SPATIAL_METRICS'])
+        self.assertEqual(
+            '/spatial-data/vitessce_configs/sample.vitessce.json',
+            self._spatial_config(),
+        )
+
+    def test_GIVEN_false_THEN_config_without_metrics_linked(self):
+        """
+        Test that disabling metrics links config generator writes without them.
+        """
+        self.reload_env(SPATIAL_METRICS='false')
+        self.assertEqual(
+            '/spatial-data/vitessce_configs/sample.nometrics.vitessce.json',
+            self._spatial_config(),
+        )
+
+
 class TestDataPathRoutes(EnvReloadCase):
     """
     Guard routes that serve files off disk. These previously 404'd because
