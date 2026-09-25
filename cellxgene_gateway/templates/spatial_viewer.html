@@ -172,7 +172,8 @@
       });
 
       // Extra segmentations have different obsType from their layer, so viewer
-      // cannot find their data
+      // cannot find their data. Metric channel differs too but declares own
+      // featureType, which does resolve
       function extraChannelTypes(config) {
         var space = config.coordinationSpace || {};
         var values = space.obsType || {};
@@ -181,7 +182,9 @@
         var channelTypes = [];
         function collect(level, out) {
           var scopes = (level || {}).obsType || {};
+          var featureTypes = (level || {}).featureType || {};
           Object.keys(scopes).forEach(function(scope) {
+            if (featureTypes[scope]) return;
             out.push(values[scopes[scope]]);
           });
         }

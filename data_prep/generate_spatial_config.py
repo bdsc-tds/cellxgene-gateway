@@ -43,6 +43,22 @@ POINT_OBS_TYPE = 'transcript'
 # Centroids pre-scaled to rendered coordinates, written by convert_xenium.py
 CENTROIDS_KEY = 'spatial_global'
 
+# Per-cell measurements offered for colouring, as obs columns
+METRIC_OBS_COLS = [
+    'cell_area',
+    'nucleus_area',
+    'nucleus_count',
+    'transcript_counts',
+]
+
+# featureType keeping metrics apart from genes; also metric channel's obsType,
+# which labels its layer row
+METRIC_TYPE = 'metric'
+
+# Viewer decodes these as BigInt, which its column loader cannot store, so one
+# such column silently blanks every metric
+UNLOADABLE_DTYPES = {'int64', 'uint64'}
+
 # Display names for obsm keys conventionally used for embeddings
 EMBEDDING_NAMES = {'X_umap': 'UMAP', 'X_pca': 'PCA', 'X_tsne': 't-SNE'}
 
@@ -164,6 +180,40 @@ def read_image_shape(image_dir):
     return (shape[-1], shape[-2]) if shape and len(shape) >= 2 else None
 
 
+# Function to pick metric obs columns viewer can load
+def detect_metric_cols(obs_dir):
+    """
+    List metric obs columns present in table with dtype viewer can load.
+
+    Columns are read by Vitessce's obsFeatureColumns loader, which copies them
+    into a Float32Array: int64 decodes as BigInt there and fails silently, so
+    such columns are skipped with a warning.
+
+    Parameters:
+    -----------
+    obs_dir: str
+      Path to table's obs group within store.
+
+    Returns:
+    --------
+    metric_cols: list of str
+      Names from METRIC_OBS_COLS that exist as loadable numeric arrays.
+    """
+    metric_cols = []
+    for name in METRIC_OBS_COLS:
+        meta_path = os.path.join(obs_dir, name, 'zarr.json')
+        if not os.path.isfile(meta_path):
+            continue
+        with open(meta_path) as handle:
+            data_type = json.load(handle).get('data_type')
+        if data_type in UNLOADABLE_DTYPES:
+            print(f'Skipping metric {name}: {data_type} cannot load in viewer')
+            continue
+        metric_cols.append(name)
+
+    return metric_cols
+
+
 # Function to compute zoom level that fits extent in viewport
 def fit_zoom(image_shape, viewport=(800, 450)):
     """
@@ -212,7 +262,8 @@ def detect_elements(zarr_path, image=None, segmentations=None):
     paths: dict
       Keys 'image_shape', 'image_path', 'obs_segmentations_path',
       'other_segmentation_paths', 'table_path', 'obs_points_path',
-      'coordinate_system', 'obs_set_cols' and 'obs_embeddings'.
+      'coordinate_system', 'obs_set_cols', 'obs_embeddings', 'centroids_path'
+      and 'metric_cols'.
     """
     images = list_group_members(os.path.join(zarr_path, 'images'))
     tables = list_group_members(os.path.join(zarr_path, 'tables'))
@@ -282,6 +333,7 @@ def detect_elements(zarr_path, image=None, segmentations=None):
             if os.path.isdir(os.path.join(table_dir, 'obsm', CENTROIDS_KEY))
             else None
         ),
+        'metric_cols': detect_metric_cols(os.path.join(table_dir, 'obs')),
     }
 
 
@@ -440,6 +492,23 @@ def generate_config(
             )
         )
 
+    # Metrics colour a second layer over cells: lookup keys on channel's
+    # featureType, and polygon layer draws only its first channel
+    if paths['metric_cols']:
+        # SpatialDataWrapper drops obs_feature_column_paths, hence plain AnnData
+        dataset.add_object(
+            AnnDataWrapper(
+                adata_url=f'{sdata_url}/{table_path}',
+                obs_feature_column_paths=[
+                    f'obs/{c}' for c in paths['metric_cols']
+                ],
+                coordination_values={
+                    'obsType': METRIC_TYPE,
+                    'featureType': METRIC_TYPE,
+                },
+            )
+        )
+
     # Extra segmentations carry no table, so they get their own file def, but
     # they must keep views' obsType to render at all
     extra_file_uids = []
@@ -477,7 +546,14 @@ def generate_config(
     )
     description = vc.add_view('description', dataset=dataset)
     description.set_props(description=os.path.splitext(name)[0])
-    status = vc.add_view('status', dataset=dataset)
+    # Metric list takes status panel's slot, the least used one
+    if paths['metric_cols']:
+        side_panel = vc.add_view('featureList', dataset=dataset)
+        vc.link_views(
+            [side_panel], ['obsType', 'featureType'], [METRIC_TYPE, METRIC_TYPE]
+        )
+    else:
+        side_panel = vc.add_view('status', dataset=dataset)
 
     # Every view shares one obsType, or they will not select each other's cells
     vc.link_views(
@@ -579,6 +655,49 @@ def generate_config(
             ]),
         }
     ]
+    if paths['metric_cols']:
+        # Own scopes shared only with metric list, so picking metric leaves
+        # gene colouring and its colormap range alone
+        metric_encoding, metric_selection, metric_range = vc.add_coordination(
+            'obsColorEncoding', 'featureSelection', 'featureValueColormapRange'
+        )
+        metric_encoding.set_value('geneSelection')
+        # Preselected so layer shows something as soon as it is switched on
+        metric_selection.set_value(paths['metric_cols'][:1])
+        metric_range.set_value([0.0, 1.0])
+        side_panel.use_coordination(metric_encoding, metric_selection)
+        # Below cells: their unfilled interiors still catch hover, so cell
+        # tooltip and UMAP crosshair survive with this layer on
+        segmentation_layers.insert(
+            0,
+            {
+                'obsType': obs_type,
+                # Reuses cells' file def: same element, so polygons load once
+                'fileUid': primary_file_uid,
+                'spatialLayerVisible': True,
+                'spatialLayerOpacity': 1,
+                'segmentationChannel': CL([
+                    {
+                        # Matches metric file def; also labels row "Metric"
+                        'obsType': METRIC_TYPE,
+                        'featureType': METRIC_TYPE,
+                        'spatialTargetC': 0,
+                        'spatialChannelColor': [255, 255, 255],
+                        'spatialChannelOpacity': 1,
+                        # Off by default: filled layer hides morphology image
+                        'spatialChannelVisible': False,
+                        'spatialSegmentationFilled': True,
+                        'spatialSegmentationStrokeWidth': 1,
+                        'obsColorEncoding': metric_encoding,
+                        'featureSelection': metric_selection,
+                        'featureValueColormapRange': metric_range,
+                        # Own scope, as for extra segmentations below
+                        'obsHighlight': None,
+                        'legendVisible': True,
+                    }
+                ]),
+            },
+        )
     # Extras appended last so they draw on top of filled cells; controller
     # lists layers reversed, so this also shows Nucleus above Cell
     segmentation_layers += [
@@ -679,6 +798,12 @@ def generate_config(
             [zoom, width / 2, height / 2],
         )
 
+    # Metric list sits above Description; Status stays below it
+    upper, lower = (
+        (side_panel, description)
+        if paths['metric_cols']
+        else (description, side_panel)
+    )
     # Explicit grid rather than vc.layout()'s row splitting, which only makes
     # equal-sized panels. Mirrors codeluppi-2018 reference layout: narrow left
     # sidebar, large spatial view, embedding and selectors right, plots below.
@@ -686,8 +811,8 @@ def generate_config(
     # UMAP, because Xenium Ranger gives one embedding
     for view, (x, y, w, h) in (
         (controller, (0, 0, 3, 4)),
-        (description, (0, 4, 3, 1)),
-        (status, (0, 5, 3, 1)),
+        (upper, (0, 4, 3, 1)),
+        (lower, (0, 5, 3, 1)),
         (spatial, (3, 0, 4, 4)),
         (scatterplot, (7, 0, 3, 4)),
         (feature_list, (10, 0, 2, 2)),
@@ -708,6 +833,7 @@ def generate_config(
         f'Wrote {out_path} (image={paths["image_path"]}, '
         f'segmentations={paths["obs_segmentations_path"]}, '
         f'points={paths["obs_points_path"]}, '
+        f'metrics={paths["metric_cols"]}, '
         f'coordinate_system={paths["coordinate_system"]})'
     )
 
