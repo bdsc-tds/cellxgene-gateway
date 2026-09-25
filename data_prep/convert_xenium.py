@@ -203,6 +203,40 @@ def normalise_string_dtypes(table):
     return converted
 
 
+# Function to make integer obs columns loadable as viewer metrics
+def downcast_int64_obs(table):
+    """
+    Rewrite int64 obs columns as int32 when their values fit.
+
+    Zarr reader in viewer returns int64 as BigInt64Array, which its obs column
+    loader cannot copy into Float32Array: load throws and every metric sharing
+    that file definition comes up blank. Xenium counts peak in low thousands.
+
+    Parameters:
+    -----------
+    table: anndata.AnnData
+      Table element whose obs columns are rewritten in place.
+
+    Returns:
+    --------
+    converted: list of str
+      Names of obs columns that were downcast.
+    """
+    info = np.iinfo('int32')
+    converted = []
+    for column in table.obs.columns:
+        values = table.obs[column]
+        if values.dtype != 'int64':
+            continue
+        # Out-of-range column stays int64; config generator then skips it
+        if values.min() < info.min or values.max() > info.max:
+            continue
+        table.obs[column] = values.astype('int32')
+        converted.append(column)
+
+    return converted
+
+
 # Function to point table at segmentation element that was written
 def retarget_table_region(sdata, region):
     """
@@ -557,6 +591,9 @@ if __name__ == '__main__':
     converted = normalise_string_dtypes(table)
     if converted:
         print(f'string dtypes normalised: {", ".join(converted)}', flush=True)
+    converted = downcast_int64_obs(table)
+    if converted:
+        print(f'int64 obs downcast: {", ".join(converted)}', flush=True)
 
     # Peak memory is reported so cap can be sized from real run. Transcripts are
     # held back so their sort does not run alongside image pyramids
