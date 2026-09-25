@@ -229,6 +229,7 @@
           config.then(function(json) {
             patchMetricTooltips(json, configUrl);
           }).catch(function() {});
+          orderLayerRows(root);
           extraTypes.then(function(types) {
             constrainExtraEncodings(root, types);
           });
@@ -360,6 +361,35 @@
           document.body, { childList: true, subtree: true, characterData: true });
       }
 
+      // Metric draws below cells so they keep hover, but row stays listed
+      // after Cell. Flex order is visual only; column-reverse sorts from bottom
+      function orderLayerRows(root) {
+        function reorder() {
+          var names = root.querySelectorAll('[class*="imageLayerName"]');
+          var cell = null;
+          var metric = null;
+          for (var i = 0; i < names.length; i++) {
+            var name = names[i].textContent.trim();
+            var row = names[i].closest('[class*="layerControllerGrid"]');
+            if (name === 'Cell') cell = row;
+            if (name === 'Metric') metric = row;
+          }
+          if (!cell || !metric || cell.parentNode !== metric.parentNode) return;
+          var rows = Array.prototype.slice.call(cell.parentNode.children);
+          var cellIndex = rows.indexOf(cell);
+          var metricIndex = rows.indexOf(metric);
+          rows[cellIndex] = metric;
+          rows[metricIndex] = cell;
+          rows.forEach(function(row, index) {
+            // Style changes are not observed, so no feedback loop
+            if (row.style.order !== String(index)) row.style.order = index;
+          });
+        }
+        reorder();
+        new MutationObserver(reorder).observe(
+          root, { childList: true, subtree: true });
+      }
+
       // Bundle uses "Points", leaves fixed-colour swatches grey, and redraws on
       // selection. Observer must outlive handover
       function patchSpatialLegends(root) {
@@ -426,10 +456,43 @@
           }
         }
 
+        // Legends follow draw order, so Metric would sit above Cell; list it
+        // after Cell, matching layer controller. Cell legend's title varies
+        // (set name when set-coloured), so extras are matched instead
+        function orderLegends() {
+          var legends = root.querySelectorAll('[class*="multiLegend"]');
+          for (var i = 0; i < legends.length; i++) {
+            var items = Array.prototype.slice.call(legends[i].children);
+            // Colour bar tick labels precede titles, so search all texts
+            var texts = items.map(function(item) {
+              return Array.prototype.map.call(
+                item.querySelectorAll('svg text'),
+                function(text) { return text.textContent; });
+            });
+            var metricIndex = texts.findIndex(function(labels) {
+              return labels.indexOf('Metric') !== -1;
+            });
+            if (metricIndex === -1) continue;
+            var metric = items.splice(metricIndex, 1)[0];
+            texts.splice(metricIndex, 1);
+            // Column-reverse: earlier in sorted order is lower on screen
+            var cellIndex = texts.findIndex(function(labels) {
+              return !['Transcript', 'Points', 'Nucleus'].some(function(title) {
+                return labels.indexOf(title) !== -1;
+              });
+            });
+            items.splice(cellIndex === -1 ? items.length : cellIndex, 0, metric);
+            items.forEach(function(item, index) {
+              if (item.style.order !== String(index)) item.style.order = index;
+            });
+          }
+        }
+
         function patch() {
           rename();
           recolourSwatches();
           fitLiftedTitles();
+          orderLegends();
         }
         patch();
         new MutationObserver(patch).observe(
