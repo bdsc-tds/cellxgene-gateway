@@ -21,6 +21,8 @@ import json
 import math
 import os
 
+import zarr
+from anndata.io import read_elem
 from vitessce import (
     AnnDataWrapper,
     SpatialDataWrapper,
@@ -54,6 +56,10 @@ METRIC_OBS_COLS = [
 # featureType keeping metrics apart from genes; also metric channel's obsType,
 # which labels its layer row
 METRIC_TYPE = 'metric'
+
+# Config file suffixes; page derives sidecar path from config path the same way
+CONFIG_SUFFIX = '.vitessce.json'
+METRIC_VALUES_SUFFIX = '.metrics.json'
 
 # Viewer decodes these as BigInt, which its column loader cannot store, so one
 # such column silently blanks every metric
@@ -212,6 +218,45 @@ def detect_metric_cols(obs_dir):
         metric_cols.append(name)
 
     return metric_cols
+
+
+# Function to write per-cell metric values shown in spatial tooltip
+def write_metric_values(table_dir, metric_cols, out_path):
+    """
+    Write metric values keyed by cell id, for page script to add to tooltip.
+
+    Vitessce tooltips list only obs id and cell-set membership, so viewer page
+    looks hovered id up in this file instead.
+
+    Parameters:
+    -----------
+    table_dir: str
+      Path to table element within store.
+    metric_cols: list of str
+      obs columns to include, in metric list order.
+    out_path: str
+      Destination path for JSON file.
+
+    Returns:
+    --------
+    out_path: str
+      Path JSON was written to.
+    """
+    obs = read_elem(zarr.open_group(os.path.join(table_dir, 'obs'), mode='r'))
+    values = obs[metric_cols].astype('float64').round(2)
+    # NaN is not valid JSON; null reads as missing in page
+    cells = {
+        cell_id: [None if math.isnan(v) else v for v in row]
+        for cell_id, row in zip(obs.index, values.itertuples(index=False))
+    }
+    with open(out_path, 'w') as handle:
+        json.dump(
+            {'columns': metric_cols, 'cells': cells},
+            handle,
+            separators=(',', ':'),
+        )
+
+    return out_path
 
 
 # Function to compute zoom level that fits extent in viewport
@@ -693,6 +738,10 @@ def generate_config(
                         'featureValueColormapRange': metric_range,
                         # Own scope, as for extra segmentations below
                         'obsHighlight': None,
+                        # Picked only while Cell layer is hidden; page adds
+                        # metric values to tooltip
+                        'tooltipsVisible': True,
+                        'tooltipCrosshairsVisible': True,
                         'legendVisible': True,
                     }
                 ]),
@@ -828,6 +877,12 @@ def generate_config(
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
     with open(out_path, 'w') as handle:
         json.dump(config, handle, indent=2)
+    if paths['metric_cols']:
+        write_metric_values(
+            os.path.join(zarr_path, table_path),
+            paths['metric_cols'],
+            out_path.removesuffix(CONFIG_SUFFIX) + METRIC_VALUES_SUFFIX,
+        )
 
     print(
         f'Wrote {out_path} (image={paths["image_path"]}, '

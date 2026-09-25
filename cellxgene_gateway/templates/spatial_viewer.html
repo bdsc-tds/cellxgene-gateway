@@ -162,12 +162,14 @@
       var chromeStyles = Array.prototype.slice.call(
         document.querySelectorAll('head link[rel="stylesheet"]'));
 
+      var configUrl =
+        new URLSearchParams(window.location.search).get('config') || '';
+
       // Bundle fetches same config, so this comes from browser cache
-      var extraTypes = fetch(
-        new URLSearchParams(window.location.search).get('config') || ''
-      ).then(function(response) {
+      var config = fetch(configUrl).then(function(response) {
         return response.json();
-      }).then(extraChannelTypes).catch(function() {
+      });
+      var extraTypes = config.then(extraChannelTypes).catch(function() {
         return [];
       });
 
@@ -224,6 +226,9 @@
           chromeStyles.forEach(function(link) { link.remove(); });
           observer.disconnect();
           patchSpatialLegends(root);
+          config.then(function(json) {
+            patchMetricTooltips(json, configUrl);
+          }).catch(function() {});
           extraTypes.then(function(types) {
             constrainExtraEncodings(root, types);
           });
@@ -267,6 +272,92 @@
             item.style.display = 'none';
           }
         }).observe(document.body, { childList: true, subtree: true });
+      }
+
+      // Vitessce tooltips list only ids and sets, so cell tooltips get selected
+      // metric from generator's sidecar file, fetched on first hover, while
+      // Metric layer is on
+      function patchMetricTooltips(config, configUrl) {
+        var featureTypes = (config.coordinationSpace || {}).featureType || {};
+        var hasMetrics = Object.keys(featureTypes).some(function(scope) {
+          return featureTypes[scope] === 'metric';
+        });
+        var valuesUrl = configUrl.replace(/\.vitessce\.json$/, '.metrics.json');
+        if (!hasMetrics || valuesUrl === configUrl) return;
+        var values = null;
+        var loaded = null;
+
+        function format(value) {
+          if (value === null) return 'n/a';
+          return Number.isInteger(value) ? String(value) : value.toFixed(2);
+        }
+
+        // Row's eye icon never changes, but its swatch is blank while hidden
+        function metricLayerVisible() {
+          var names = document.querySelectorAll('[class*="imageLayerName"]');
+          for (var i = 0; i < names.length; i++) {
+            if (names[i].textContent.trim() !== 'Metric') continue;
+            var row = names[i].closest('[class*="layerControllerGrid"]');
+            return !!(row && row.querySelector(
+              '[class*="colorIcon"] svg, [class*="colorIcon"][style*="background"]'));
+          }
+          return false;
+        }
+
+        // Metric list checks its selected row's hidden checkbox
+        function selectedMetric() {
+          return values.columns.findIndex(function(column) {
+            var input = document.querySelector(
+              'input[type="checkbox"][value="' + column + '"]');
+            return input && input.checked;
+          });
+        }
+
+        function patch() {
+          // Tooltip is portalled, and React reuses it across hovered cells
+          var headers = document.querySelectorAll('th');
+          for (var i = 0; i < headers.length; i++) {
+            var th = headers[i];
+            var tbody = th.closest('tbody');
+            // Hovered id is always first row
+            if (!tbody || th !== tbody.querySelector('th')) continue;
+            if (th.textContent === 'Metric ID') {
+              // Metric layer's own, shown while Cell layer is hidden. React
+              // never rewrites constant key, so rename sticks
+              th.textContent = 'Cell ID';
+            } else if (th.textContent !== 'Cell ID') {
+              continue;
+            }
+            if (!values) {
+              loaded = loaded || fetch(valuesUrl).then(function(response) {
+                return response.json();
+              }).then(function(json) {
+                values = json;
+                patch();
+              });
+              continue;
+            }
+            var cellId = th.nextElementSibling.textContent;
+            var metric = metricLayerVisible() ? selectedMetric() : -1;
+            var key = cellId + '|' + metric;
+            if (tbody.dataset.metricCell === key) continue;
+            tbody.dataset.metricCell = key;
+            var old = tbody.querySelector('tr[data-metric-row]');
+            if (old) old.remove();
+            var cellValues = values.cells[cellId];
+            if (metric < 0 || !cellValues) continue;
+            var row = document.createElement('tr');
+            row.dataset.metricRow = '';
+            var name = document.createElement('th');
+            name.textContent = values.columns[metric];
+            var value = document.createElement('td');
+            value.textContent = format(cellValues[metric]);
+            row.append(name, value);
+            tbody.append(row);
+          }
+        }
+        new MutationObserver(patch).observe(
+          document.body, { childList: true, subtree: true, characterData: true });
       }
 
       // Bundle uses "Points", leaves fixed-colour swatches grey, and redraws on
